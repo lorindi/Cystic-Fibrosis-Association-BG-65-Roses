@@ -18,9 +18,13 @@
     "@nuxt/scripts": "^0.11.2",
     "@nuxt/test-utils": "^3.17.2",
     "@nuxt/ui": "^3.0.0",
+    "@nuxtjs/supabase": "^1.5.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "@tailwindcss/vite": "^4.0.14",
     "@unhead/vue": "^2.0.0-rc.8",
     "eslint": "^9.22.0",
     "nuxt": "^3.16.0",
+    "tailwindcss": "^4.0.14",
     "typescript": "^5.8.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
