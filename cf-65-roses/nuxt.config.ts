@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
@@ -11,6 +13,24 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/scripts',
     '@nuxt/test-utils',
-    '@nuxt/ui'
-  ]
+    '@nuxt/ui',
+    '@nuxtjs/supabase', 
+  ],
+  supabase: {
+    redirect: false,
+    redirectOptions: {
+      login: '/auth/login',
+      callback: '/auth/confirm',
+      exclude: ['/*'],
+    },
+    cookieOptions: {
+      secure: process.env.NODE_ENV === 'production',
+    },
+  },
+  
+  vite: {
+    plugins: [
+      tailwindcss(),
+    ],
+  }
 })
