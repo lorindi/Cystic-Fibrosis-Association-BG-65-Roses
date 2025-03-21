@@ -1,0 +1,20 @@
+api-contracts пакет:
+Не съдържа имплементация на никакви функции
+Дефинира интерфейси и типове - това са само TypeScript "договори"
+Казва какво трябва да прави API-то, без да казва как
+Служи като общ "речник" между всички компоненти
+
+Ролята на api-contracts
+api-contracts дефинира какво трябва да прави вашето API, без да уточнява как го прави. Това е като договор, който казва:
+// В packages/shared/api-contracts/src/index.ts
+export interface ApiService {
+  getUsers(): Promise<User[]>;
+  getUserById(id: string): Promise<User | null>;
+  // други методи...
+}
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+};

@@ -1,0 +1,27 @@
+adapter пакети:
+Съдържат реална имплементация на интерфейсите дефинирани в api-contracts
+Имплементират конкретните функции, които правят заявки към различните бекенд технологии
+Всеки адаптер предоставя еднакъв интерфейс, но с различна вътрешна логика
+
+Ролята на адаптерите
+Адаптерите имплементират този интерфейс за различните бекенд технологии:
+
+// В packages/adapters/express-adapter/src/index.ts
+import { ApiService, User } from '@cf/api-contracts';
+
+export class ExpressApiService implements ApiService {
+  async getUsers(): Promise<User[]> {
+    // Имплементация за Express
+    const response = await fetch('/api/express/users');
+    return response.json();
+  }
+  
+  async getUserById(id: string): Promise<User | null> {
+    // Имплементация за Express
+    const response = await fetch(`/api/express/users/${id}`);
+    if (response.status === 404) return null;
+    return response.json();
+  }
+  
+  // Имплементирайте останалите методи...
+}
