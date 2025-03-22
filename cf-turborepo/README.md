@@ -1,84 +1,106 @@
-# Turborepo starter
+# CF Turborepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+This is a monorepo template for the Cystic Fibrosis Association project using [Turborepo](https://turbo.build/).
 
-## Using this example
+## What's Inside
 
-Run the following command:
+This monorepo includes the following packages/apps:
 
-```sh
-npx create-turbo@latest
+### Apps
+
+- `next-app`: [Next.js](https://nextjs.org/) frontend application
+- `nuxt-app`: [Nuxt.js](https://nuxt.com/) frontend application
+- `express-api`: [Express](https://expressjs.com/) backend API
+- `nest-api`: [NestJS](https://nestjs.com/) backend API
+
+### Packages
+
+- `@cf/api-contracts`: Shared TypeScript interfaces and types
+- `@cf/express-adapter`: Adapter for Express API
+- `@cf/nest-adapter`: Adapter for NestJS API
+- `@cf/supabase-adapter`: Adapter for Supabase (mocked)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+ recommended)
+- npm (v7+ recommended)
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
 ```
 
-## What's inside?
+### Development
 
-This Turborepo includes the following packages/apps:
+You can run different combinations of frontend and backend services:
 
-### Apps and Packages
+#### Next.js with Express
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+```bash
+npm run dev:next-express
 ```
 
-### Develop
+#### Next.js with NestJS
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
+```bash
+npm run dev:next-nest
 ```
 
-### Remote Caching
+#### Next.js with Supabase (mocked)
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
+```bash
+npm run dev:next-supabase
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+#### Nuxt with Express
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
+```bash
+npm run dev:nuxt-express
 ```
 
-## Useful Links
+#### Nuxt with NestJS
 
-Learn more about the power of Turborepo:
+```bash
+npm run dev:nuxt-nest
+```
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+#### Nuxt with Supabase (mocked)
+
+```bash
+npm run dev:nuxt-supabase
+```
+
+### Building
+
+To build all apps and packages:
+
+```bash
+npm run build
+```
+
+## Architecture
+
+This template demonstrates a flexible architecture that allows swapping between different frontend frameworks (Next.js and Nuxt.js) and backend services (Express, NestJS, and Supabase) without changing the core business logic.
+
+### Adapter Pattern
+
+The `adapter-factory` utility creates appropriate adapters based on the environment configuration, allowing the frontend to interact with different backends seamlessly.
+
+## Demo
+
+Navigate to `/api-demo` in either the Next.js or Nuxt.js app to see a demonstration of the adapter pattern in action. You can switch between different backend implementations and see how the same frontend components work with each one.
+
+## Adding New Services
+
+To add a new backend or frontend service:
+
+1. Create a new app in the `apps` directory
+2. Create a new adapter in the `packages/adapters` directory
+3. Update the adapter factory to support the new service
+4. Add the appropriate scripts to the root `package.json`
