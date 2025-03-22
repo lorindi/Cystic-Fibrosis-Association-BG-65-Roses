@@ -1,24 +1,26 @@
 {
   "name": "cf-turborepo",
   "private": true,
+  "packageManager": "npm@10.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "packages/adapters/*",
+    "packages/shared/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "dev:next-express": "cross-env NEXT_PUBLIC_BACKEND_TYPE=express turbo run dev --filter=next-app --filter=express-api",
+    "dev:next-nest": "cross-env NEXT_PUBLIC_BACKEND_TYPE=nest PORT=8888 turbo run dev --filter=next-app --filter=nest-api",
+    "dev:next-supabase": "cross-env NEXT_PUBLIC_BACKEND_TYPE=supabase turbo run dev --filter=next-app",
+    "dev:nuxt-express": "cross-env NUXT_PUBLIC_BACKEND_TYPE=express turbo run dev --filter=nuxt-app --filter=express-api",
+    "dev:nuxt-nest": "cross-env NUXT_PUBLIC_BACKEND_TYPE=nest turbo run dev --filter=nuxt-app --filter=nest-api",
+    "dev:nuxt-supabase": "cross-env NUXT_PUBLIC_BACKEND_TYPE=supabase turbo run dev --filter=nuxt-app"
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
-    "turbo": "^2.4.4",
-    "typescript": "5.8.2"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "packageManager": "npm@10.0.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+    "cross-env": "^7.0.3",
+    "turbo": "latest"
+  }
 }

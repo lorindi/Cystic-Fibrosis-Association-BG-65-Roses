@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@cf/api-contracts": ["../../packages/shared/api-contracts/src"],
+      "@cf/express-adapter": ["../../packages/adapters/express-adapter/src"],
+      "@cf/nest-adapter": ["../../packages/adapters/nest-adapter/src"],
+      "@cf/supabase-adapter": ["../../packages/adapters/supabase-adapter/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
