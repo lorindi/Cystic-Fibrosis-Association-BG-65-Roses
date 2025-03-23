@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Button from "../buttons/Button";
+import Link from "next/link";
 
 function Card({
   imageUrl,
@@ -7,12 +8,14 @@ function Card({
   description,
   tags,
   onClick,
+  link,
 }: {
   imageUrl: string;
   title: string;
   description: string;
   tags: string[];
   onClick: () => void;
+  link: string;
 }) {
   const ArrowRightIcon = () => (
     <svg
@@ -44,7 +47,7 @@ function Card({
     return text.slice(0, maxLength) + "";
   };
   return (
-    <div className="flex flex-col relative rounded-[10px] shadow-lg overflow-hidden gap-2 sm:gap-4
+    <Link href={link} className="flex flex-col relative rounded-[10px] shadow-lg overflow-hidden gap-2 sm:gap-4 m-2
     p-2 lg:p-4
     w-[176px] h-[224px]
     sm:w-[255px] sm:h-[328px]
@@ -96,7 +99,7 @@ function Card({
         ">{truncateDescription(description)}</p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
