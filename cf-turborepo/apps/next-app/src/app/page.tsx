@@ -1,20 +1,18 @@
-// export default function Home() {
-//   return (
-
-//   );
-// }
-
-
-import Link from 'next/link';
-
+"use client";
+import Image from "next/image";
+import Button from "./components/buttons/Button";
+import Card from "./components/cards/Card";
 export default function Home() {
+  const handleClick = () => {
+    alert("Button clicked!");
+  };
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Next.js Demo</h1>
-      <p className="mb-4">Backend: {process.env.NEXT_PUBLIC_BACKEND_TYPE || 'express'}</p>
-      <Link href="/users" className="text-blue-500 underline">
-        View Users
-      </Link>
-    </div>
+    <Card
+    imageUrl="https://images.unsplash.com/photo-1561525140-c2a4cc68e4bd?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    title="Cardafdhfgjhjjgkukyhkujjkvfjlh"
+    description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. Lorem ipsum dolor sit amet consectetur adipisicing elit. gggghfghfgQuisquam, quos. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. Lorem ipsum dolor sit amet consectetur"
+    tags={["Tag 1", "Tag 2", "Tag 3"]}
+    onClick={handleClick}
+  />
   );
 }
