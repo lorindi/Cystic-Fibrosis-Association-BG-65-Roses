@@ -20,7 +20,7 @@ function Card({
   const ArrowRightIcon = () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className="h-4 md:h-5 w-4 md:w-5"
+      className="h-4 md:h-5 w-4 md:w-5 rotate-[-45deg]"
       viewBox="0 0 20 20"
       fill="currentColor"
     >
@@ -31,10 +31,7 @@ function Card({
       />
     </svg>
   );
-  const truncateTitle = (
-    text: string,
-    maxLength: number = 18
-  ): string => {
+  const truncateTitle = (text: string, maxLength: number = 18): string => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "";
   };
@@ -47,20 +44,28 @@ function Card({
     return text.slice(0, maxLength) + "";
   };
   return (
-    <Link href={link} className="flex flex-col relative rounded-[10px] shadow-lg overflow-hidden gap-2 sm:gap-4 m-2
+    <Link
+      href={link}
+      className="flex flex-col relative rounded-[10px] shadow-lg gap-2 sm:gap-4 m-2
     p-2 lg:p-4
     w-[176px] h-[224px]
     sm:w-[255px] sm:h-[328px]
     md:w-[383px] md:h-[492px]
     lg:w-[430px] lg:h-[522px]
-    ">
-      <div className="absolute top-0 right-0 pb-2 pl-2 bg-white rounded-[10px]
+    "
+    >
+      <div
+        className="absolute top-0 right-0 
       lg:pb-4 lg:pl-4
-      ">
+      "
+      >
+        <div className="absolute top-0 right-0 bg-white rounded-[10px] h-[28px] md:h-[42px] w-full min-w-15 md:min-w-20 max-w-[278px] z-0"></div>
+
         <Button
           type="filled-icon"
           icon={<ArrowRightIcon />}
           onClick={onClick}
+          className="absolute top-0 right-0 hover:top-[-10px] hover:right-[-10px] z-[1px]"
         />
       </div>
       <div className="flex-1">
@@ -69,7 +74,7 @@ function Card({
           alt={title}
           width={100}
           height={100}
-          className="w-full h-full bg-cyan-50 bg-opacity-20 rounded-[10px]"
+          className="w-full h-full bg-cyan-50 bg-opacity-20 rounded-[10px] object-cover"
         />
       </div>
       <div className="flex-1 flex flex-col gap-2 sm:gap-4">
@@ -86,17 +91,25 @@ function Card({
           ))}
         </ul>
         <div className="flex flex-col gap-0 sm:gap-2 w-full h-full overflow-hidden">
-          <h2 className="text-color-heading font-semibold font-['Montserrat'] 
+          <h2
+            className="text-color-heading font-semibold font-['Montserrat'] 
           text-sm 
           sm:text-base
           md:text-2xl
-        ">{truncateTitle(title)}</h2>
-          <p className="text-color-paragraph font-normal font-['Montserrat']
+        "
+          >
+            {truncateTitle(title)}
+          </h2>
+          <p
+            className="text-color-paragraph font-normal font-['Montserrat']
             text-[11px]
             sm:text-sm
             md:text-base
             lg:text-base 
-        ">{truncateDescription(description)}</p>
+        "
+          >
+            {truncateDescription(description)}
+          </p>
         </div>
       </div>
     </Link>
