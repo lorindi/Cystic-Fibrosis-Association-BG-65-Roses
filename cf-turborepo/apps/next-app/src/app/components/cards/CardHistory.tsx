@@ -26,7 +26,7 @@ function CardHistory({imageUrl,
   
     const truncateDescription = (
       text: string,
-      maxLength: number = 55
+      maxLength: number = 100
     ): string => {
       if (text.length <= maxLength) return text;
       return text.slice(0, maxLength) + "...";
@@ -34,12 +34,12 @@ function CardHistory({imageUrl,
     return (
       <Link href={link} className="flex flex-col relative rounded-[10px] shadow-lg overflow-hidden gap-2 m-2
      
-      w-[176px] h-[224px]
-      sm:w-[255px] sm:h-[328px]
-      md:w-[383px] md:h-[492px]
-      lg:w-[430px] lg:h-[522px]
+      w-[192px] h-[315px]
+      sm:w-[288px] sm:h-[473px]
+      md:w-[345px] md:h-[524px]
+      lg:w-[460px] lg:h-[688px]
       ">
-        <div className="absolute bottom-0 right-0 bg-white rounded-[10px]
+        <div className="absolute bottom-2 right-2 bg-white rounded-[10px]
         ">
           <Button
             type="filled-text"
@@ -53,12 +53,12 @@ function CardHistory({imageUrl,
             alt={title}
             width={100}
             height={100}
-            className="w-full h-full bg-cyan-50 bg-opacity-20 rounded-t-[10px]"
+            className="w-full h-full bg-cyan-50 bg-opacity-20 rounded-t-[10px] object-cover"
           />
         </div>
         <div className="h-[50%] md:h-[40%] flex flex-col gap-2">
     
-          <div className="flex flex-col gap-0 sm:gap-2 w-full h-full overflow-hidden p-2 sm:p-6 md:p-8 lg:p-10">
+          <div className="flex flex-col gap-0 sm:gap-2 w-full h-full overflow-hidden p-4 sm:p-6 md:p-8 lg:p-10">
             <h2 className="text-color-heading font-semibold font-['Montserrat'] 
             text-sm 
             sm:text-base
