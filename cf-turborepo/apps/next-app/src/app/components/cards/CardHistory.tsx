@@ -38,6 +38,7 @@ function CardHistory({imageUrl,
       sm:w-[288px] sm:h-[473px]
       md:w-[345px] md:h-[524px]
       lg:w-[460px] lg:h-[688px]
+      xl:w-[821px] xl:h-[688px]
       ">
         <div className="absolute bottom-2 right-2 bg-white rounded-[10px]
         ">
