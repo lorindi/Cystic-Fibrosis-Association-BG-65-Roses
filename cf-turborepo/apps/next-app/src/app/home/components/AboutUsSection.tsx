@@ -13,9 +13,10 @@ function AboutUsSection() {
         ]}
       />
       <div
-        className="flex flex-col justify-center items-center gap-4 px-4 xl:px-0 max-w-[271px]
+        className="flex flex-col justify-center items-center gap-4 w-full xl:px-0 max-w-[271px]
            sm:max-w-[430px]
-           md:max-w-[582px]"
+           md:max-w-[582px]
+           xl:max-w-[800px]"
       >
         <span
           className="self-stretch text-center justify-start text-sky-800 text-xs font-medium font-['Montserrat']
