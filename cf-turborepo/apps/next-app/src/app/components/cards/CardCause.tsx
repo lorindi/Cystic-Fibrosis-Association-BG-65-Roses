@@ -13,15 +13,15 @@ function CardCause({
   link: string;
 }) {
   return (
-    <div className="w-full h-full lg:w-[430px] lg:h-[551px] relative rounded-[10px] overflow-hidden ">
+    <div className="w-[430px] h-[551px] relative rounded-[10px] overflow-hidden ">
       <Image
         src={imageUrl}
         alt={title}
-        width={100}
-        height={100}
+        width={430}
+        height={551}
         className="w-full h-full object-cover opacity-80"
       />
-      <div className="absolute bottom-[40px] left-1/2 transform -translate-x-1/2 w-[290px] h-[162px] bg-white rounded-[10px] z-10 flex flex-col items-center justify-center shadow-lg">
+      <div className="absolute bottom-[40px] left-1/2 transform -translate-x-1/2 w-full h-full max-w-[290px] max-h-[162px] bg-white rounded-[10px] z-10 flex flex-col items-center justify-center shadow-lg m-2">
         <h4 className="text-color-heading text-xl font-bold font-['Montserrat'] leading-loose">
           {title}
         </h4>
