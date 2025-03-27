@@ -6,7 +6,7 @@ function HeroSection() {
     <section className="w-full h-auto sm:h-[364px] md:h-[478px] lg:h-[520px] xl:h-[714px] flex flex-col gap-4 sm:gap-none sm:flex-row overflow-hidden">
       <div className="w-full sm:w-[50%] h-full sm:bg-[#f4f4f5] sm:shadow-[30px_0_50px_50px_#f4f4f5] flex flex-col sm:flex-row mt-[32px] sm:mt-0">
         <div
-          className="flex flex-col justify-center sm:justify-start items-center sm:items-start gap-[12px] sm:gap-[16px] w-full h-full 
+          className="flex flex-col justify-center sm:justify-start items-center sm:items-start gap-[12px] sm:gap-[16px] w-full h-full px-4
         sm:pl-8 sm:pt-8
         md:pl-16 md:pt-24
         lg:pl-16 lg:pt-24
