@@ -8,8 +8,8 @@ function CardFrame({ imageUrls }: { imageUrls: string[] }) {
       <Image
         src={logoLung}
         alt="Logo"
-        width={100}
-        height={100}
+        width={300}
+        height={300}
         className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-18 h-18 p-2 sm:w-20 sm:h-20 sm:p-2 md:w-28 md:h-28 md:p-4 lg:w-30 lg:h-30 lg:p-4"
       />
       {imageUrls.map((imageUrl, index) => (
@@ -17,8 +17,8 @@ function CardFrame({ imageUrls }: { imageUrls: string[] }) {
           key={`card-frame-${index}`}
           src={imageUrl}
           alt="Card Frame"
-          width={100}
-          height={100}
+          width={300}
+          height={300}
           className="w-32 h-40 sm:w-52 sm:h-56 md:w-72 md:h-80 bg-cyan-50 bg-opacity-10 rounded-[10px] object-cover"
         />
       ))}
