@@ -2,6 +2,8 @@
 import AboutUsSection from "./home/components/AboutUsSection";
 import HeroSection from "./home/components/HeroSection";
 import NavigationCards from "./home/components/NavigationCards";
+import ContributeSection from "./home/components/ContributeSection";
+import NewsSection from "./home/components/NewsSection";
 
 export default function Home() {
   const handleClick = () => {
@@ -12,6 +14,8 @@ export default function Home() {
       <HeroSection />
       <NavigationCards />
       <AboutUsSection />
+      <ContributeSection />
+      <NewsSection />
     </div>
   );
 }
