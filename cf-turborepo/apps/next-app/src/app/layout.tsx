@@ -34,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#fafafa]`}
       >
         <div className="flex flex-col items-center justify-center w-full h-full">
