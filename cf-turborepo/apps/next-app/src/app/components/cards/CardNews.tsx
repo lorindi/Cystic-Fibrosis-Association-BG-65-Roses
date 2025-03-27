@@ -53,11 +53,12 @@ function CardNews({
     sm:w-[288px] sm:h-[595px]
     md:w-[343px] md:h-[595px]
     lg:w-[343px] lg:h-[595px]
+    xl:w-[500px] xl:h-[600px]
     ">
       <div className="absolute top-0 right-0 
       lg:pb-4 lg:pl-4
       ">
-        <div className="absolute top-0 right-0 bg-white rounded-[10px] h-[28px] md:h-[42px] w-full min-w-15 md:min-w-20 max-w-[278px] z-0"></div>
+        <div className="absolute top-0 right-0 bg-white rounded-[10px] h-[48px] md:h-[52px] w-full min-w-[70px] md:min-w-[90px] max-w-[278px] z-0"></div>
         <Button
           type="filled-icon"
           icon={<ArrowRightIcon />}
@@ -69,9 +70,9 @@ function CardNews({
         <Image
           src={imageUrl}
           alt={title}
-          width={100}
-          height={100}
-          className="w-full h-full bg-cyan-50 bg-opacity-20 rounded-[10px] object-cover"
+          width={300}
+          height={300}
+          className=" bg-cyan-50 bg-opacity-20 rounded-[10px] object-cover w-64 h-80 xl:w-[549px] xl:h-[366px]"
         />
       </div>
       <div className="flex-1 flex flex-col gap-2 sm:gap-4">
@@ -94,10 +95,9 @@ function CardNews({
           md:text-2xl
         ">{truncateTitle(title)}</h2>
           <p className="text-color-paragraph font-normal font-['Montserrat']
-            text-[11px]
+            text-xs
             sm:text-sm
             md:text-base
-            lg:text-base 
         ">{truncateDescription(description)}</p>
         </div>
       </div>
