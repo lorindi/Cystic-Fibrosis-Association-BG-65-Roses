@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar {
+  -ms-overflow-style: none;  /* За Internet Explorer и Edge */
+  scrollbar-width: none;  /* За Firefox */
+}
 
 :root {
   /* --background: #ffffff;
