@@ -49,11 +49,11 @@ function CardNews({
   return (
     <Link href={link} className="flex flex-col relative rounded-[10px] shadow-lg gap-2 sm:gap-4 m-2
     p-4
-    w-[288px] h-[595px]
-    sm:w-[288px] sm:h-[595px]
-    md:w-[343px] md:h-[595px]
-    lg:w-[343px] lg:h-[595px]
-    xl:w-[430px] xl:h-[600px]
+   w-[258px] h-[313px]
+      sm:w-[301px] sm:h-[365px]
+      md:w-[344px] md:h-[417px]
+      lg:w-[387px] lg:h-[469px]
+      xl:w-[430px] xl:h-[522px]
     ">
       <div className="absolute top-0 right-0 
       lg:pb-4 lg:pl-4
