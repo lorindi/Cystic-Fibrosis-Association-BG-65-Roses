@@ -18,10 +18,16 @@ function PatientStoriesSection() {
       imageUrl: "/images/rectangle2.jpeg",
       link: "/story2",
     },
- 
+    {
+      id: 3,
+      title: "Story 3",
+      description: "Description 3",
+      imageUrl: "/images/rectangle3.jpeg",
+      link: "/story3",
+    },
   ];
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full px-4 sm:px-8 xl:px-16 gap-8 lg:gap-18 xl:gap-0 max-w-[1536px]">
       <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
         <div className="flex flex-col items-center justify-center sm:items-start">
           <span
@@ -46,7 +52,7 @@ function PatientStoriesSection() {
           <Button text="Read more" type="outlined-text" onClick={() => {}} />
         </div>
       </div>
-      <div className="flex lg:justify-center lg:items-center w-full xl:px-16 xl:pt-11 gap-6 scroll-smooth overflow-x-auto custom-scrollbar">
+      <div className="flex lg:justify-start lg:items-center w-full xl:pt-11 gap-6 scroll-smooth overflow-x-auto custom-scrollbar">
         {stories.map((story) => (
           <div key={story.id} className="">
             <CardHistory
