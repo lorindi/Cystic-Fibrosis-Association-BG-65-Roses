@@ -27,7 +27,7 @@ function PatientStoriesSection() {
     },
   ];
   return (
-    <div className="flex flex-col items-center justify-center w-full px-4 sm:px-8 xl:px-16 gap-8 lg:gap-18 xl:gap-0 max-w-[1536px]">
+    <div className="flex flex-col items-center justify-center w-full px-4 py-8 sm:px-8 xl:px-16 gap-8 lg:gap-18 xl:gap-0 max-w-[1536px]">
       <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
         <div className="flex flex-col items-center justify-center sm:items-start">
           <span
