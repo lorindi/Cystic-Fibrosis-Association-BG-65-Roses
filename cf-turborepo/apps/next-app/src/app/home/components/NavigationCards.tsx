@@ -26,7 +26,7 @@ function NavigationCards() {
     },
   ];
   return (
-    <div className="flex flex-col lg:justify-center xl:justify-evenly items-center px-4
+    <div className="flex flex-col lg:justify-center xl:justify-evenly items-center px-4 w-full max-w-[1536px]
     mt-[-25px] gap-6
     md:gap-8
     lg:flex-row lg:mt-[-45px] lg:gap-8
