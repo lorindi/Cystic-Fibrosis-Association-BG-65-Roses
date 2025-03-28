@@ -32,13 +32,13 @@ function CardHistory({imageUrl,
       return text.slice(0, maxLength) + "...";
     };
     return (
-      <Link href={link} className="flex flex-col relative rounded-[10px] shadow-lg overflow-hidden gap-2 m-2
+      <Link href={link} className="flex flex-col relative rounded-[10px] shadow-lg overflow-hidden gap-2 m-2 bg-[#ecfeff]
      
-      w-[192px] h-[315px]
-      sm:w-[288px] sm:h-[473px]
-      md:w-[345px] md:h-[524px]
-      lg:w-[460px] lg:h-[688px]
-      xl:w-[821px] xl:h-[688px]
+      w-[258px] h-[313px]
+      sm:w-[279px] sm:h-[365px]
+      md:w-[345px] md:h-[417px]
+      lg:w-[473px] lg:h-[469px]
+      xl:w-[675px] xl:h-[522px]
       ">
         <div className="absolute bottom-2 right-2 bg-white rounded-[10px]
         ">
@@ -52,8 +52,8 @@ function CardHistory({imageUrl,
           <Image
             src={imageUrl}
             alt={title}
-            width={100}
-            height={100}
+            width={300}
+            height={300}
             className="w-full h-full bg-cyan-50 bg-opacity-20 rounded-t-[10px] object-cover"
           />
         </div>
