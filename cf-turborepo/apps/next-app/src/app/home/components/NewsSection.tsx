@@ -38,8 +38,8 @@ function NewsSection() {
     },
   ];
   return (
-    <div className="flex flex-col justify-center items-center w-full h-auto px-4 sm:px-8 xl:px-16 xl:py-80 xl:gap-6 ">
-      <div className="flex flex-col justify-center items-center w-full py-8 sm:py-17">
+    <div className="flex flex-col justify-center items-center w-full h-auto px-4 py-16 sm:px-8 xl:px-16 xl:py-20 xl:gap-6 max-w-[1536px]">
+      <div className="flex flex-col justify-center items-center w-full py-8 sm:py-17 md:py-10">
         <span className="text-sky-800 text-xs font-medium font-['Montserrat'] uppercase
         sm:leading-normal
         md:text-base
@@ -54,7 +54,7 @@ function NewsSection() {
           and the fight against cystic fibrosis.
         </h3>
       </div>
-      <div className="flex w-full xl:px-16 xl:pt-11 gap-6 scroll-smooth touch-pan-x overflow-x-auto custom-scrollbar">
+      <div className="flex xl:justify-center w-full xl:px-0 xl:pt-0 gap-6 scroll-smooth touch-pan-x overflow-x-auto custom-scrollbar">
         {cards.map((card) => (
           <div key={card.title} className="flex-shrink-0">
             <CardNews {...card} />
