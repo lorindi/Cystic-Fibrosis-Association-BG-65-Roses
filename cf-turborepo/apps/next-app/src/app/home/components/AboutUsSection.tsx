@@ -3,7 +3,7 @@ import React from "react";
 
 function AboutUsSection() {
   return (
-    <div className="flex flex-col xl:flex-row items-center justify-center h-auto my-24 xl:my-[232px] xl:py-[152px] px-4 xl:px-16 gap-18 xl:gap-16">
+    <div className="flex flex-col xl:flex-row items-center justify-center h-auto my-24 lg:my-16 xl:my-[116px] py-8 sm:py-16 xl:py-[76px] px-4 xl:px-16 gap-18 xl:gap-16 w-full max-w-[1536px] rounded-[10px]">
       <CardFrame
         imageUrls={[
           "/images/rectangle1.jpeg",
@@ -13,9 +13,8 @@ function AboutUsSection() {
         ]}
       />
       <div
-        className="flex flex-col justify-center items-center gap-4 w-full xl:px-0 max-w-[271px]
-           sm:max-w-[430px]
-           md:max-w-[582px]
+        className="flex flex-col justify-center items-center gap-4 w-[90%] xl:w-full xl:px-0
+        
            xl:max-w-[800px]"
       >
         <span
@@ -37,7 +36,7 @@ function AboutUsSection() {
           Information about upcoming conferences and events
         </h4>
         <p
-          className="self-stretch text-center justify-start text-color-heading text-xs font-normal font-['Montserrat'] leading-tight
+          className="self-stretch text-center justify-start text-color-heading text-sm font-normal  leading-tight
         sm:text-base sm:leading-normal
         xl:text-left
         "
