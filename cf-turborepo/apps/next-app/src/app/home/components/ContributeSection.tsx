@@ -24,7 +24,7 @@ function ContributeSection() {
   ];
 
   return (
-    <div className="hidden xl:flex flex-col px-16 bg-sky-100 pt-23 pb-34 mx-16 rounded-[10px] h-auto ">
+    <div className="hidden xl:flex flex-col px-16 bg-sky-100 pt-[76px] pb-[76px] mx-16 rounded-[10px] h-auto w-full max-w-[1536px]">
       <div className="flex flex-col gap-3 pl-24 pb-24">
         <span className="justify-start text-sky-800 text-base font-medium font-['Montserrat'] leading-normal uppercase">
           Our Mission
