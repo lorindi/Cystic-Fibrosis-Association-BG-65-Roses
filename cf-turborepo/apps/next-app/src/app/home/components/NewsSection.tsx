@@ -38,7 +38,7 @@ function NewsSection() {
     },
   ];
   return (
-    <div className="flex flex-col justify-center items-center w-full h-auto px-4 py-16 sm:px-8 xl:px-16 xl:py-20 xl:gap-6 max-w-[1536px]">
+    <div className="flex flex-col justify-center items-center w-full h-auto px-4 py-8 sm:px-8 xl:px-16 xl:py-20 xl:gap-6 max-w-[1536px]">
       <div className="flex flex-col justify-center items-center w-full py-8 sm:py-17 md:py-10">
         <span className="text-sky-800 text-xs font-medium font-['Montserrat'] uppercase
         sm:leading-normal
