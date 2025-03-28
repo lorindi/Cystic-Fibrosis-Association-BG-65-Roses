@@ -13,7 +13,11 @@ function CardCause({
   link: string;
 }) {
   return (
-    <div className="w-[430px] h-[551px] relative rounded-[10px] overflow-hidden ">
+    <div className=" w-[258px] h-[313px]
+      sm:w-[301px] sm:h-[365px]
+      md:w-[344px] md:h-[417px]
+      lg:w-[387px] lg:h-[469px]
+      xl:w-[430px] xl:h-[522px] relative rounded-[10px] overflow-hidden ">
       <Image
         src={imageUrl}
         alt={title}
