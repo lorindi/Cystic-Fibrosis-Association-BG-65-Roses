@@ -20,7 +20,7 @@ function CardCategory({
   return (
     <Link
       href={link}
-      className="flex flex-col xl:flex-row items-center justify-center shadow-lg rounded-[10px] bg-[#fafafa] 
+      className="flex flex-col xl:flex-row items-center justify-center shadow-lg rounded-[10px] bg-white 
       w-60 px-2 py-8 gap-2
       sm:w-96 
       md:w-[520px]
