@@ -1,20 +1,22 @@
-// export default function Home() {
-//   return (
-
-//   );
-// }
-
-
-import Link from 'next/link';
-
+"use client";
+import AboutUsSection from "./home/components/AboutUsSection";
+import HeroSection from "./home/components/HeroSection";
+import NavigationCards from "./home/components/NavigationCards";
+import ContributeSection from "./home/components/ContributeSection";
+import NewsSection from "./home/components/NewsSection";
+import PatientStoriesSection from "./home/components/PatientStoriesSection";
 export default function Home() {
+  const handleClick = () => {
+    alert("Button clicked!");
+  };
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Next.js Demo</h1>
-      <p className="mb-4">Backend: {process.env.NEXT_PUBLIC_BACKEND_TYPE || 'express'}</p>
-      <Link href="/users" className="text-blue-500 underline">
-        View Users
-      </Link>
+    <div className="flex flex-col justify-center items-center w-full h-full">
+      <HeroSection />
+      <NavigationCards />
+      <AboutUsSection />
+      <ContributeSection />
+      <NewsSection />
+      <PatientStoriesSection />
     </div>
   );
 }
