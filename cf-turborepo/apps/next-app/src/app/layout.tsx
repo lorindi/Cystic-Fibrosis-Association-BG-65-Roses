@@ -35,7 +35,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#fafafa]`}
+        className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#fafafa] font-['Montserrat']`}
       >
         <div className="flex flex-col items-center justify-center w-full h-full">
           <Navbar />
