@@ -3,7 +3,7 @@ import React from "react";
 
 function AboutUsSection() {
   return (
-    <div className="flex flex-col xl:flex-row items-center justify-center h-auto my-8 lg:my-16 xl:my-[116px] py-8 sm:py-16 xl:py-[76px] px-4 xl:px-16 gap-8 xl:gap-16 w-full max-w-[1536px] rounded-[10px]">
+    <div className="flex flex-col xl:flex-row items-center justify-center h-auto my-12 lg:my-16 xl:my-[116px] py-8 sm:py-16 xl:py-[76px] px-4 xl:px-16 gap-18 xl:gap-16 w-full max-w-[1536px] rounded-[10px] bg-white">
       <CardFrame
         imageUrls={[
           "/images/rectangle1.jpeg",
