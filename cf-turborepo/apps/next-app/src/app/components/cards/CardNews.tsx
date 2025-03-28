@@ -53,7 +53,7 @@ function CardNews({
     sm:w-[288px] sm:h-[595px]
     md:w-[343px] md:h-[595px]
     lg:w-[343px] lg:h-[595px]
-    xl:w-[500px] xl:h-[600px]
+    xl:w-[430px] xl:h-[600px]
     ">
       <div className="absolute top-0 right-0 
       lg:pb-4 lg:pl-4
@@ -72,10 +72,10 @@ function CardNews({
           alt={title}
           width={300}
           height={300}
-          className=" bg-cyan-50 bg-opacity-20 rounded-[10px] object-cover w-64 h-80 xl:w-[549px] xl:h-[366px]"
+          className=" bg-cyan-50 bg-opacity-20 rounded-[10px] object-cover w-full h-[150px] sm:h-[179px] md:h-[208px] lg:h-[236px] xl:h-[265px]"
         />
       </div>
-      <div className="flex-1 flex flex-col gap-2 sm:gap-4">
+      <div className="flex-1 flex flex-col gap-2 sm:gap-4 ">
         <ul className="flex gap-2 w-full">
           {tags.map((tag) => (
             <li
