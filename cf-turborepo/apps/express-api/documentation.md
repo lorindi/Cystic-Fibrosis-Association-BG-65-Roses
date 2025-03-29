@@ -1,21 +1,21 @@
-# Документация на API за "65 Roses" - Асоциация за муковисцидоза
+# API Documentation for "65 Roses" - Cystic Fibrosis Association
 
-## Въведение
+## Introduction
 
-Това API предоставя функционалности за управление на уебсайта на Асоциация за муковисцидоза "65 Roses". API-то използва GraphQL и предоставя разнообразни възможности за управление на кампании, инициативи, конференции, събития, рецепти, истории на пациенти и други функционалности.
+This API provides functionalities for managing the website of the "65 Roses" Cystic Fibrosis Association. The API uses GraphQL and offers various capabilities for managing campaigns, initiatives, conferences, events, recipes, patient stories, and other functionalities.
 
-## Автентикация
+## Authentication
 
-API-то използва JWT (JSON Web Tokens) за автентикация. Токенът трябва да бъде включен в HTTP хедър `Authorization` във формат `Bearer [вашият_токен]`.
+The API uses JWT (JSON Web Tokens) for authentication. The token must be included in the HTTP header `Authorization` in the format `Bearer [your_token]`.
 
-### Регистрация
+### Registration
 
 ```graphql
 mutation {
   register(input: {
-    name: "Име Фамилия",
+    name: "First Last Name",
     email: "email@example.com",
-    password: "парола123"
+    password: "password123"
   }) {
     token
     user {
@@ -28,13 +28,13 @@ mutation {
 }
 ```
 
-### Вход
+### Login
 
 ```graphql
 mutation {
   login(input: {
     email: "email@example.com",
-    password: "парола123"
+    password: "password123"
   }) {
     token
     user {
@@ -47,7 +47,7 @@ mutation {
 }
 ```
 
-### Проверка на текущия потребител
+### Check Current User
 
 ```graphql
 query {
@@ -75,31 +75,31 @@ query {
 }
 ```
 
-### Актуализиране на профил
+### Update Profile
 
 ```graphql
 mutation {
   updateProfile(input: {
     avatar: "https://example.com/avatar.jpg",
-    bio: "Кратка биография",
+    bio: "Short biography",
     birthDate: "1990-01-01T00:00:00Z",
     address: {
-      city: "София",
+      city: "Sofia",
       postalCode: "1000",
-      street: "бул. Витоша 1"
+      street: "1 Vitosha Blvd."
     },
     contact: {
       phone: "+359888123456",
       alternativeEmail: "alt@example.com",
       emergencyContact: {
-        name: "Име на контакт при спешност",
+        name: "Emergency contact name",
         phone: "+359888654321",
-        relation: "роднина"
+        relation: "relative"
       }
     },
     diagnosed: true,
     diagnosisYear: 2010,
-    childName: "Име на детето" // за потребители с роля "родител"
+    childName: "Child's name" // for users with "parent" role
   }) {
     _id
     name
@@ -118,9 +118,9 @@ mutation {
 }
 ```
 
-## Управление на потребители
+## User Management
 
-### Промяна на ролята на потребител (само за админи)
+### Change User Role (admin only)
 
 ```graphql
 mutation {
@@ -133,13 +133,13 @@ mutation {
 }
 ```
 
-Възможни роли:
-- `patient` - пациент
-- `parent` - родител
-- `donor` - дарител
-- `admin` - администратор
+Possible roles:
+- `patient` - patient
+- `parent` - parent
+- `donor` - donor
+- `admin` - administrator
 
-### Добавяне на потребител към група (само за админи)
+### Add User to Group (admin only)
 
 ```graphql
 mutation {
@@ -151,16 +151,16 @@ mutation {
 }
 ```
 
-Възможни групи:
-- `campaigns` - кампании
-- `initiatives` - инициативи
-- `conferences` - конференции
-- `events` - събития
-- `news` - новини
-- `blog` - блог
-- `recipes` - рецепти
+Possible groups:
+- `campaigns` - campaigns
+- `initiatives` - initiatives
+- `conferences` - conferences
+- `events` - events
+- `news` - news
+- `blog` - blog
+- `recipes` - recipes
 
-### Премахване на потребител от група (само за админи)
+### Remove User from Group (admin only)
 
 ```graphql
 mutation {
@@ -172,7 +172,7 @@ mutation {
 }
 ```
 
-### Получаване на потребител по ID
+### Get User by ID
 
 ```graphql
 query {
@@ -186,7 +186,7 @@ query {
 }
 ```
 
-### Получаване на всички потребители (само за админи)
+### Get All Users (admin only)
 
 ```graphql
 query {
@@ -200,7 +200,7 @@ query {
 }
 ```
 
-### Получаване на потребители по роля (само за админи)
+### Get Users by Role (admin only)
 
 ```graphql
 query {
@@ -212,7 +212,7 @@ query {
 }
 ```
 
-### Получаване на потребители по група (само за админи)
+### Get Users by Group (admin only)
 
 ```graphql
 query {
@@ -224,24 +224,24 @@ query {
 }
 ```
 
-## Кампании
+## Campaigns
 
-### Създаване на кампания (изисква админ или група "кампании")
+### Create Campaign (requires admin or "campaigns" group)
 
 ```graphql
 mutation {
   createCampaign(input: {
-    title: "Кампания за набиране на средства",
-    description: "Подробно описание на кампанията",
+    title: "Fundraising Campaign",
+    description: "Detailed campaign description",
     goal: 10000,
     startDate: "2023-10-01T00:00:00Z",
     endDate: "2023-12-31T00:00:00Z",
     events: [
       {
-        title: "Стартово събитие",
-        description: "Откриване на кампанията",
+        title: "Launch event",
+        description: "Campaign kickoff",
         date: "2023-10-01T18:00:00Z",
-        location: "София, площад Славейков"
+        location: "Sofia, Slaveikov Square"
       }
     ]
   }) {
@@ -260,15 +260,15 @@ mutation {
 }
 ```
 
-### Актуализиране на кампания
+### Update Campaign
 
 ```graphql
 mutation {
   updateCampaign(
     id: "campaign_id",
     input: {
-      title: "Нов заголовок",
-      description: "Ново описание",
+      title: "New title",
+      description: "New description",
       goal: 15000,
       endDate: "2024-01-31T00:00:00Z"
     }
@@ -282,7 +282,7 @@ mutation {
 }
 ```
 
-### Изтриване на кампания
+### Delete Campaign
 
 ```graphql
 mutation {
@@ -290,17 +290,17 @@ mutation {
 }
 ```
 
-### Добавяне на събитие към кампания
+### Add Event to Campaign
 
 ```graphql
 mutation {
   addCampaignEvent(
     campaignId: "campaign_id",
     input: {
-      title: "Ново събитие",
-      description: "Описание на събитието",
+      title: "New event",
+      description: "Event description",
       date: "2023-11-15T19:00:00Z",
-      location: "Пловдив, Капана"
+      location: "Plovdiv, Kapana"
     }
   ) {
     id
@@ -311,14 +311,14 @@ mutation {
 }
 ```
 
-### Актуализиране на събитие в кампания
+### Update Campaign Event
 
 ```graphql
 mutation {
   updateCampaignEvent(
     eventId: "event_id",
     input: {
-      title: "Актуализирано заглавие",
+      title: "Updated title",
       date: "2023-11-16T19:00:00Z"
     }
   ) {
@@ -329,7 +329,7 @@ mutation {
 }
 ```
 
-### Изтриване на събитие от кампания
+### Delete Campaign Event
 
 ```graphql
 mutation {
@@ -337,7 +337,7 @@ mutation {
 }
 ```
 
-### Записване за кампания (само за пациенти и родители)
+### Join Campaign (patients and parents only)
 
 ```graphql
 mutation {
@@ -353,7 +353,7 @@ mutation {
 }
 ```
 
-### Отписване от кампания
+### Leave Campaign
 
 ```graphql
 mutation {
@@ -369,7 +369,7 @@ mutation {
 }
 ```
 
-### Получаване на кампания по ID
+### Get Campaign by ID
 
 ```graphql
 query {
@@ -401,7 +401,7 @@ query {
 }
 ```
 
-### Получаване на всички кампании
+### Get All Campaigns
 
 ```graphql
 query {
@@ -417,7 +417,7 @@ query {
 }
 ```
 
-### Получаване на събития на кампания
+### Get Campaign Events
 
 ```graphql
 query {
@@ -431,7 +431,7 @@ query {
 }
 ```
 
-### Получаване на кампаниите на текущия потребител
+### Get Current User's Campaigns
 
 ```graphql
 query {
@@ -447,26 +447,26 @@ query {
 }
 ```
 
-## Инициативи
+## Initiatives
 
-### Създаване на инициатива (изисква админ или група "инициативи")
+### Create Initiative (requires admin or "initiatives" group)
 
 ```graphql
 mutation {
   createInitiative(input: {
-    title: "Раздаване на медикаменти",
-    description: "Инициатива за безплатно раздаване на медикаменти",
+    title: "Medication Distribution",
+    description: "Free medication distribution initiative",
     startDate: "2023-10-15T00:00:00Z",
     endDate: "2023-11-15T00:00:00Z",
     items: [
       {
-        name: "Инхалатор",
-        description: "Стандартен инхалатор",
+        name: "Inhaler",
+        description: "Standard inhaler",
         quantity: 50
       },
       {
-        name: "Кависепт",
-        description: "Медикамент за инхалация",
+        name: "Kavisept",
+        description: "Medication for inhalation",
         quantity: 100
       }
     ]
@@ -484,15 +484,15 @@ mutation {
 }
 ```
 
-### Актуализиране на инициатива
+### Update Initiative
 
 ```graphql
 mutation {
   updateInitiative(
     id: "initiative_id",
     input: {
-      title: "Нов заголовок",
-      description: "Ново описание",
+      title: "New title",
+      description: "New description",
       endDate: "2023-12-15T00:00:00Z"
     }
   ) {
@@ -504,7 +504,7 @@ mutation {
 }
 ```
 
-### Изтриване на инициатива
+### Delete Initiative
 
 ```graphql
 mutation {
@@ -512,15 +512,15 @@ mutation {
 }
 ```
 
-### Добавяне на артикул към инициатива
+### Add Item to Initiative
 
 ```graphql
 mutation {
   addInitiativeItem(
     initiativeId: "initiative_id",
     input: {
-      name: "Мукоклиър",
-      description: "Медикамент за муковисцидоза",
+      name: "Mucocleer",
+      description: "Medication for cystic fibrosis",
       quantity: 30
     }
   ) {
@@ -533,7 +533,7 @@ mutation {
 }
 ```
 
-### Актуализиране на артикул в инициатива
+### Update Initiative Item
 
 ```graphql
 mutation {
@@ -552,7 +552,7 @@ mutation {
 }
 ```
 
-### Изтриване на артикул от инициатива
+### Delete Initiative Item
 
 ```graphql
 mutation {
@@ -560,7 +560,7 @@ mutation {
 }
 ```
 
-### Записване за инициатива (само за пациенти)
+### Join Initiative (patients only)
 
 ```graphql
 mutation {
@@ -575,7 +575,7 @@ mutation {
 }
 ```
 
-### Отписване от инициатива
+### Leave Initiative
 
 ```graphql
 mutation {
@@ -590,7 +590,7 @@ mutation {
 }
 ```
 
-### Получаване на инициатива по ID
+### Get Initiative by ID
 
 ```graphql
 query {
@@ -619,7 +619,7 @@ query {
 }
 ```
 
-### Получаване на всички инициативи
+### Get All Initiatives
 
 ```graphql
 query {
@@ -638,7 +638,7 @@ query {
 }
 ```
 
-### Получаване на инициативите на текущия потребител
+### Get Current User's Initiatives
 
 ```graphql
 query {
@@ -656,23 +656,23 @@ query {
 }
 ```
 
-## Конференции
+## Conferences
 
-### Създаване на конференция (изисква админ или група "конференции")
+### Create Conference (requires admin or "conferences" group)
 
 ```graphql
 mutation {
   createConference(input: {
-    title: "Образователна конференция",
-    description: "Конференция с лекции за пациенти и родители",
+    title: "Educational Conference",
+    description: "Conference with lectures for patients and parents",
     startDate: "2023-11-10T09:00:00Z",
     endDate: "2023-11-12T18:00:00Z",
-    location: "Медицински университет - София",
+    location: "Medical University - Sofia",
     agenda: [
       {
-        title: "Нови терапии при муковисцидоза",
-        speaker: "Д-р Иван Иванов",
-        description: "Преглед на новите терапевтични подходи",
+        title: "New therapies for cystic fibrosis",
+        speaker: "Dr. Ivan Ivanov",
+        description: "Overview of new therapeutic approaches",
         startTime: "2023-11-10T10:00:00Z",
         endTime: "2023-11-10T11:30:00Z"
       }
@@ -690,16 +690,16 @@ mutation {
 }
 ```
 
-### Актуализиране на конференция
+### Update Conference
 
 ```graphql
 mutation {
   updateConference(
     id: "conference_id",
     input: {
-      title: "Нов заголовок",
-      description: "Ново описание",
-      location: "Нова локация"
+      title: "New title",
+      description: "New description",
+      location: "New location"
     }
   ) {
     id
@@ -710,7 +710,7 @@ mutation {
 }
 ```
 
-### Изтриване на конференция
+### Delete Conference
 
 ```graphql
 mutation {
@@ -718,16 +718,16 @@ mutation {
 }
 ```
 
-### Добавяне на сесия към конференция
+### Add Session to Conference
 
 ```graphql
 mutation {
   addConferenceSession(
     conferenceId: "conference_id",
     input: {
-      title: "Хранене при муковисцидоза",
-      speaker: "Д-р Мария Петрова",
-      description: "Правилно хранене за пациенти",
+      title: "Nutrition for cystic fibrosis",
+      speaker: "Dr. Maria Petrova",
+      description: "Proper nutrition for patients",
       startTime: "2023-11-10T13:00:00Z",
       endTime: "2023-11-10T14:30:00Z"
     }
@@ -741,15 +741,15 @@ mutation {
 }
 ```
 
-### Актуализиране на сесия в конференция
+### Update Conference Session
 
 ```graphql
 mutation {
   updateConferenceSession(
     sessionId: "session_id",
     input: {
-      title: "Актуализирано заглавие",
-      speaker: "Нов лектор",
+      title: "Updated title",
+      speaker: "New speaker",
       startTime: "2023-11-10T13:30:00Z"
     }
   ) {
@@ -762,7 +762,7 @@ mutation {
 }
 ```
 
-### Изтриване на сесия от конференция
+### Delete Conference Session
 
 ```graphql
 mutation {
@@ -770,7 +770,7 @@ mutation {
 }
 ```
 
-### Записване за конференция
+### Join Conference
 
 ```graphql
 mutation {
@@ -785,7 +785,7 @@ mutation {
 }
 ```
 
-### Отписване от конференция
+### Leave Conference
 
 ```graphql
 mutation {
@@ -800,7 +800,7 @@ mutation {
 }
 ```
 
-### Получаване на конференция по ID
+### Get Conference by ID
 
 ```graphql
 query {
@@ -831,7 +831,7 @@ query {
 }
 ```
 
-### Получаване на всички конференции
+### Get All Conferences
 
 ```graphql
 query {
@@ -850,18 +850,18 @@ query {
 }
 ```
 
-## Събития за разтоварване
+## Recreational Events
 
-### Създаване на събитие (изисква админ или група "събития")
+### Create Event (requires admin or "events" group)
 
 ```graphql
 mutation {
   createEvent(input: {
-    title: "Планински поход",
-    description: "Поход до връх Ботев",
-    type: "спортно",
+    title: "Mountain hike",
+    description: "Hike to Botev Peak",
+    type: "sports",
     date: "2023-11-20T09:00:00Z",
-    location: "Стара Планина"
+    location: "Stara Planina"
   }) {
     id
     title
@@ -872,15 +872,15 @@ mutation {
 }
 ```
 
-### Актуализиране на събитие
+### Update Event
 
 ```graphql
 mutation {
   updateEvent(
     id: "event_id",
     input: {
-      title: "Нов заголовок",
-      description: "Ново описание",
+      title: "New title",
+      description: "New description",
       date: "2023-11-21T09:00:00Z"
     }
   ) {
@@ -892,7 +892,7 @@ mutation {
 }
 ```
 
-### Изтриване на събитие
+### Delete Event
 
 ```graphql
 mutation {
@@ -900,7 +900,7 @@ mutation {
 }
 ```
 
-### Записване за събитие
+### Join Event
 
 ```graphql
 mutation {
@@ -915,7 +915,7 @@ mutation {
 }
 ```
 
-### Отписване от събитие
+### Leave Event
 
 ```graphql
 mutation {
@@ -930,7 +930,7 @@ mutation {
 }
 ```
 
-### Получаване на събитие по ID
+### Get Event by ID
 
 ```graphql
 query {
@@ -953,7 +953,7 @@ query {
 }
 ```
 
-### Получаване на всички събития
+### Get All Events
 
 ```graphql
 query {
@@ -968,9 +968,9 @@ query {
 }
 ```
 
-## Дарители и дарения
+## Donors and Donations
 
-### Получаване на дарител по ID
+### Get Donor by ID
 
 ```graphql
 query {
@@ -995,7 +995,7 @@ query {
 }
 ```
 
-### Получаване на всички дарители
+### Get All Donors
 
 ```graphql
 query {
@@ -1010,7 +1010,7 @@ query {
 }
 ```
 
-### Създаване на дарение
+### Create Donation
 
 ```graphql
 mutation {
@@ -1038,18 +1038,18 @@ mutation {
 }
 ```
 
-## Благотворителен магазин
+## Charity Shop
 
-### Създаване на артикул в магазина (изисква админ)
+### Create Store Item (admin only)
 
 ```graphql
 mutation {
   createStoreItem(input: {
-    name: "Подкрепа за изследвания",
-    description: "Подкрепете изследванията на муковисцидоза",
+    name: "Research Support",
+    description: "Support cystic fibrosis research",
     price: 50,
     image: "https://example.com/research.jpg",
-    category: "изследвания"
+    category: "research"
   }) {
     id
     name
@@ -1059,14 +1059,14 @@ mutation {
 }
 ```
 
-### Актуализиране на артикул в магазина
+### Update Store Item
 
 ```graphql
 mutation {
   updateStoreItem(
     id: "item_id",
     input: {
-      name: "Ново име",
+      name: "New name",
       price: 55,
       available: true
     }
@@ -1079,7 +1079,7 @@ mutation {
 }
 ```
 
-### Изтриване на артикул от магазина
+### Delete Store Item
 
 ```graphql
 mutation {
@@ -1087,7 +1087,7 @@ mutation {
 }
 ```
 
-### Получаване на артикул от магазина по ID
+### Get Store Item by ID
 
 ```graphql
 query {
@@ -1103,7 +1103,7 @@ query {
 }
 ```
 
-### Получаване на всички артикули от магазина
+### Get All Store Items
 
 ```graphql
 query {
@@ -1119,17 +1119,17 @@ query {
 }
 ```
 
-## Новини
+## News
 
-### Създаване на новина (изисква админ или група "новини")
+### Create News (requires admin or "news" group)
 
 ```graphql
 mutation {
   createNews(input: {
-    title: "Нова терапия одобрена",
-    content: "Детайлно описание на новата терапия...",
+    title: "New therapy approved",
+    content: "Detailed description of the new therapy...",
     image: "https://example.com/therapy.jpg",
-    tags: ["терапия", "лечение", "изследване"]
+    tags: ["therapy", "treatment", "research"]
   }) {
     id
     title
@@ -1139,16 +1139,16 @@ mutation {
 }
 ```
 
-### Актуализиране на новина
+### Update News
 
 ```graphql
 mutation {
   updateNews(
     id: "news_id",
     input: {
-      title: "Актуализирано заглавие",
-      content: "Актуализирано съдържание",
-      tags: ["ново", "терапия"]
+      title: "Updated title",
+      content: "Updated content",
+      tags: ["new", "therapy"]
     }
   ) {
     id
@@ -1159,7 +1159,7 @@ mutation {
 }
 ```
 
-### Изтриване на новина
+### Delete News
 
 ```graphql
 mutation {
@@ -1167,7 +1167,7 @@ mutation {
 }
 ```
 
-### Получаване на новина по ID
+### Get News Item by ID
 
 ```graphql
 query {
@@ -1187,7 +1187,7 @@ query {
 }
 ```
 
-### Получаване на всички новини
+### Get All News
 
 ```graphql
 query {
@@ -1205,17 +1205,17 @@ query {
 }
 ```
 
-## Блог
+## Blog
 
-### Създаване на блог пост (трябва да бъде одобрен от админ или група "блог")
+### Create Blog Post (must be approved by admin or "blog" group)
 
 ```graphql
 mutation {
   createBlogPost(input: {
-    title: "Моят опит с муковисцидоза",
-    content: "Подробно описание на моя опит...",
+    title: "My experience with cystic fibrosis",
+    content: "Detailed description of my experience...",
     image: "https://example.com/blog.jpg",
-    tags: ["опит", "мнение", "живот с муковисцидоза"]
+    tags: ["experience", "opinion", "living with cystic fibrosis"]
   }) {
     id
     title
@@ -1226,16 +1226,16 @@ mutation {
 }
 ```
 
-### Актуализиране на блог пост
+### Update Blog Post
 
 ```graphql
 mutation {
   updateBlogPost(
     id: "post_id",
     input: {
-      title: "Актуализирано заглавие",
-      content: "Актуализирано съдържание",
-      tags: ["ново", "опит"]
+      title: "Updated title",
+      content: "Updated content",
+      tags: ["new", "experience"]
     }
   ) {
     id
@@ -1246,7 +1246,7 @@ mutation {
 }
 ```
 
-### Изтриване на блог пост
+### Delete Blog Post
 
 ```graphql
 mutation {
@@ -1254,7 +1254,7 @@ mutation {
 }
 ```
 
-### Одобряване на блог пост (изисква админ или група "блог")
+### Approve Blog Post (requires admin or "blog" group)
 
 ```graphql
 mutation {
@@ -1266,12 +1266,12 @@ mutation {
 }
 ```
 
-### Добавяне на коментар към блог пост
+### Add Comment to Blog Post
 
 ```graphql
 mutation {
   addComment(input: {
-    content: "Много полезна информация!",
+    content: "Very useful information!",
     postId: "post_id"
   }) {
     id
@@ -1285,7 +1285,7 @@ mutation {
 }
 ```
 
-### Изтриване на коментар
+### Delete Comment
 
 ```graphql
 mutation {
@@ -1293,7 +1293,7 @@ mutation {
 }
 ```
 
-### Получаване на блог пост по ID
+### Get Blog Post by ID
 
 ```graphql
 query {
@@ -1322,7 +1322,7 @@ query {
 }
 ```
 
-### Получаване на всички блог постове
+### Get All Blog Posts
 
 ```graphql
 query {
@@ -1344,28 +1344,28 @@ query {
 }
 ```
 
-## Рецепти
+## Recipes
 
-### Създаване на рецепта (трябва да бъде одобрена от админ или група "рецепти")
+### Create Recipe (must be approved by admin or "recipes" group)
 
 ```graphql
 mutation {
   createRecipe(input: {
-    title: "Протеинов шейк",
-    description: "Подходящ за прием с Кафтрио",
+    title: "Protein shake",
+    description: "Suitable for intake with Kaftrio",
     image: "https://example.com/shake.jpg",
     preparationTime: 10,
     cookingTime: 0,
     servings: 1,
     ingredients: [
-      "1 банан",
-      "200мл мляко",
-      "2 лъжици протеин",
-      "1 лъжица мед"
+      "1 banana",
+      "200ml milk",
+      "2 tablespoons protein",
+      "1 tablespoon honey"
     ],
     instructions: [
-      "Смесете всички съставки в блендер",
-      "Разбъркайте до гладка консистенция"
+      "Mix all ingredients in a blender",
+      "Stir until smooth consistency"
     ],
     nutritionalInfo: {
       calories: 350,
@@ -1374,7 +1374,7 @@ mutation {
       fat: 5,
       vitamins: [
         {
-          name: "Витамин C",
+          name: "Vitamin C",
           amount: 15,
           unit: "mg"
         }
@@ -1388,20 +1388,20 @@ mutation {
 }
 ```
 
-### Актуализиране на рецепта
+### Update Recipe
 
 ```graphql
 mutation {
   updateRecipe(
     id: "recipe_id",
     input: {
-      title: "Актуализирано заглавие",
-      description: "Актуализирано описание",
+      title: "Updated title",
+      description: "Updated description",
       ingredients: [
-        "1 голям банан",
-        "250мл бадемово мляко",
-        "2 лъжици протеин",
-        "1 лъжица мед"
+        "1 large banana",
+        "250ml almond milk",
+        "2 tablespoons protein",
+        "1 tablespoon honey"
       ]
     }
   ) {
@@ -1413,7 +1413,7 @@ mutation {
 }
 ```
 
-### Изтриване на рецепта
+### Delete Recipe
 
 ```graphql
 mutation {
@@ -1421,7 +1421,7 @@ mutation {
 }
 ```
 
-### Одобряване на рецепта (изисква админ или група "рецепти")
+### Approve Recipe (requires admin or "recipes" group)
 
 ```graphql
 mutation {
@@ -1433,7 +1433,7 @@ mutation {
 }
 ```
 
-### Получаване на рецепта по ID
+### Get Recipe by ID
 
 ```graphql
 query {
@@ -1469,7 +1469,7 @@ query {
 }
 ```
 
-### Получаване на всички рецепти
+### Get All Recipes
 
 ```graphql
 query {
@@ -1493,15 +1493,15 @@ query {
 }
 ```
 
-## Истории
+## Stories
 
-### Създаване на история (трябва да бъде одобрена от админ)
+### Create Story (must be approved by admin)
 
 ```graphql
 mutation {
   createStory(input: {
-    title: "Моят път с муковисцидозата",
-    content: "Детайлно описание на моя опит и път...",
+    title: "My journey with cystic fibrosis",
+    content: "Detailed description of my experience and journey...",
     image: "https://example.com/story.jpg"
   }) {
     id
@@ -1511,15 +1511,15 @@ mutation {
 }
 ```
 
-### Актуализиране на история
+### Update Story
 
 ```graphql
 mutation {
   updateStory(
     id: "story_id",
     input: {
-      title: "Актуализирано заглавие",
-      content: "Актуализирано съдържание"
+      title: "Updated title",
+      content: "Updated content"
     }
   ) {
     id
@@ -1529,7 +1529,7 @@ mutation {
 }
 ```
 
-### Изтриване на история
+### Delete Story
 
 ```graphql
 mutation {
@@ -1537,7 +1537,7 @@ mutation {
 }
 ```
 
-### Одобряване на история (изисква админ)
+### Approve Story (requires admin)
 
 ```graphql
 mutation {
@@ -1549,7 +1549,7 @@ mutation {
 }
 ```
 
-### Получаване на история по ID
+### Get Story by ID
 
 ```graphql
 query {
@@ -1569,7 +1569,7 @@ query {
 }
 ```
 
-### Получаване на всички истории
+### Get All Stories
 
 ```graphql
 query {
@@ -1587,16 +1587,16 @@ query {
 }
 ```
 
-## Чат съобщения
+## Chat Messages
 
-### Изпращане на съобщение
+### Send Message
 
 ```graphql
 mutation {
   sendChatMessage(input: {
-    content: "Здравейте! Имам въпрос относно...",
-    receiverId: "user_id",    # ID на получателя (опционално)
-    roomId: "room_id"         # ID на стая (опционално)
+    content: "Hello! I have a question about...",
+    receiverId: "user_id",    # ID of recipient (optional)
+    roomId: "room_id"         # ID of room (optional)
   }) {
     id
     content
@@ -1614,7 +1614,7 @@ mutation {
 }
 ```
 
-### Получаване на съобщения
+### Get Messages
 
 ```graphql
 query {
@@ -1635,17 +1635,18 @@ query {
 }
 ```
 
-## Изкуствен интелект
+## Artificial Intelligence
 
-### Задаване на въпрос към AI
+### Ask a Question to AI
 
 ```graphql
 query {
-  askAI(query: "Какви са симптомите на муковисцидоза?") {
+  askAI(query: "What are the symptoms of cystic fibrosis?") {
     id
     query
     response
     createdAt
   }
 }
-``` 
+```
+```
