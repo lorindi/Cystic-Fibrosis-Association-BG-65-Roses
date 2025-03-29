@@ -1,7 +1,8 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { IUserDocument } from './user.types';
 
 export interface ICampaignEvent {
+  _id?: Types.ObjectId;
   title: string;
   description: string;
   date: Date;
@@ -16,6 +17,7 @@ export interface ICampaignDocument extends Document {
   startDate: Date;
   endDate?: Date;
   events: ICampaignEvent[];
+  participants: IUserDocument['_id'][];
   createdBy: IUserDocument['_id'];
   createdAt: Date;
   updatedAt: Date;
