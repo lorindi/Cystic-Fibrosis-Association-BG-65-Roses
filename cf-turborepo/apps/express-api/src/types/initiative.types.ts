@@ -1,7 +1,8 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { IUserDocument } from './user.types';
 
 export interface IInitiativeItem {
+  _id?: Types.ObjectId;
   name: string;
   description: string;
   quantity: number;
