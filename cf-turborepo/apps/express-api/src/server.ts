@@ -3,8 +3,8 @@ import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { typeDefs } from './graphql/schema';
-import { resolvers } from './graphql/resolvers';
+import { typeDefs } from './graphql/schema/index';
+import { resolvers } from './graphql/resolvers/index';
 
 // Зареждане на env променливи
 dotenv.config();
