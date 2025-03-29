@@ -1,7 +1,8 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { IUserDocument } from './user.types';
 
 export interface IConferenceSession {
+  _id?: Types.ObjectId;
   title: string;
   speaker: string;
   description: string;
