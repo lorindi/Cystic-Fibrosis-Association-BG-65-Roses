@@ -73,6 +73,8 @@ export const typeDefs = gql`
     startDate: Date!
     endDate: Date
     events: [CampaignEvent!]!
+    participants: [User!]!
+    participantsCount: Int!
     createdBy: User!
     createdAt: Date!
     updatedAt: Date!
@@ -469,6 +471,7 @@ export const typeDefs = gql`
     getCampaign(id: ID!): Campaign
     getCampaigns: [Campaign!]
     getCampaignEvents(campaignId: ID!): [CampaignEvent!]
+    getUserCampaigns: [Campaign!]
     
     # Initiatives
     getInitiative(id: ID!): Initiative
@@ -531,6 +534,8 @@ export const typeDefs = gql`
     addCampaignEvent(campaignId: ID!, input: CampaignEventInput!): CampaignEvent!
     updateCampaignEvent(eventId: ID!, input: CampaignEventInput!): CampaignEvent!
     deleteCampaignEvent(eventId: ID!): Boolean!
+    joinCampaign(id: ID!): Campaign!
+    leaveCampaign(id: ID!): Campaign!
     
     # Initiatives
     createInitiative(input: InitiativeInput!): Initiative!
@@ -548,6 +553,9 @@ export const typeDefs = gql`
     deleteConference(id: ID!): Boolean!
     joinConference(id: ID!): Conference!
     leaveConference(id: ID!): Conference!
+    addConferenceSession(conferenceId: ID!, input: ConferenceSessionInput!): ConferenceSession!
+    updateConferenceSession(sessionId: ID!, input: ConferenceSessionInput!): ConferenceSession!
+    deleteConferenceSession(sessionId: ID!): Boolean!
     
     # Events
     createEvent(input: EventInput!): Event!
