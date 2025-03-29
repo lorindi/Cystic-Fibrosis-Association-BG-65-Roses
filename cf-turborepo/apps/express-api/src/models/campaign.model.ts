@@ -36,6 +36,10 @@ const CampaignSchema = new Schema<ICampaignDocument>({
     type: Date 
   },
   events: [CampaignEventSchema],
+  participants: [{ 
+    type: Schema.Types.ObjectId, 
+    ref: 'User'
+  }],
   createdBy: { 
     type: Schema.Types.ObjectId, 
     ref: 'User',
@@ -51,6 +55,7 @@ const CampaignSchema = new Schema<ICampaignDocument>({
 CampaignSchema.index({ startDate: 1 });
 CampaignSchema.index({ endDate: 1 });
 CampaignSchema.index({ createdBy: 1 });
+CampaignSchema.index({ participants: 1 });
 
 // Виртуално поле за процента на изпълнение
 CampaignSchema.virtual('percentCompleted').get(function() {
@@ -70,6 +75,11 @@ CampaignSchema.virtual('isActive').get(function() {
     return now >= this.startDate && now <= this.endDate;
   }
   return now >= this.startDate;
+});
+
+// Виртуално поле за броя на участниците
+CampaignSchema.virtual('participantsCount').get(function() {
+  return this.participants.length;
 });
 
 const Campaign = mongoose.model<ICampaignDocument>('Campaign', CampaignSchema);
