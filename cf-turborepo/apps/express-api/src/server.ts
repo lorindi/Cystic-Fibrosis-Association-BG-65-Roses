@@ -1,49 +1,60 @@
-// Simple Express server with TypeScript
-import express, { Request, Response, RequestHandler } from 'express';
+import express from 'express';
 import cors from 'cors';
-import usersRouter from './routes/users.js';
-import { User, IdParam } from './types/index.js';
+import { ApolloServer } from 'apollo-server-express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import { typeDefs } from './graphql/schema';
+import { resolvers } from './graphql/resolvers';
 
+// Зареждане на env променливи
+dotenv.config();
+
+// Инициализиране на Express app
 const app = express();
-const PORT = process.env.PORT || 5001;
-
-// Mock data
-const users: User[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'admin',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    role: 'user',
-    createdAt: new Date().toISOString()
-  }
-];
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/express/users', usersRouter);
+// Връзка с MongoDB
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/cystic-fibrosis-db');
+    console.log(`MongoDB connected: ${conn.connection.host}`);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(`Error: ${error.message}`);
+    } else {
+      console.error(`Unexpected error occurred while connecting to the database`);
+    }
+    process.exit(1);
+  }
+};
 
-// Legacy API routes directly in server.js
-app.get('/api/express/users-legacy', ((_req: Request, res: Response) => {
-  res.json(users);
-}) as RequestHandler);
+// Настройка на Apollo Server
+async function startApolloServer() {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: ({ req }) => ({ req })
+  });
 
-app.get('/api/express/users-legacy/:id', ((req: Request<IdParam>, res: Response) => {
-  const user = users.find(u => u.id === req.params.id);
-  if (!user) return res.status(404).send('User not found');
-  res.json(user);
-}) as RequestHandler<IdParam>);
+  await server.start();
+  // Фиксиране на проблем с типовете на Express и Apollo
+  server.applyMiddleware({ 
+    app: app as any, 
+    path: '/graphql' 
+  });
+  
+  // Стартиране на сървъра
+  app.listen(PORT, () => {
+    console.log(`Express server started on port ${PORT}`);
+    console.log(`GraphQL endpoint: http://localhost:${PORT}${server.graphqlPath}`);
+  });
+}
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Express server running on port ${PORT}`);
+// Свързване с базата данни и стартиране на сървъра
+connectDB().then(() => {
+  startApolloServer();
 }); 
