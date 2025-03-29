@@ -1,46 +1,83 @@
-# Express API with TypeScript
+# Express GraphQL API за Сдружение за Муковисцидоза "65 Рози"
 
-This is a simple Express API built with TypeScript and ES modules.
+Това е GraphQL API, което обслужва различни функционалности за уебсайта на Сдружение за Муковисцидоза "65 Рози".
 
-## Setup
+## Функционалности
 
-1. Install dependencies:
-```
+- **Автентикация и оторизация**: Регистрация, вход и управление на потребители с различни роли и групи.
+- **Кампании**: Управление на благотворителни кампании за набиране на средства.
+- **Инициативи**: Организиране на инициативи за раздаване на медикаменти и оборудване.
+- **Конференции**: Организиране на образователни конференции с детайлни програми.
+- **Събития**: Управление на събития като спортни състезания, планински преходи и други.
+- **Благотворителен магазин**: Артикули, благодетели и дарения.
+- **Съдържание**: Новини, блог постове, рецепти и истории.
+- **Чат**: Реалновременна комуникация между потребители.
+- **AI помощник**: Интеграция с изкуствен интелект за отговаряне на въпроси.
+
+## Технологии
+
+- Express.js
+- Apollo Server
+- GraphQL
+- MongoDB с Mongoose
+- JSON Web Tokens за автентикация
+
+## Стартиране на проекта
+
+### Предварителни изисквания
+
+- Node.js 16+ инсталиран
+- MongoDB инсталирана и стартирана локално или достъп до MongoDB Atlas
+
+### Инсталиране
+
+```bash
+# Инсталиране на зависимостите
 npm install
 ```
 
-2. Build the TypeScript code:
+### Настройка на средата
+
+Създайте `.env` файл в главната директория със следното съдържание:
+
 ```
-npm run build
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/cystic-fibrosis-db
+JWT_SECRET=your_jwt_secret
 ```
 
-3. Start the server:
-```
+### Стартиране
+
+```bash
+# Стартиране в режим разработка
+npm run dev
+
+# Стартиране в продуктивен режим
+npm run build
 npm start
 ```
 
-4. Start in development mode (with hot reloading):
+## GraphQL Ендпойнт
+
+След стартиране на сървъра, GraphQL API ще бъде достъпно на:
+
 ```
-npm run dev
+http://localhost:5000/graphql
 ```
 
-## API Endpoints
+## Структура на проекта
 
-### Users
-- `GET /api/express/users` - Get all users
-- `GET /api/express/users/:id` - Get a user by ID
-- `POST /api/express/users` - Create a new user
-- `PATCH /api/express/users/:id` - Update a user
-- `DELETE /api/express/users/:id` - Delete a user
+- `src/` - Основен кодов директория
+  - `models/` - MongoDB модели
+  - `types/` - TypeScript типове и интерфейси
+  - `graphql/` - GraphQL схема и резолвери
+  - `controllers/` - Контролери за допълнителни REST ендпойнти
+  - `services/` - Бизнес логика, отделена от резолверите
+  - `routes/` - Express маршрути за REST API (ако е необходимо)
+  - `server.ts` - Входна точка на приложението
 
-### Legacy Endpoints
-- `GET /api/express/users-legacy` - Get all users (legacy endpoint)
-- `GET /api/express/users-legacy/:id` - Get a user by ID (legacy endpoint)
+## Документация на API
 
-## Project Structure
+GraphQL API предоставя вградена документация през GraphQL Playground (достъпна на /graphql ендпойнта).
 
-- `src/server.ts` - Main server file
-- `src/routes/` - API routes
-- `src/controllers/` - Request handlers
-- `src/types/` - TypeScript interfaces
-- `dist/` - Compiled JavaScript code 
+За по-подробна информация за всяка функционалност и модел, моля вижте кода и коментарите в съответните файлове. 
