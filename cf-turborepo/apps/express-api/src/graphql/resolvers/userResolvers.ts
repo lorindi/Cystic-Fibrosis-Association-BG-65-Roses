@@ -2,6 +2,8 @@ import { UserInputError } from 'apollo-server-express';
 import { UserRole, UserGroup } from '../../types/user.types';
 import User from '../../models/user.model';
 import { ContextType, checkAuth, checkPermissions, generateToken } from '../utils/auth';
+import { sendVerificationEmail } from '../../services/emailService';
+import crypto from 'crypto';
 
 export const userResolvers = {
   Query: {
@@ -75,15 +77,35 @@ export const userResolvers = {
           email: input.email,
           password: input.password, // Password will be hashed in pre-save hook
           // Проверка дали имейлът е посоченият - ако да, задава роля админ
-          role: input.email === "loramitova9@gmail.com" ? UserRole.ADMIN : UserRole.DONOR,
+          role: input.email === process.env.ADMIN_EMAIL ? UserRole.ADMIN : UserRole.DONOR,
           isEmailVerified: false
         });
+        
+        // Генериране на токен за потвърждение на имейла
+        const verificationToken = newUser.generateEmailVerificationToken();
         
         // Save user
         const savedUser = await newUser.save();
         
-        // Generate token
+        // Generate token for auth
         const token = generateToken(savedUser);
+        
+        // Изпращане на имейл за потвърждение (асинхронно, не блокира регистрацията)
+        try {
+          const emailSent = await sendVerificationEmail(
+            savedUser.email,
+            savedUser.name,
+            verificationToken
+          );
+          
+          if (emailSent) {
+            console.log('Verification email sent successfully to:', savedUser.email);
+          } else {
+            console.error('Failed to send verification email to:', savedUser.email);
+          }
+        } catch (emailError) {
+          console.error('Error in email sending process:', emailError);
+        }
         
         return {
           token,
@@ -96,7 +118,98 @@ export const userResolvers = {
         throw new Error('Unexpected error during registration');
       }
     },
+    resendVerificationEmail: async (_: unknown, __: unknown, context: ContextType) => {
+      const user = checkAuth(context);
+      
+      try {
+        const userData = await User.findById(user.id);
+        if (!userData) {
+          throw new Error('User not found');
+        }
+        
+        if (userData.isEmailVerified) {
+          throw new Error('Email is already verified');
+        }
+        
+        // Генериране на нов токен за потвърждение
+        const verificationToken = userData.generateEmailVerificationToken();
+        await userData.save();
+        
+        // Изпращане на имейл за потвърждение
+        const emailSent = await sendVerificationEmail(
+          userData.email,
+          userData.name,
+          verificationToken
+        );
+        
+        if (!emailSent) {
+          throw new Error('Failed to send verification email');
+        }
+        
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error resending verification email: ${err.message}`);
+        }
+        throw new Error('Unexpected error during email verification resend');
+      }
+    },
     
+    verifyEmail: async (_: unknown, { token }: { token: string }) => {
+      try {
+        // Хеширане на токена за сравнение
+        const hashedToken = crypto
+          .createHash('sha256')
+          .update(token)
+          .digest('hex');
+        
+        // Търсене на потребител с този токен и валиден период на експирация
+        const user = await User.findOne({
+          emailVerificationToken: hashedToken,
+          emailVerificationExpires: { $gt: Date.now() }
+        });
+        
+        if (!user) {
+          return {
+            success: false,
+            message: 'Invalid or expired verification token',
+            user: null
+          };
+        }
+        
+        // Актуализиране на потребителя като потвърден
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        
+        await user.save();
+        
+        // Генериране на нов токен след успешна верификация
+        const authToken = generateToken(user);
+        
+        return {
+          success: true,
+          message: 'Email verified successfully',
+          user: user,
+          token: authToken // Добавяме нов JWT токен за автоматично логване
+        };
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("Email verification error:", err);
+          return {
+            success: false,
+            message: `Error verifying email: ${err.message}`,
+            user: null
+          };
+        }
+        return {
+          success: false,
+          message: 'Unexpected error during email verification',
+          user: null
+        };
+      }
+    },
+
     login: async (_: unknown, { input }: { input: { email: string; password: string } }) => {
       try {
         // Find user by email
