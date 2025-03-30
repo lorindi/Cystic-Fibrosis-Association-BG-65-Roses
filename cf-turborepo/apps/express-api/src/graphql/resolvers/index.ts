@@ -2,6 +2,13 @@ import { userResolvers } from './userResolvers';
 import { campaignResolvers } from './campaignResolvers';
 import { initiativeResolvers } from './initiativeResolvers';
 import { conferenceResolvers } from './conferenceResolvers';
+import { eventResolvers } from './eventResolvers';
+import { storeResolvers } from './storeResolvers';
+import { chatResolvers } from './chatResolvers';
+import { blogResolvers } from './blogResolvers';
+import { newsResolvers } from './newsResolvers';
+import { recipeResolvers } from './recipeResolvers';
+import { storyResolvers } from './storyResolvers';
 
 // Date scalar type
 const dateScalar = {
@@ -36,6 +43,13 @@ export const resolvers = {
     ...campaignResolvers.Query,
     ...initiativeResolvers.Query,
     ...conferenceResolvers.Query,
+    ...eventResolvers.Query,
+    ...storeResolvers.Query,
+    ...chatResolvers.Query,
+    ...blogResolvers.Query,
+    ...newsResolvers.Query,
+    ...recipeResolvers.Query,
+    ...storyResolvers.Query,
   },
   
   Mutation: {
@@ -43,7 +57,18 @@ export const resolvers = {
     ...campaignResolvers.Mutation,
     ...initiativeResolvers.Mutation,
     ...conferenceResolvers.Mutation,
+    ...eventResolvers.Mutation,
+    ...storeResolvers.Mutation,
+    ...chatResolvers.Mutation,
+    ...blogResolvers.Mutation,
+    ...newsResolvers.Mutation,
+    ...recipeResolvers.Mutation,
+    ...storyResolvers.Mutation,
   },
   
+  // Специфични resolver-и за типове
+  Donor: storeResolvers.Donor,
+  
+  // Добавяме subscription-и
   ...subscriptionResolvers,
-}; 
+};
