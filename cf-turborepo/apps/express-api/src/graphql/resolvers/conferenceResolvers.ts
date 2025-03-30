@@ -12,12 +12,12 @@ export const conferenceResolvers = {
           .populate('participants');
           
         if (!conference) {
-          throw new Error('Конференцията не е намерена');
+          throw new Error('Conference not found');
         }
         
         return conference;
       } catch (err) {
-        throw new Error('Грешка при извличане на конференция');
+        throw new Error('Error fetching conference');
       }
     },
     
@@ -28,7 +28,7 @@ export const conferenceResolvers = {
           .populate('participants')
           .sort({ startDate: -1 });
       } catch (err) {
-        throw new Error('Грешка при извличане на конференции');
+        throw new Error('Error fetching conferences');
       }
     }
   },
