@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { typeDefs } from './graphql/schema/index';
 import { resolvers } from './graphql/resolvers/index';
-
+import { testEmailConnection, testOAuth2Connection } from './services/emailService';
 // Зареждане на env променливи
 dotenv.config();
 
@@ -22,6 +22,8 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/cystic-fibrosis-db');
     console.log(`MongoDB connected: ${conn.connection.host}`);
+    await testOAuth2Connection();
+    await testEmailConnection();
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error(`Error: ${error.message}`);

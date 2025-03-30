@@ -10,6 +10,10 @@ export const mutationTypeDefs = gql`
     setUserRole(userId: ID!, role: UserRole!): User!
     addUserToGroup(userId: ID!, group: UserGroup!): User!
     removeUserFromGroup(userId: ID!, group: UserGroup!): User!
+
+    # Email verification
+    resendVerificationEmail: Boolean!
+    verifyEmail(token: String!): VerificationResponse!
     
     # Campaigns
     createCampaign(input: CampaignInput!): Campaign!

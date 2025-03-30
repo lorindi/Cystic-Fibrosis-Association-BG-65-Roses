@@ -13,6 +13,13 @@ export const userTypeDefs = gql`
     createdAt: Date!
     updatedAt: Date!
   }
+
+  type VerificationResponse {
+    success: Boolean!
+    message: String!
+    user: User
+    token: String
+  }
   
   type UserProfile {
     avatar: String
