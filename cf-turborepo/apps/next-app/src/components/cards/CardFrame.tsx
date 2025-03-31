@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React from "react";
-import logoLung from "../../../../public/images/logoLung.png";
+import logoLung from "../../../public/images/logoLung.png";
 function CardFrame({ imageUrls }: { imageUrls: string[] }) {
   return (
     <div className="grid grid-cols-2 gap-4 w-full h-full max-w-[271px] max-h-[346px] sm:max-w-[430px] sm:max-h-[468px] md:max-w-[582px] md:max-h-[662px] relative">

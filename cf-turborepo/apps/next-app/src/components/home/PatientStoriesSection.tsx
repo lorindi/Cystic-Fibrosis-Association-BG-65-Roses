@@ -1,5 +1,5 @@
-import Button from "@/app/components/buttons/Button";
-import CardHistory from "@/app/components/cards/CardHistory";
+import Button from "@/components/buttons/Button";
+import CardHistory from "@/components/cards/CardHistory";
 import React from "react";
 
 function PatientStoriesSection() {

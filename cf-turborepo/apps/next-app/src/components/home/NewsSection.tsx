@@ -1,4 +1,4 @@
-import CardNews from "@/app/components/cards/CardNews";
+import CardNews from "@/components/cards/CardNews";
 import React from "react";
 
 function NewsSection() {

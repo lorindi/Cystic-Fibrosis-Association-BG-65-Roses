@@ -1,4 +1,4 @@
-import CardFrame from "@/app/components/cards/CardFrame";
+import CardFrame from "@/components/cards/CardFrame";
 import React from "react";
 
 function AboutUsSection() {

@@ -1,8 +1,8 @@
-import CardCategory from "@/app/components/cards/CardCategory";
+import CardCategory from "@/components/cards/CardCategory";
 import React from "react";
-import News from "../svgs/News";
-import Conferences from "../svgs/Conferences";
-import Stories from "../svgs/Stories";
+import News from "./svgs/News";
+import Conferences from "./svgs/Conferences";
+import Stories from "./svgs/Stories";
 
 function NavigationCards() {
   const cards = [

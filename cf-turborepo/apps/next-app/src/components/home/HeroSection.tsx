@@ -1,4 +1,4 @@
-import Button from "@/app/components/buttons/Button";
+import Button from "@/components/buttons/Button";
 import React from "react";
 
 function HeroSection() {

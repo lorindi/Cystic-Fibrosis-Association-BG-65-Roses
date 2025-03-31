@@ -1,4 +1,4 @@
-import CardCause from "@/app/components/cards/CardCause";
+import CardCause from "@/components/cards/CardCause";
 import React from "react";
 
 function ContributeSection() {
