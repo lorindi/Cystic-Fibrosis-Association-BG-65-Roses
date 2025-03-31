@@ -14,6 +14,7 @@
     "@cf/express-adapter": "*",
     "@cf/nest-adapter": "*",
     "@cf/supabase-adapter": "*",
+    "framer-motion": "^12.6.2",
     "graphql": "^16.10.0",
     "next": "15.2.3",
     "postcss": "^8.5.3",
