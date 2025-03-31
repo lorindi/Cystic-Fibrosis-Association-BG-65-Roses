@@ -9,12 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@apollo/client": "^3.13.5",
     "@cf/api-contracts": "*",
     "@cf/express-adapter": "*",
     "@cf/nest-adapter": "*",
     "@cf/supabase-adapter": "*",
+    "graphql": "^16.10.0",
     "next": "15.2.3",
     "postcss": "^8.5.3",
+    "primeflex": "^4.0.0",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
