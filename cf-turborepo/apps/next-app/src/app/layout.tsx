@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "./components/navbar/Navbar";
 import Footer from "./components/footer/Footer";
 import { Montserrat } from "next/font/google";
+import { ClientApolloProvider } from "@/lib/apollo/ClientApolloProvider";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -37,11 +38,13 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#fafafa] font-['Montserrat']`}
       >
+        <ClientApolloProvider>
           <div className="flex flex-col items-center justify-center w-full h-full">
             <Navbar />
             {children}
             <Footer />
           </div>
+        </ClientApolloProvider>
       </body>
     </html>
   );
