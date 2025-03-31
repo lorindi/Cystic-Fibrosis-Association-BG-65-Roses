@@ -2,16 +2,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Logo from "../logo/Logo";
-import { usePathname } from "next/navigation";
 
 function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
-  const isAdmin = pathname.startsWith('/admin');
+
 
 
   return (
-    <div className={`${isAdmin ? 'hidden' : ''}`}>
+    <div>
       <div className="flex items-center justify-between">
         <Logo type="navigation" />
 
