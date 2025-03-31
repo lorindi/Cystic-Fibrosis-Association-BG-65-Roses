@@ -1,13 +1,13 @@
 import React from 'react'
 import Link from 'next/link'
-import DnaBackground from '../components/auth/DnaBackground'
-import GoogleSignInButton from '../components/auth/GoogleSignInButton'
-import OrDivider from '../components/auth/OrDivider'
-import InputField from '../components/auth/InputField'
-import PasswordField from '../components/auth/PasswordField'
-import BackButton from '../components/auth/BackButton'
-import SubmitButton from '../components/auth/SubmitButton'
-import AuthFormWrapper from '../components/auth/AuthFormWrapper'
+import DnaBackground from '@/components/auth/DnaBackground'
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
+import OrDivider from '@/components/auth/OrDivider'
+import InputField from '@/components/auth/InputField'
+import PasswordField from '@/components/auth/PasswordField'
+import BackButton from '@/components/auth/BackButton'
+import SubmitButton from '@/components/auth/SubmitButton'
+import AuthFormWrapper from '@/components/auth/AuthFormWrapper'
 
 function CreateAccountPage() {
   return (
