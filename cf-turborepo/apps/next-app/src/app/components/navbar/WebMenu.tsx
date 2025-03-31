@@ -5,11 +5,10 @@ import Button from '../buttons/Button'
 import { usePathname } from 'next/navigation';
 
 function WebMenu() {
-  const pathname = usePathname();
-  const isAdmin = pathname.startsWith('/admin');
+
 
   return (
-    <div className={`${isAdmin ? 'hidden' : 'flex items-center justify-between w-full px-10'}`}>
+    <div className='flex items-center justify-between w-full px-10'>
         <Logo type='navigation'/>
         <div className='flex items-center justify-end gap-15 '>
           <ul className='flex items-center justify-end gap-4 w-full max-w-[754px]'>
