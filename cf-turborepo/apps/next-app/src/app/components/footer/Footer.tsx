@@ -1,14 +1,19 @@
+"use client"
 import React from "react";
 import Logo from "../logo/Logo";
+import { usePathname } from 'next/navigation';
 
 function Footer() {
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith('/admin');
+
   return (
     <div
-      className="flex flex-col lg:flex-row h-full w-full max-w-[1536px] 2xl:rounded-[10px] bg-[#034D61] 
+      className={`flex-col lg:flex-row h-full w-full max-w-[1536px] 2xl:rounded-[10px] bg-[#034D61] 
     py-8 px-4 gap-8
     sm:justify-center sm:items-center
     lg:justify-start lg:items-start lg:py-23 lg:px-16
-    xl:m-8 xl:pl-56 xl:pr-16 xl:py-24 xl:max-h-[418px]"
+    xl:m-8 xl:pl-56 xl:pr-16 xl:py-24 xl:max-h-[418px] ${isAdmin ? 'hidden' : 'flex'}`}
     >
       <div className="flex-1 flex flex-col justify-center sm:justify-start items-center sm:items-start gap-4 w-full sm:pl-[20%] lg:pl-0">
         <div className="flex items-center justify-center sm:items-start bg-[#fafafa] px-6 py-2 rounded-full ">
