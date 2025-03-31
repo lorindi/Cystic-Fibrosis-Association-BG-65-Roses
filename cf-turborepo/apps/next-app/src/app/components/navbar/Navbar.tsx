@@ -1,7 +1,8 @@
-
+"use client"
 import React from 'react'
 import WebMenu from './WebMenu'
 import MobileMenu from './MobileMenu'
+
 
 function Navbar() {
   return (
