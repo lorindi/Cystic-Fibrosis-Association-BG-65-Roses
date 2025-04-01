@@ -2,11 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import Logo from "../logo/Logo";
+import { useAuth } from '@/lib/context/AuthContext';
 
 function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-
-
+  const { user, logout } = useAuth();
 
   return (
     <div>
@@ -37,12 +37,29 @@ function MobileMenu() {
 
       {isOpen && (
         <ul className="absolute left-0 top-[60px] sm:top-[87px] w-full h-[calc(100vh-70px)] sm:h-[calc(100vh-87px)] bg-white flex flex-col items-center justify-center gap-8 font-medium text-xl z-10">
-            <li><Link href='/'>Home</Link></li>
-            <li><Link href='/news'>News</Link></li>
-            <li><Link href='/events'>Events</Link></li>
-            <li><Link href='/causes'>History</Link></li>
-            <li><Link href='/about'>Charities</Link></li>
-            <li><Link href='/profile'>Profile</Link></li>
+          <li><Link href='/'>Home</Link></li>
+          <li><Link href='/news'>News</Link></li>
+          <li><Link href='/events'>Events</Link></li>
+          <li><Link href='/causes'>History</Link></li>
+          <li><Link href='/about'>Charities</Link></li>
+          {user ? (
+            <>
+              <li><Link href='/profile'>Profile</Link></li>
+              <li>
+                <button 
+                  onClick={logout}
+                  className="text-teal-600 hover:text-teal-800"
+                >
+                  Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <>
+              <li><Link href='/sign-in'>Sign In</Link></li>
+              <li><Link href='/create-account'>Create Account</Link></li>
+            </>
+          )}
         </ul>
       )}
     </div>
