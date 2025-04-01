@@ -8,6 +8,8 @@ interface PasswordFieldProps {
   required?: boolean
   className?: string
   mb?: string
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export default function PasswordField({ 
@@ -16,7 +18,9 @@ export default function PasswordField({
   placeholder = '', 
   required = false,
   className = '',
-  mb = 'mb-4'
+  mb = 'mb-4',
+  value,
+  onChange
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false)
   
@@ -31,6 +35,8 @@ export default function PasswordField({
           id={id}
           placeholder={placeholder}
           required={required}
+          value={value}
+          onChange={onChange}
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 pr-10"
         />
         <button
