@@ -88,4 +88,22 @@ export const GET_CURRENT_USER = gql`
       }
     }
   }
+`;
+
+export const GOOGLE_AUTH = gql`
+  mutation GoogleAuth($input: GoogleAuthInput!) {
+    googleAuth(input: $input) {
+      token
+      user {
+        _id
+        name
+        email
+        role
+        isEmailVerified
+        profile {
+          avatar
+        }
+      }
+    }
+  }
 `; 
