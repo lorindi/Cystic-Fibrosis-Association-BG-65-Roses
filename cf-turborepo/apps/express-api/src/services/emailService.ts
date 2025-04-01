@@ -120,7 +120,7 @@ export const sendVerificationEmail = async (
   try {
     // Проверяваме дали имаме валиден FRONTEND_URL
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const verificationUrl = `${baseUrl}/verify-email/${token}`;
+    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
     const subject = "Confirm your email address";
     const html = createEmailVerificationTemplate(name, verificationUrl);
     
