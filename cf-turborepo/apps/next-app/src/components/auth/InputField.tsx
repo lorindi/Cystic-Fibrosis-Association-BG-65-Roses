@@ -6,6 +6,8 @@ interface InputFieldProps {
   type?: string
   placeholder?: string
   required?: boolean
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   className?: string
 }
 
@@ -15,6 +17,8 @@ export default function InputField({
   type = 'text', 
   placeholder = '', 
   required = false,
+  value,
+  onChange,
   className = ''
 }: InputFieldProps) {
   return (
@@ -27,7 +31,9 @@ export default function InputField({
         id={id}
         placeholder={placeholder}
         required={required}
-        className="w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+        value={value}
+        onChange={onChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
       />
     </div>
   )
