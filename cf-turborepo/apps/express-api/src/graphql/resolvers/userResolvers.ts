@@ -3,7 +3,10 @@ import { UserRole, UserGroup } from '../../types/user.types';
 import User from '../../models/user.model';
 import { ContextType, checkAuth, checkPermissions, generateToken } from '../utils/auth';
 import { sendVerificationEmail } from '../../services/emailService';
+import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const userResolvers = {
   Query: {
@@ -354,6 +357,55 @@ export const userResolvers = {
           throw new Error(`Error removing from group: ${err.message}`);
         }
         throw new Error('Unexpected error during group removal');
+      }
+    },
+
+    googleAuth: async (_: unknown, { input }: { input: { idToken: string } }) => {
+      try {
+        // Verify Google token
+        const ticket = await googleClient.verifyIdToken({
+          idToken: input.idToken,
+          audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload) {
+          throw new Error('Invalid Google token');
+        }
+
+        const { email, name, picture } = payload;
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+
+        if (!user) {
+          // Create new user if doesn't exist
+          user = new User({
+            name,
+            email,
+            password: crypto.randomBytes(20).toString('hex'), // Generate random password
+            role: email === process.env.ADMIN_EMAIL ? UserRole.ADMIN : UserRole.DONOR,
+            isEmailVerified: true, // Google emails are already verified
+            profile: {
+              avatar: picture
+            }
+          });
+
+          await user.save();
+        }
+
+        // Generate JWT token
+        const token = generateToken(user);
+
+        return {
+          token,
+          user
+        };
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Google authentication error: ${err.message}`);
+        }
+        throw new Error('Unexpected error during Google authentication');
       }
     },
   },
