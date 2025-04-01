@@ -1,5 +1,11 @@
-import React from 'react'
+'use client';
+
+import React, { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useMutation } from '@apollo/client'
+import { REGISTER } from '@/lib/apollo/mutations'
+import { useAuth } from '@/lib/context/AuthContext'
 import DnaBackground from '@/components/auth/DnaBackground'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 import OrDivider from '@/components/auth/OrDivider'
@@ -10,6 +16,59 @@ import SubmitButton from '@/components/auth/SubmitButton'
 import AuthFormWrapper from '@/components/auth/AuthFormWrapper'
 
 function CreateAccountPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const [registerMutation] = useMutation(REGISTER);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data } = await registerMutation({
+        variables: {
+          input: {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password
+          }
+        }
+      });
+
+      if (data?.register) {
+        login(data.register.token, data.register.user);
+        router.push('/verify-email');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during registration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-screen w-full">
       {/* Left side - DNA GIF */}
@@ -27,20 +86,51 @@ function CreateAccountPage() {
           <OrDivider />
           
           {/* Registration Form */}
-          <form>
-            <InputField id="name" label="Name" />
-            <InputField id="email" label="Email" type="email" />
-            <PasswordField id="password" label="Password" />
-            <PasswordField id="confirmPassword" label="Confirm Password" />
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            <InputField 
+              id="name" 
+              label="Name" 
+              value={formData.name}
+              onChange={handleChange}
+              required 
+            />
+            <InputField 
+              id="email" 
+              label="Email" 
+              type="email" 
+              value={formData.email}
+              onChange={handleChange}
+              required 
+            />
+            <PasswordField 
+              id="password" 
+              label="Password" 
+              value={formData.password}
+              onChange={handleChange}
+              required 
+            />
+            <PasswordField 
+              id="confirmPassword" 
+              label="Confirm Password" 
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required 
+            />
             
             <div className="flex gap-3">
               <BackButton href="/" />
-              <SubmitButton text="Create Account" />
+              <SubmitButton text="Create Account" loading={loading} />
             </div>
             
             {/* Login redirect text */}
             <div className="text-center mt-6 text-sm text-gray-600">
-              Already have an account?{" "}
+              Already have an account?
               <Link href="/sign-in" className="text-teal-600 hover:text-teal-800 font-medium">
                 Sign in
               </Link>
