@@ -5,6 +5,7 @@ import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import { Montserrat } from "next/font/google";
 import { ClientApolloProvider } from "@/lib/apollo/ClientApolloProvider";
+import { AuthProvider } from "@/lib/context/AuthContext";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -23,8 +24,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CF Association BG",
-  description: "Cystic Fibrosis Association Bulgaria",
+  title: "Cystic Fibrosis Association BG",
+  description: "Supporting the CF community in Bulgaria",
 };
 
 export default function RootLayout({
@@ -39,11 +40,13 @@ export default function RootLayout({
         className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#fafafa] font-['Montserrat']`}
       >
         <ClientApolloProvider>
-          <div className="flex flex-col items-center justify-center w-full h-full">
-            <Navbar />
-            {children}
-            <Footer />
-          </div>
+          <AuthProvider>
+            <div className="flex flex-col items-center justify-center w-full h-full">
+              <Navbar />
+              {children}
+              <Footer />
+            </div>
+          </AuthProvider>
         </ClientApolloProvider>
       </body>
     </html>
