@@ -6,7 +6,7 @@ import { sendVerificationEmail } from '../../services/emailService';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client(process.env.GOOGLE_SIGNIN_CLIENT_ID);
 
 export const userResolvers = {
   Query: {
@@ -365,7 +365,7 @@ export const userResolvers = {
         // Verify Google token
         const ticket = await googleClient.verifyIdToken({
           idToken: input.idToken,
-          audience: process.env.GOOGLE_CLIENT_ID
+          audience: process.env.GOOGLE_SIGNIN_CLIENT_ID
         });
 
         const payload = ticket.getPayload();
