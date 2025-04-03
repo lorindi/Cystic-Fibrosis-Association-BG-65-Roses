@@ -1,10 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash2,
+  Plus,
+  AlertTriangle
+} from "lucide-react";
 
 interface ColumnDefinition {
   field: string;
@@ -60,7 +84,7 @@ export default function DataTableComponent({
   expandable = false,
   actions = true,
   selectable = false,
-  tableClass = "bg-gray-700",
+  tableClass = "",
   loading = false,
   rowClass,
   selection,
@@ -80,32 +104,28 @@ export default function DataTableComponent({
   ...otherProps
 }: DataTableComponentProps) {
   // Row expansion logic
-  const [expandedRows, setExpandedRows] = useState<any[]>([]);
+  const [expandedRows, setExpandedRows] = useState<Record<string | number, boolean>>({});
 
   const toggleRow = (rowData: any) => {
-    const index = expandedRows.findIndex(d => d.id === rowData.id);
-    let newExpandedRows;
+    const id = rowData.id;
+    const newExpandedRows = { ...expandedRows };
     
-    if (index >= 0) {
-      newExpandedRows = [...expandedRows];
-      newExpandedRows.splice(index, 1);
-      console.log("Row collapsed:", rowData.id);
+    if (expandedRows[id]) {
+      delete newExpandedRows[id];
+      console.log("Row collapsed:", id);
     } else {
-      newExpandedRows = [...expandedRows, rowData];
-      console.log("Row expanded:", rowData.id);
+      newExpandedRows[id] = true;
+      console.log("Row expanded:", id);
     }
     
     setExpandedRows(newExpandedRows);
-    onRowToggle?.(rowData, newExpandedRows);
-  };
-
-  const isExpanded = (rowData: any) => {
-    return expandedRows.some(d => d.id === rowData.id);
+    onRowToggle?.(rowData, Object.keys(newExpandedRows).map(key => ({ id: key })));
   };
 
   // CRUD operations
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [selectedRow, setSelectedRow] = useState<any>(null);
 
   const createNew = () => {
     console.log("Creating new item");
@@ -141,54 +161,31 @@ export default function DataTableComponent({
   };
 
   // Handle row selection
-  const handleRowSelect = (event: any) => {
-    console.log("Row selected:", event.data);
-    onRowSelect?.(event.data);
+  const handleRowSelect = (rowData: any) => {
+    setSelectedRow(rowData);
+    console.log("Row selected:", rowData);
+    onRowSelect?.(rowData);
   };
 
   // Expansion template
-  const expansionTemplate = (data: any) => {
+  const renderExpansionContent = (data: any) => {
     if (expansionSlot) {
       return expansionSlot(data);
     }
     
     return (
-      <div className="p-3 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-        <h5>Details for {data.name || data.title}</h5>
-        <p>Additional information here...</p>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      </div>
-    );
-  };
-
-  // Empty template
-  const emptyTemplate = () => {
-    if (emptySlot) {
-      return emptySlot;
-    }
-    
-    return (
-      <div className="p-4 text-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-        No records found
-      </div>
-    );
-  };
-
-  // Loading template
-  const loadingTemplate = () => {
-    if (loadingSlot) {
-      return loadingSlot;
-    }
-    
-    return (
-      <div className="p-4 text-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-        Loading data...
+      <div className="p-3 bg-muted text-muted-foreground">
+        <h5 className="text-sm font-medium">Details for {data.name || data.title}</h5>
+        <p className="mt-2">Additional information here...</p>
+        <pre className="mt-2 p-2 bg-muted/50 rounded text-xs overflow-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
       </div>
     );
   };
 
   // Actions template
-  const actionsBodyTemplate = (rowData: any) => {
+  const renderActions = (rowData: any) => {
     if (actionsSlot) {
       return actionsSlot(rowData);
     }
@@ -196,143 +193,164 @@ export default function DataTableComponent({
     return (
       <div className="flex gap-2">
         <Button 
-          icon="pi pi-pencil" 
-          onClick={() => editItem(rowData)} 
-          className="p-button-success p-button-sm" 
-          tooltip="Edit"
-        />
+          variant="outline" 
+          size="icon"
+          onClick={() => editItem(rowData)}
+          className="h-8 w-8"
+        >
+          <Pencil size={16} />
+        </Button>
         <Button 
-          icon="pi pi-trash" 
-          onClick={() => confirmDelete(rowData)} 
-          className="p-button-danger p-button-sm" 
-          tooltip="Delete"
-        />
+          variant="outline" 
+          size="icon"
+          onClick={() => confirmDelete(rowData)}
+          className="h-8 w-8 text-destructive hover:text-destructive"
+        >
+          <Trash2 size={16} />
+        </Button>
       </div>
     );
   };
-
-  // Status template
-  const statusBodyTemplate = (rowData: any) => {
-    if (statusSlot) {
-      return statusSlot(rowData, handleStatusChange);
-    }
-    return null;
-  };
-
-  // Expander template
-  const expanderBodyTemplate = (rowData: any) => (
-    <button 
-      onClick={() => toggleRow(rowData)}
-      className="p-link"
-    >
-      <i className={`pi ${!isExpanded(rowData) ? 'pi-chevron-down' : 'pi-chevron-up'}`}></i>
-    </button>
-  );
 
   return (
     <div className="flex flex-col gap-3">
       {/* Create button outside the table */}
       {(createButtonSlot || onCreate) && (
-        <div className="flex justify-end">
+        <div className="flex justify-end mb-2">
           {createButtonSlot || (
             <Button 
-              icon="pi pi-plus" 
-              label="Create new" 
-              onClick={createNew} 
-              className="p-button-success"
-            />
+              onClick={createNew}
+              className="flex items-center gap-1"
+            >
+              <Plus size={16} />
+              Create new
+            </Button>
           )}
         </div>
       )}
 
-      <DataTable 
-        value={data} 
-        expandedRows={expandedRows}
-        onRowToggle={(e: { data: any[] }) => setExpandedRows(Array.isArray(e.data) ? e.data : [])}
-        rowExpansionTemplate={expansionTemplate}
-        rowClassName={rowClass}
-        selection={selectable ? selection : undefined}
-        selectionMode={selectable ? 'single' : undefined}
-        onSelectionChange={(e: { value: any }) => handleRowSelect(e)}
-        className={tableClass}
-        loading={loading}
-        emptyMessage={emptyTemplate}
-        loadingIcon={loadingTemplate}
-        {...otherProps}
-      >
-        {/* Toggle column for expandable rows */}
-        {expandable && (
-          <Column 
-            expander 
-            headerStyle={{ width: '3rem' }} 
-            className={tableClass}
-            body={expanderBodyTemplate}
-          />
-        )}
-
-        {/* Dynamic columns */}
-        {columns.map((col, index) => (
-          <Column 
-            key={index}
-            field={col.field} 
-            header={col.header}
-            sortable={col.sortable !== false}
-            className={tableClass}
-            style={col.style}
-            headerStyle={col.headerStyle}
-            body={col.template || (columnTemplates?.[col.field] ? 
-              (rowData) => columnTemplates[col.field](rowData, col) : 
-              undefined)}
-          />
-        ))}
-
-        {/* Actions column */}
-        {actions && (
-          <Column 
-            header="Actions" 
-            className={tableClass}
-            body={actionsBodyTemplate}
-          />
-        )}
-
-        {/* Status column */}
-        {statusSlot && (
-          <Column 
-            header="Status" 
-            className={tableClass}
-            body={statusBodyTemplate}
-          />
-        )}
-      </DataTable>
+      {/* Loading state */}
+      {loading ? (
+        loadingSlot || (
+          <div className="p-4 text-center bg-muted rounded-lg">
+            Loading data...
+          </div>
+        )
+      ) : data.length === 0 ? (
+        emptySlot || (
+          <div className="p-4 text-center bg-muted rounded-lg">
+            No records found
+          </div>
+        )
+      ) : (
+        <div className={`rounded-md border ${tableClass}`}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {expandable && (
+                  <TableHead className="w-[40px]"></TableHead>
+                )}
+                {columns.map((col, index) => (
+                  <TableHead key={index} style={col.headerStyle}>
+                    {col.header}
+                  </TableHead>
+                ))}
+                {actions && (
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                )}
+                {statusSlot && (
+                  <TableHead>Status</TableHead>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((row, rowIndex) => (
+                <>
+                  <TableRow 
+                    key={`row-${rowIndex}`}
+                    className={`${rowClass?.(row) || ''} ${selectable && selectedRow?.id === row.id ? 'bg-muted' : ''}`}
+                    onClick={selectable ? () => handleRowSelect(row) : undefined}
+                    style={{ cursor: selectable ? 'pointer' : 'default' }}
+                  >
+                    {expandable && (
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRow(row);
+                          }}
+                        >
+                          {expandedRows[row.id] ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          )}
+                        </Button>
+                      </TableCell>
+                    )}
+                    
+                    {columns.map((col, colIndex) => (
+                      <TableCell key={`cell-${rowIndex}-${colIndex}`} style={col.style}>
+                        {col.template 
+                          ? col.template(row) 
+                          : columnTemplates?.[col.field] 
+                            ? columnTemplates[col.field](row, col)
+                            : row[col.field]}
+                      </TableCell>
+                    ))}
+                    
+                    {actions && (
+                      <TableCell className="text-right">
+                        {renderActions(row)}
+                      </TableCell>
+                    )}
+                    
+                    {statusSlot && (
+                      <TableCell>
+                        {statusSlot(row, handleStatusChange)}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                  
+                  {expandable && expandedRows[row.id] && (
+                    <TableRow key={`exp-${rowIndex}`}>
+                      <TableCell colSpan={columns.length + (actions ? 1 : 0) + (statusSlot ? 1 : 0) + 1}>
+                        {renderExpansionContent(row)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
-      <Dialog 
-        visible={deleteDialog} 
-        style={{ width: '450px' }} 
-        header="Confirmation" 
-        modal
-        onHide={() => setDeleteDialog(false)}
-        footer={(
-          <>
-            <Button 
-              label="No" 
-              icon="pi pi-times" 
-              onClick={() => setDeleteDialog(false)} 
-              className="p-button-text" 
-            />
-            <Button 
-              label="Yes" 
-              icon="pi pi-check" 
-              onClick={deleteItem} 
-              className="p-button-danger" 
-            />
-          </>
-        )}
-      >
-        <div className="confirmation-content">
-          <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-          <span>Are you sure you want to delete this record?</span>
-        </div>
+      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete this record from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle size={24} />
+            <span>Are you sure you want to delete this record?</span>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteItem}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );

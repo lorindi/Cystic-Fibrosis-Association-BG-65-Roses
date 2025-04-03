@@ -1,4 +1,14 @@
-@import 'primereact/resources/themes/lara-light-blue/theme.css';
-@import 'primereact/resources/primereact.min.css';
-@import 'primeicons/primeicons.css';
-@import 'primeflex/primeflex.css';
+/* Стиловете на PrimeReact са премахнати, сега използваме shadcn/ui */
+
+/* Допълнителни стилове за админ панела */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.active-menu-item {
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
