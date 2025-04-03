@@ -9,6 +9,7 @@ import { Avatar } from 'primereact/avatar';
 import { Badge } from 'primereact/badge';
 import { Tooltip } from 'primereact/tooltip';
 import { Divider } from 'primereact/divider';
+import Link from 'next/link';
 
 export default function AdminLayout({
   children,
@@ -163,7 +164,7 @@ export default function AdminLayout({
           />
           <div className="text-xl font-semibold text-primary ml-2 flex align-items-center">
             <i className="pi pi-shield mr-2"></i>
-            <span>65 Roses Admin</span>
+            <Link href="/">65 Roses Admin</Link>
           </div>
         </div>
         <div className="flex align-items-center gap-3">
