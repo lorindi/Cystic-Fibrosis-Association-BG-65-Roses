@@ -8,7 +8,8 @@ function Navbar() {
   const pathname = usePathname();
   const hideNavbar = pathname.startsWith("/sign-in") || 
                     pathname.startsWith("/create-account") ||
-                    pathname.startsWith("/verify-email");
+                    pathname.startsWith("/verify-email") ||
+                    pathname.startsWith("/admin");
 
   if (hideNavbar) {
     return null;
