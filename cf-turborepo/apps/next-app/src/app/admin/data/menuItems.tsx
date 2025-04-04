@@ -26,6 +26,11 @@ export const menuItems: MenuItem[] = [
     id: "dashboard",
   },
   {
+    label: "Users",
+    icon: <Users className="h-5 w-5" />,
+    id: "users",
+  },
+  {
     label: "Campaigns",
     icon: <Heart className="h-5 w-5" />,
     id: "campaigns",
@@ -85,9 +90,5 @@ export const menuItems: MenuItem[] = [
     icon: <Bot className="h-5 w-5" />,
     id: "ai-assistant",
   },
-  {
-    label: "Users",
-    icon: <Users className="h-5 w-5" />,
-    id: "users",
-  },
+
 ]; 
