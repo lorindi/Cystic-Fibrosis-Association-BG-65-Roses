@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_USERS, GET_USERS_BY_ROLE, GET_USER } from "@/lib/apollo/queries";
-import { SET_USER_ROLE } from "@/lib/apollo/mutations";
-import { User, UserRole } from "@/lib/apollo/types";
+import { SET_USER_ROLE, ADD_USER_TO_GROUP, REMOVE_USER_FROM_GROUP } from "@/lib/apollo/mutations";
+import { User, UserRole, UserGroup } from "@/lib/apollo/types";
 import { 
   Card, 
   CardContent, 
@@ -102,6 +102,7 @@ export default function UsersContent() {
   const [viewProfileOpen, setViewProfileOpen] = useState(false);
   const [editDetailsOpen, setEditDetailsOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
   
   // Fetch users data
   const { data: allUsersData, loading: allUsersLoading, error: allUsersError } = useQuery(GET_USERS);
@@ -119,6 +120,16 @@ export default function UsersContent() {
   });
 
   const [setUserRole, { loading: setRoleLoading }] = useMutation(SET_USER_ROLE, {
+    refetchQueries: [{ query: GET_USERS }],
+  });
+
+  // Set up the ADD_USER_TO_GROUP mutation
+  const [addUserToGroup, { loading: addToGroupLoading }] = useMutation(ADD_USER_TO_GROUP, {
+    refetchQueries: [{ query: GET_USERS }],
+  });
+
+  // Set up the REMOVE_USER_FROM_GROUP mutation
+  const [removeUserFromGroup, { loading: removeFromGroupLoading }] = useMutation(REMOVE_USER_FROM_GROUP, {
     refetchQueries: [{ query: GET_USERS }],
   });
 
@@ -293,6 +304,36 @@ export default function UsersContent() {
     }
   };
 
+  // Function to handle adding user to a group
+  const handleAddToGroup = async (userId: string, group: UserGroup) => {
+    try {
+      await addUserToGroup({
+        variables: {
+          userId,
+          group
+        }
+      });
+    } catch (error) {
+      console.error("Error adding user to group:", error);
+      // You could add toast notifications here
+    }
+  };
+
+  // Function to handle removing user from a group
+  const handleRemoveFromGroup = async (userId: string, group: UserGroup) => {
+    try {
+      await removeUserFromGroup({
+        variables: {
+          userId,
+          group
+        }
+      });
+    } catch (error) {
+      console.error("Error removing user from group:", error);
+      // You could add toast notifications here
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -420,6 +461,23 @@ export default function UsersContent() {
                                     disabled={user.role === role || setRoleLoading}
                                   >
                                     {role === user.role ? `Current: ${translateRole(role)}` : translateRole(role)}
+                                  </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>Manage Groups</DropdownMenuLabel>
+                                {Object.values(UserGroup).map((group) => (
+                                  <DropdownMenuItem 
+                                    key={group}
+                                    onClick={() => {
+                                      if(user.groups?.includes(group)) {
+                                        handleRemoveFromGroup(user._id, group as UserGroup);
+                                      } else {
+                                        handleAddToGroup(user._id, group as UserGroup);
+                                      }
+                                    }}
+                                    disabled={addToGroupLoading || removeFromGroupLoading}
+                                  >
+                                    {user.groups?.includes(group) ? `Remove from ${group}` : `Add to ${group}`}
                                   </DropdownMenuItem>
                                 ))}
                                 <DropdownMenuSeparator />
@@ -614,6 +672,18 @@ export default function UsersContent() {
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Bio</h4>
                   <p className="text-sm">{selectedUserData.profile.bio}</p>
+                </div>
+              )}
+
+              {/* Add groups information */}
+              {selectedUserData.groups && selectedUserData.groups.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Groups</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedUserData.groups.map((group: UserGroup) => (
+                      <Badge key={group} variant="secondary">{group}</Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
