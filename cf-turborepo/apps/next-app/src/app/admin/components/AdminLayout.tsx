@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { menuItems, MenuItem } from "../data/menuItems";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -27,9 +29,16 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { logout } = useAuth();
+  const router = useRouter()
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
   };
 
   return (
@@ -92,7 +101,11 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
             <Settings className="h-5 w-5 mr-3" />
             Settings
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-red-500">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-red-500"
+            onClick={handleLogout}
+          >
             <LogOut className="h-5 w-5 mr-3" />
             Logout
           </Button>
@@ -134,7 +147,12 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-500">Logout</DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-red-500" 
+                  onClick={handleLogout}
+                >
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
