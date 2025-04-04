@@ -21,7 +21,9 @@ import {
   PlusCircle,
   Filter,
   Loader2,
-  X
+  X,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -389,6 +391,7 @@ export default function UsersContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[50px]"></TableHead>
                       <TableHead className="w-[80px]">ID</TableHead>
                       <TableHead>User</TableHead>
                       <TableHead>Role</TableHead>
@@ -400,97 +403,192 @@ export default function UsersContent() {
                   <TableBody>
                     {filteredUsers?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                           No users found with the current filters
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredUsers?.map((user: User) => (
-                        <TableRow key={user._id}>
-                          <TableCell className="font-medium">{user._id.substring(0, 8)}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                {user.profile?.avatar ? (
-                                  <AvatarImage src={user.profile.avatar} alt={user.name} />
-                                ) : null}
-                                <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">{user.name}</div>
-                                <div className="text-sm text-muted-foreground">{user.email}</div>
+                        <React.Fragment key={user._id}>
+                          <TableRow 
+                            className="cursor-pointer hover:bg-muted/50" 
+                            onClick={() => {
+                              if (selectedUser === user._id) {
+                                setSelectedUser(null);
+                              } else {
+                                setSelectedUser(user._id);
+                              }
+                            }}
+                          >
+                            <TableCell className="pr-0 w-[50px]">
+                              <div className="flex items-center justify-center text-muted-foreground">
+                                {selectedUser === user._id ? 
+                                  <ChevronDown className="h-4 w-4 text-primary" /> : 
+                                  <ChevronRight className="h-4 w-4" />
+                                }
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getRoleBadgeVariant(user.role)}>
-                              {translateRole(user.role)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <div className={`h-2 w-2 rounded-full mr-2 ${
-                                user.isEmailVerified ? "bg-green-500" : "bg-yellow-500"
-                              }`} />
-                              {user.isEmailVerified ? "Verified" : "Pending"}
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.createdAt ? formatDate(user.createdAt) : "N/A"}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleViewProfile(user._id)}>
-                                  View Profile
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEditDetails(user._id)}>
-                                  Edit Details
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                                {Object.values(UserRole).map((role) => (
-                                  <DropdownMenuItem 
-                                    key={role}
-                                    onClick={() => handleRoleChange(user._id, role as UserRole)}
-                                    disabled={user.role === role || setRoleLoading}
-                                  >
-                                    {role === user.role ? `Current: ${translateRole(role)}` : translateRole(role)}
+                            </TableCell>
+                            <TableCell className="font-medium">{user._id.substring(0, 8)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar>
+                                  {user.profile?.avatar ? (
+                                    <AvatarImage src={user.profile.avatar} alt={user.name} />
+                                  ) : null}
+                                  <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium">{user.name}</div>
+                                  <div className="text-sm text-muted-foreground">{user.email}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={getRoleBadgeVariant(user.role)}>
+                                {translateRole(user.role)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center">
+                                <div className={`h-2 w-2 rounded-full mr-2 ${
+                                  user.isEmailVerified ? "bg-green-500" : "bg-yellow-500"
+                                }`} />
+                                {user.isEmailVerified ? "Verified" : "Pending"}
+                              </div>
+                            </TableCell>
+                            <TableCell>{user.createdAt ? formatDate(user.createdAt) : "N/A"}</TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => handleViewProfile(user._id)}>
+                                    View Profile
                                   </DropdownMenuItem>
-                                ))}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Manage Groups</DropdownMenuLabel>
-                                {Object.values(UserGroup).map((group) => (
-                                  <DropdownMenuItem 
-                                    key={group}
-                                    onClick={() => {
-                                      if(user.groups?.includes(group)) {
-                                        handleRemoveFromGroup(user._id, group as UserGroup);
-                                      } else {
-                                        handleAddToGroup(user._id, group as UserGroup);
-                                      }
-                                    }}
-                                    disabled={addToGroupLoading || removeFromGroupLoading}
-                                  >
-                                    {user.groups?.includes(group) ? `Remove from ${group}` : `Add to ${group}`}
+                                  <DropdownMenuItem onClick={() => handleEditDetails(user._id)}>
+                                    Edit Details
                                   </DropdownMenuItem>
-                                ))}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  className="text-red-600"
-                                  onClick={() => handleDeactivateAccount(user._id)}
-                                >
-                                  Deactivate Account
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                                  {Object.values(UserRole).map((role) => (
+                                    <DropdownMenuItem 
+                                      key={role}
+                                      onClick={() => handleRoleChange(user._id, role as UserRole)}
+                                      disabled={user.role === role || setRoleLoading}
+                                    >
+                                      {role === user.role ? `Current: ${translateRole(role)}` : translateRole(role)}
+                                    </DropdownMenuItem>
+                                  ))}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuLabel>Manage Groups</DropdownMenuLabel>
+                                  {Object.values(UserGroup).map((group) => (
+                                    <DropdownMenuItem 
+                                      key={group}
+                                      onClick={() => {
+                                        if(user.groups?.includes(group)) {
+                                          handleRemoveFromGroup(user._id, group as UserGroup);
+                                        } else {
+                                          handleAddToGroup(user._id, group as UserGroup);
+                                        }
+                                      }}
+                                      disabled={addToGroupLoading || removeFromGroupLoading}
+                                    >
+                                      {user.groups?.includes(group) ? `Remove from ${group}` : `Add to ${group}`}
+                                    </DropdownMenuItem>
+                                  ))}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={() => handleDeactivateAccount(user._id)}
+                                  >
+                                    Deactivate Account
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                          
+                          {/* Expandable row with groups info */}
+                          {selectedUser === user._id && (
+                            <TableRow>
+                              <TableCell></TableCell>
+                              <TableCell colSpan={6} className="p-4 bg-muted/20">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium">User Groups</h4>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-6 text-xs"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewProfile(user._id);
+                                      }}
+                                    >
+                                      View Profile
+                                    </Button>
+                                  </div>
+                                  
+                                  {user.groups && user.groups.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                      {user.groups.map((group: UserGroup) => (
+                                        <div key={group} className="flex items-center">
+                                          <Badge variant="secondary" className="mr-2">{group}</Badge>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-6 w-6 rounded-full" 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRemoveFromGroup(user._id, group as UserGroup);
+                                            }}
+                                            disabled={removeFromGroupLoading}
+                                          >
+                                            <X className="h-3 w-3" />
+                                            <span className="sr-only">Remove from {group}</span>
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground">User is not a member of any groups</p>
+                                  )}
+                                  
+                                  {Object.values(UserGroup).length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-medium text-muted-foreground mt-3 mb-2">Add to Group</h5>
+                                      <div className="flex flex-wrap gap-2">
+                                        {Object.values(UserGroup)
+                                          .filter(group => !user.groups?.includes(group))
+                                          .map((group: UserGroup) => (
+                                            <Button 
+                                              key={group}
+                                              variant="outline" 
+                                              size="sm"
+                                              className="text-xs"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAddToGroup(user._id, group as UserGroup);
+                                              }}
+                                              disabled={addToGroupLoading}
+                                            >
+                                              <PlusCircle className="h-3 w-3 mr-1" /> {group}
+                                            </Button>
+                                          ))
+                                        }
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
                       ))
                     )}
                   </TableBody>
@@ -681,11 +779,45 @@ export default function UsersContent() {
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Groups</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedUserData.groups.map((group: UserGroup) => (
-                      <Badge key={group} variant="secondary">{group}</Badge>
+                      <div key={group} className="flex items-center">
+                        <Badge variant="secondary" className="mr-2">{group}</Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 rounded-full" 
+                          onClick={() => handleRemoveFromGroup(selectedUserData._id, group as UserGroup)}
+                          disabled={removeFromGroupLoading}
+                        >
+                          <X className="h-3 w-3" />
+                          <span className="sr-only">Remove from {group}</span>
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+              
+              {/* Add UI to add user to groups they're not already in */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Add to Group</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.values(UserGroup)
+                    .filter(group => !selectedUserData.groups?.includes(group))
+                    .map((group: UserGroup) => (
+                      <Button 
+                        key={group}
+                        variant="outline" 
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleAddToGroup(selectedUserData._id, group as UserGroup)}
+                        disabled={addToGroupLoading}
+                      >
+                        <PlusCircle className="h-3 w-3 mr-1" /> {group}
+                      </Button>
+                    ))
+                  }
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center p-4 text-muted-foreground">
