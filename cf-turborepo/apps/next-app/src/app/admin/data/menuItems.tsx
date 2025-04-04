@@ -21,72 +21,72 @@ export interface MenuItem {
 
 export const menuItems: MenuItem[] = [
   {
-    label: "Табло",
+    label: "Dashboard",
     icon: <LayoutDashboard className="h-5 w-5" />,
     id: "dashboard",
   },
   {
-    label: "Кампании",
+    label: "Campaigns",
     icon: <Heart className="h-5 w-5" />,
     id: "campaigns",
   },
   {
-    label: "Инициативи",
+    label: "Initiatives",
     icon: <ShoppingBag className="h-5 w-5" />,
     id: "initiatives",
   },
   {
-    label: "Конференции",
+    label: "Conferences",
     icon: <Calendar className="h-5 w-5" />,
     id: "conferences",
   },
   {
-    label: "Събития",
+    label: "Events",
     icon: <Calendar className="h-5 w-5" />,
     id: "events",
   },
   {
-    label: "Дарители",
+    label: "Benefactors",
     icon: <Users className="h-5 w-5" />,
     id: "benefactors",
   },
   {
-    label: "Благотворителен магазин",
+    label: "Charity Store",
     icon: <ShoppingBag className="h-5 w-5" />,
     id: "store",
   },
   {
-    label: "Новини",
+    label: "News",
     icon: <FileText className="h-5 w-5" />,
     id: "news",
   },
   {
-    label: "Блог",
+    label: "Blog",
     icon: <BookOpen className="h-5 w-5" />,
     id: "blog",
   },
   {
-    label: "Рецепти",
+    label: "Recipes",
     icon: <Utensils className="h-5 w-5" />,
     id: "recipes",
   },
   {
-    label: "Истории",
+    label: "Stories",
     icon: <BookMarked className="h-5 w-5" />,
     id: "stories",
   },
   {
-    label: "Чат",
+    label: "Chat",
     icon: <MessageCircle className="h-5 w-5" />,
     id: "chat",
   },
   {
-    label: "AI асистент",
+    label: "AI Assistant",
     icon: <Bot className="h-5 w-5" />,
     id: "ai-assistant",
   },
   {
-    label: "Потребители",
+    label: "Users",
     icon: <Users className="h-5 w-5" />,
     id: "users",
   },
