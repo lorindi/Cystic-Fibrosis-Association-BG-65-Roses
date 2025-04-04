@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -9,8 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Settings, LogOut } from "lucide-react";
+import { 
+  Bell, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X 
+} from "lucide-react";
 import { menuItems, MenuItem } from "../data/menuItems";
+import { cn } from "@/lib/utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -19,13 +26,43 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="flex h-screen bg-[#fafafa] w-full max-w-[1536px]">
-      {/* Странична навигация */}
-      <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-4 border-b border-slate-200">
-          <h1 className="text-xl font-bold text-primary">CF Admin</h1>
-          <p className="text-sm text-muted-foreground">65 Roses Асоциация</p>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden" 
+          onClick={toggleSidebar}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar navigation - hidden on mobile, visible on sidebar open */}
+      <div 
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <div>
+            <h1 className="text-xl font-bold text-primary">CF Admin</h1>
+            <p className="text-sm text-muted-foreground">65 Roses Association</p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleSidebar} 
+            className="lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
         <div className="flex-1 overflow-auto py-2">
           <nav className="space-y-1 px-2">
@@ -36,7 +73,13 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
                 className={`w-full justify-start ${
                   activeMenu === item.id ? "bg-slate-100" : ""
                 }`}
-                onClick={() => setActiveMenu(item.id)}
+                onClick={() => {
+                  setActiveMenu(item.id);
+                  // Close sidebar on mobile when menu item is selected
+                  if (window.innerWidth < 1024) {
+                    setSidebarOpen(false);
+                  }
+                }}
               >
                 {item.icon}
                 <span className="ml-3">{item.label}</span>
@@ -47,20 +90,31 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
         <div className="p-4 border-t border-slate-200">
           <Button variant="ghost" className="w-full justify-start">
             <Settings className="h-5 w-5 mr-3" />
-            Настройки
+            Settings
           </Button>
           <Button variant="ghost" className="w-full justify-start text-red-500">
             <LogOut className="h-5 w-5 mr-3" />
-            Изход
+            Logout
           </Button>
         </div>
       </div>
 
-      {/* Основно съдържание */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Заглавие */}
+        {/* Header */}
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">{menuItems.find((item: MenuItem) => item.id === activeMenu)?.label || "Табло"}</h1>
+          <div className="flex items-center gap-4">
+            {/* Mobile burger menu */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleSidebar} 
+              className="lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-semibold">{menuItems.find((item: MenuItem) => item.id === activeMenu)?.label || "Dashboard"}</h1>
+          </div>
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="icon">
               <Bell className="h-5 w-5" />
@@ -75,18 +129,18 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Моят акаунт</DropdownMenuLabel>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Профил</DropdownMenuItem>
-                <DropdownMenuItem>Настройки</DropdownMenuItem>
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-500">Изход</DropdownMenuItem>
+                <DropdownMenuItem className="text-red-500">Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
 
-        {/* Основно съдържание */}
+        {/* Main content area */}
         <main className="flex-1 overflow-auto p-6 bg-slate-50">
           {children}
         </main>
