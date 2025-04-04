@@ -63,6 +63,37 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import React from "react";
+
+// Добавяме схема за валидиране на формата в началото на файла, преди компонента
+const userFormSchema = z.object({
+  name: z.string().min(2, { message: "Name should be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  birthDate: z.string().optional(),
+  diagnosisYear: z.string().optional(),
+  childName: z.string().optional(),
+  companyName: z.string().optional(),
+  phone: z.string().optional(),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  bio: z.string().optional(),
+});
+
+type UserFormValues = z.infer<typeof userFormSchema>;
 
 export default function UsersContent() {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -95,6 +126,52 @@ export default function UsersContent() {
   const users = selectedRole ? filteredUsersData?.getUsersByRole : allUsersData?.getUsers;
   const isLoading = allUsersLoading || filteredUsersLoading || setRoleLoading;
   const selectedUserData = userData?.getUser;
+
+  // Form
+  const form = useForm<z.infer<typeof userFormSchema>>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      birthDate: "",
+      diagnosisYear: "",
+      childName: "",
+      companyName: "",
+      phone: "",
+      street: "",
+      city: "",
+      postalCode: "",
+      bio: "",
+    },
+  });
+
+  // Effect to update form values when selected user changes
+  React.useEffect(() => {
+    if (selectedUserData) {
+      form.reset({
+        name: selectedUserData.name || "",
+        email: selectedUserData.email || "",
+        birthDate: selectedUserData.profile?.birthDate 
+          ? new Date(selectedUserData.profile.birthDate).toISOString().split('T')[0] 
+          : "",
+        diagnosisYear: selectedUserData.profile?.diagnosisYear?.toString() || "",
+        childName: selectedUserData.profile?.childName || "",
+        companyName: selectedUserData.profile?.companyName || "",
+        phone: selectedUserData.profile?.contact?.phone || "",
+        street: selectedUserData.profile?.address?.street || "",
+        city: selectedUserData.profile?.address?.city || "",
+        postalCode: selectedUserData.profile?.address?.postalCode || "",
+        bio: selectedUserData.profile?.bio || "",
+      });
+    }
+  }, [selectedUserData, form]);
+
+  // Handle form submission
+  function onSubmit(data: z.infer<typeof userFormSchema>) {
+    console.log("Form submitted:", data);
+    // Тук може да имплементирате мутацията за обновяване на потребителя
+    setEditDetailsOpen(false);
+  }
 
   // Error handling
   if (allUsersError) {
@@ -567,136 +644,192 @@ export default function UsersContent() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Full Name
-                  </label>
-                  <Input 
-                    id="name" 
-                    defaultValue={selectedUserData?.name || ""}
-                    placeholder="Full name"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </label>
-                  <Input 
-                    id="email" 
-                    defaultValue={selectedUserData?.email || ""}
-                    placeholder="Email address"
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Email address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
+                  
+                  {selectedUserData?.role === UserRole.PATIENT && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Birth</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="diagnosisYear"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Diagnosis Year</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="Year of diagnosis"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                  
+                  {selectedUserData?.role === UserRole.PARENT && (
+                    <FormField
+                      control={form.control}
+                      name="childName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Child's Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Child's name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  
+                  {selectedUserData?.role === UserRole.DONOR && (
+                    <FormField
+                      control={form.control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Company name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
                 
-                {selectedUserData?.role === UserRole.PATIENT && (
-                  <>
-                    <div className="space-y-2">
-                      <label htmlFor="birthDate" className="text-sm font-medium">
-                        Date of Birth
-                      </label>
-                      <Input 
-                        id="birthDate" 
-                        type="date"
-                        defaultValue={selectedUserData?.profile?.birthDate ? 
-                          new Date(selectedUserData.profile.birthDate).toISOString().split('T')[0] : ""}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="diagnosisYear" className="text-sm font-medium">
-                        Diagnosis Year
-                      </label>
-                      <Input 
-                        id="diagnosisYear" 
-                        type="number"
-                        defaultValue={selectedUserData?.profile?.diagnosisYear || ""}
-                        placeholder="Year of diagnosis"
-                      />
-                    </div>
-                  </>
-                )}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                {selectedUserData?.role === UserRole.PARENT && (
-                  <div className="space-y-2">
-                    <label htmlFor="childName" className="text-sm font-medium">
-                      Child's Name
-                    </label>
-                    <Input 
-                      id="childName" 
-                      defaultValue={selectedUserData?.profile?.childName || ""}
-                      placeholder="Child's name"
+                <div className="space-y-2">
+                  <FormLabel>Address</FormLabel>
+                  
+                  <FormField
+                    control={form.control}
+                    name="street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="Street" {...field} className="mb-2" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="City" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="postalCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="Postal code" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                )}
-                
-                {selectedUserData?.role === UserRole.DONOR && (
-                  <div className="space-y-2">
-                    <label htmlFor="companyName" className="text-sm font-medium">
-                      Company Name
-                    </label>
-                    <Input 
-                      id="companyName" 
-                      defaultValue={selectedUserData?.profile?.companyName || ""}
-                      placeholder="Company name"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium">
-                  Phone Number
-                </label>
-                <Input 
-                  id="phone" 
-                  defaultValue={selectedUserData?.profile?.contact?.phone || ""}
-                  placeholder="Phone number"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="address" className="text-sm font-medium">
-                  Address
-                </label>
-                <Input 
-                  id="street" 
-                  defaultValue={selectedUserData?.profile?.address?.street || ""}
-                  placeholder="Street"
-                  className="mb-2"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <Input 
-                    id="city" 
-                    defaultValue={selectedUserData?.profile?.address?.city || ""}
-                    placeholder="City"
-                  />
-                  <Input 
-                    id="postalCode" 
-                    defaultValue={selectedUserData?.profile?.address?.postalCode || ""}
-                    placeholder="Postal code"
-                  />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="bio" className="text-sm font-medium">
-                  Bio
-                </label>
-                <textarea 
-                  id="bio" 
-                  className="w-full min-h-[100px] px-3 py-2 border rounded-md"
-                  defaultValue={selectedUserData?.profile?.bio || ""}
-                  placeholder="User bio"
+                
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bio</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="User bio"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
+                
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setEditDetailsOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Changes</Button>
+                </DialogFooter>
+              </form>
+            </Form>
           )}
-
-          <DialogFooter>
-            <Button onClick={() => setEditDetailsOpen(false)} variant="outline">Cancel</Button>
-            <Button>Save Changes</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       
