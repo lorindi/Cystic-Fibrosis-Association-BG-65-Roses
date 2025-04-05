@@ -1,10 +1,10 @@
 "use client";
-import AboutUsSection from "./home/components/AboutUsSection";
-import HeroSection from "./home/components/HeroSection";
-import NavigationCards from "./home/components/NavigationCards";
-import ContributeSection from "./home/components/ContributeSection";
-import NewsSection from "./home/components/NewsSection";
-import PatientStoriesSection from "./home/components/PatientStoriesSection";
+import AboutUsSection from "@/components/home/AboutUsSection";
+import HeroSection from "@/components/home/HeroSection";
+import NavigationCards from "@/components/home/NavigationCards";
+import ContributeSection from "@/components/home/ContributeSection";
+import NewsSection from "@/components/home/NewsSection";
+import PatientStoriesSection from "@/components/home/PatientStoriesSection";
 export default function Home() {
   const handleClick = () => {
     alert("Button clicked!");

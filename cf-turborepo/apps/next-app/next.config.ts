@@ -1,6 +1,16 @@
-import type { NextConfig } from "next";
+import { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
+const config: NextConfig = {
+  reactStrictMode: true,
+  experimental: {
+    appDir: true,
+  },
+  async redirects() {
+    return [];
+  },
+  async rewrites() {
+    return [];
+  },
   images: {
     domains: ['via.placeholder.com'],
     
@@ -14,4 +24,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default config;

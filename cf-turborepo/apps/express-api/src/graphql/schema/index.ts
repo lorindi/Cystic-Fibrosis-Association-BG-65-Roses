@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express';
+import { gql } from 'graphql-tag';
 import { scalarTypeDefs } from './scalars';
 import { userTypeDefs } from './user';
 import { campaignTypeDefs } from './campaign';

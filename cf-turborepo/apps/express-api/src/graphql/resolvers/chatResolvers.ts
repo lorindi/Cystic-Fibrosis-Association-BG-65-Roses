@@ -1,4 +1,4 @@
-import { AuthenticationError } from 'apollo-server-express';
+import { AuthenticationError } from '../utils/errors';
 import { UserRole } from '../../types/user.types';
 import { ChatMessage, AIResponse } from '../../models/chat.model';
 import { ContextType, checkAuth } from '../utils/auth';

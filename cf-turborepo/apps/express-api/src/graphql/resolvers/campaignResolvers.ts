@@ -1,4 +1,4 @@
-import { AuthenticationError } from 'apollo-server-express';
+import { AuthenticationError } from '../utils/errors';
 import { UserRole } from '../../types/user.types';
 import Campaign from '../../models/campaign.model';
 import { ContextType, checkAuth, checkPermissions } from '../utils/auth';

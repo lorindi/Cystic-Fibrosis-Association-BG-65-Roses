@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express';
+import { gql } from 'graphql-tag';
 
 export const userTypeDefs = gql`
   # Main types
@@ -79,6 +79,10 @@ export const userTypeDefs = gql`
     email: String!
     password: String!
   }
+
+  input GoogleAuthInput {
+    idToken: String!
+  }
   
   input ProfileUpdateInput {
     avatar: String
@@ -114,5 +118,9 @@ export const userTypeDefs = gql`
   type AuthResponse {
     token: String!
     user: User!
+  }
+
+  extend type Mutation {
+    googleAuth(input: GoogleAuthInput!): AuthResponse!
   }
 `; 
