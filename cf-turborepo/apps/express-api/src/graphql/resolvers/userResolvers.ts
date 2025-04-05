@@ -96,7 +96,6 @@ export const userResolvers = {
         if (existingUser) {
           throw new UserInputError("User with this email already exists");
         }
-        console.log("process.env.ADMIN_EMAIL:", process.env.ADMIN_EMAIL);
 
         // Create new user
         const newUser = new User({
