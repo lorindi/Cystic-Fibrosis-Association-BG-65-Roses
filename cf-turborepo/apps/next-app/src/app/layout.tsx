@@ -6,6 +6,7 @@ import Footer from "@/components/footer/Footer";
 import { Montserrat } from "next/font/google";
 import { ClientApolloProvider } from "@/lib/apollo/ClientApolloProvider";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { Toaster } from "@/components/ui/toaster"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -48,6 +49,7 @@ export default function RootLayout({
             </div>
           </AuthProvider>
         </ClientApolloProvider>
+        <Toaster />
       </body>
     </html>
   );
