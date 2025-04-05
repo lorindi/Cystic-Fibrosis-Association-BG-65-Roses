@@ -5,7 +5,7 @@ import { UserRole, UserGroup, IUserDocument } from '../../types/user.types';
 // Utility функции
 export const generateToken = (user: IUserDocument): string => {
   return jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
+    { id: user._id, email: user.email, role: user.role, groups: user.groups },
     process.env.JWT_SECRET || 'default_secret',
     { expiresIn: '1d' }
   );
@@ -34,7 +34,7 @@ export const checkAuth = (context: ContextType) => {
   
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
-    return user as jwt.JwtPayload & { id: string; role: UserRole };
+    return user as jwt.JwtPayload & { id: string; role: UserRole; groups?: UserGroup[] };
   } catch (err) {
     throw new AuthenticationError('Invalid or expired token');
   }
