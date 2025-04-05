@@ -18,6 +18,7 @@ export interface ICampaignDocument extends Document {
   endDate?: Date;
   events: ICampaignEvent[];
   participants: IUserDocument['_id'][];
+  pendingParticipants: IUserDocument['_id'][];
   createdBy: IUserDocument['_id'];
   createdAt: Date;
   updatedAt: Date;
