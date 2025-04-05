@@ -13,6 +13,8 @@ export const campaignTypeDefs = gql`
     events: [CampaignEvent!]!
     participants: [User!]!
     participantsCount: Int!
+    pendingParticipants: [User!]!
+    pendingParticipantsCount: Int!
     createdBy: User!
     createdAt: Date!
     updatedAt: Date!
@@ -24,6 +26,19 @@ export const campaignTypeDefs = gql`
     description: String!
     date: Date!
     location: String!
+  }
+  
+  # Campaign status for users
+  enum CampaignParticipationStatus {
+    PENDING
+    APPROVED
+    NOT_REGISTERED
+  }
+  
+  type UserCampaignStatus {
+    campaign: Campaign!
+    status: CampaignParticipationStatus!
+    registeredAt: Date
   }
   
   # Campaign inputs
