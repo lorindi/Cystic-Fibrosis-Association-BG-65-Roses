@@ -1,4 +1,4 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from '../utils/errors';
 import { UserRole, UserGroup } from '../../types/user.types';
 import User from '../../models/user.model';
 import { ContextType, checkAuth, checkPermissions, generateToken } from '../utils/auth';

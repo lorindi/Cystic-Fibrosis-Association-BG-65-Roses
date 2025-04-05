@@ -1,4 +1,4 @@
-import { AuthenticationError } from 'apollo-server-express';
+import { AuthenticationError } from '../utils/errors';
 import { UserRole } from '../../types/user.types';
 import { StoreItem, Donor, Donation } from '../../models/store.model';
 import mongoose from 'mongoose';

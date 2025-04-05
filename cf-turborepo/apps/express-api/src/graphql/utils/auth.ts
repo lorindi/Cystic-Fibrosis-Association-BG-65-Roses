@@ -1,4 +1,4 @@
-import { AuthenticationError } from 'apollo-server-express';
+import { AuthenticationError } from './errors';
 import jwt from 'jsonwebtoken';
 import { UserRole, UserGroup, IUserDocument } from '../../types/user.types';
 

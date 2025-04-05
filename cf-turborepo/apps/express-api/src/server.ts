@@ -1,23 +1,17 @@
 import express from 'express';
+import http from 'http';
 import cors from 'cors';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { typeDefs } from './graphql/schema/index';
 import { resolvers } from './graphql/resolvers/index';
 import { testEmailConnection, testOAuth2Connection } from './services/emailService';
-// Зареждане на env променливи
+
 dotenv.config();
 
-// Инициализиране на Express app
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Връзка с MongoDB
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/cystic-fibrosis-db');
@@ -34,29 +28,37 @@ const connectDB = async () => {
   }
 };
 
-// Настройка на Apollo Server
 async function startApolloServer() {
+  const app = express();
+  const httpServer = http.createServer(app);
+  const PORT = process.env.PORT || 5000;
+
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }) => ({ req })
   });
 
   await server.start();
-  // Фиксиране на проблем с типовете на Express и Apollo
-  server.applyMiddleware({ 
-    app: app as any, 
-    path: '/graphql' 
-  });
+
+  app.use(cors());
+  app.use(express.json());
   
-  // Стартиране на сървъра
-  app.listen(PORT, () => {
-    console.log(`Express server started on port ${PORT}`);
-    console.log(`GraphQL endpoint: http://localhost:${PORT}${server.graphqlPath}`);
-  });
+  app.use('/graphql', 
+    // @ts-ignore 
+    expressMiddleware(server, {
+      context: async ({ req }) => ({ req }),
+    })
+  );
+
+  await new Promise<void>((resolve) => 
+    httpServer.listen({ port: PORT }, resolve)
+  );
+  
+  console.log(`Express server started on port ${PORT}`);
+  console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
+  console.log(`GraphQL Playground available at: http://localhost:${PORT}/graphql`);
 }
 
-// Свързване с базата данни и стартиране на сървъра
 connectDB().then(() => {
   startApolloServer();
 }); 

@@ -1,4 +1,4 @@
-import { AuthenticationError } from 'apollo-server-express';
+import { AuthenticationError } from '../utils/errors';
 import { UserRole, UserGroup } from '../../types/user.types';
 import Conference from '../../models/conference.model';
 import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
