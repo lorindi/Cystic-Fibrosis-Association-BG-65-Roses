@@ -1,134 +1,158 @@
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+"use client";
+
+import * as React from "react";
+import { useQuery, useMutation } from "@apollo/client";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Heart,
-  Calendar,
-  Clock,
-  Users,
-  BadgeDollarSign
-} from "lucide-react";
+import { Plus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Campaign } from "@/types/campaign";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CampaignsTable } from "../features/campaigns/components/CampaignsTable";
+import { CampaignFormModal } from "../features/campaigns/components/CampaignFormModal";
+import {
+  GET_CAMPAIGNS,
+  CREATE_CAMPAIGN,
+  UPDATE_CAMPAIGN,
+  DELETE_CAMPAIGN,
+} from "../graphql/campaigns";
 
 export default function CampaignsContent() {
-  // Примерни данни за кампании
-  const campaigns = [
-    {
-      id: 1,
-      title: "Набиране на средства за медицински център",
-      description: "Кампания за набиране на средства за изграждане на специализиран медицински център за пациенти с кистична фиброза",
-      target: 500000,
-      current: 178500,
-      daysLeft: 45,
-      supporters: 124,
-      image: "/campaigns/medical-center.jpg"
-    },
-    {
-      id: 2,
-      title: "Лекарства за деца с кистична фиброза",
-      description: "Кампания за набиране на средства за закупуване на скъпоструващи лекарства за деца с кистична фиброза",
-      target: 70000,
-      current: 35000,
-      daysLeft: 30,
-      supporters: 87,
-      image: "/campaigns/medications.jpg"
-    },
-    {
-      id: 3,
-      title: "Рехабилитационна програма",
-      description: "Кампания за финансиране на рехабилитационна програма за пациенти с кистична фиброза",
-      target: 25000,
-      current: 12000,
-      daysLeft: 20,
-      supporters: 45,
-      image: "/campaigns/rehabilitation.jpg"
-    },
-  ];
+  const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedCampaign, setSelectedCampaign] = React.useState<Campaign | undefined>();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [campaignToDelete, setCampaignToDelete] = React.useState<Campaign | undefined>();
+
+  const { data, loading, error } = useQuery(GET_CAMPAIGNS);
+
+  const [createCampaign] = useMutation(CREATE_CAMPAIGN, {
+    refetchQueries: [{ query: GET_CAMPAIGNS }],
+  });
+
+  const [updateCampaign] = useMutation(UPDATE_CAMPAIGN, {
+    refetchQueries: [{ query: GET_CAMPAIGNS }],
+  });
+
+  const [deleteCampaign] = useMutation(DELETE_CAMPAIGN, {
+    refetchQueries: [{ query: GET_CAMPAIGNS }],
+  });
+
+  const handleCreateOrUpdate = async (formData: any) => {
+    try {
+      if (selectedCampaign) {
+        await updateCampaign({
+          variables: {
+            id: selectedCampaign.id,
+            ...formData,
+          },
+        });
+        toast({
+          title: "Успешно",
+          description: "Кампанията беше обновена успешно",
+        });
+      } else {
+        await createCampaign({
+          variables: formData,
+        });
+        toast({
+          title: "Успешно",
+          description: "Кампанията беше създадена успешно",
+        });
+      }
+      setIsModalOpen(false);
+      setSelectedCampaign(undefined);
+    } catch (error: any) {
+      toast({
+        title: "Грешка",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!campaignToDelete) return;
+
+    try {
+      await deleteCampaign({
+        variables: {
+          id: campaignToDelete.id,
+        },
+      });
+      toast({
+        title: "Успешно",
+        description: "Кампанията беше изтрита успешно",
+      });
+      setIsDeleteDialogOpen(false);
+      setCampaignToDelete(undefined);
+    } catch (error: any) {
+      toast({
+        title: "Грешка",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) return <div>Зареждане...</div>;
+  if (error) return <div>Грешка: {error.message}</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Активни кампании</h2>
-        <Button>Нова кампания</Button>
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Кампании</h1>
+        <Button
+          onClick={() => {
+            setSelectedCampaign(undefined);
+            setIsModalOpen(true);
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" /> Добави кампания
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {campaigns.map(campaign => (
-          <Card key={campaign.id} className="overflow-hidden">
-            <div className="h-40 bg-slate-200 flex items-center justify-center">
-              <Heart className="h-10 w-10 text-primary" />
-            </div>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{campaign.title}</CardTitle>
-              <CardDescription className="line-clamp-2">{campaign.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="w-full bg-slate-100 rounded-full h-2.5">
-                <div 
-                  className="bg-primary h-2.5 rounded-full" 
-                  style={{ width: `${(campaign.current / campaign.target) * 100}%` }}
-                ></div>
-              </div>
-              
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold">{campaign.current.toLocaleString()} лв.</span>
-                <span className="text-muted-foreground">от {campaign.target.toLocaleString()} лв.</span>
-              </div>
+      <CampaignsTable
+        campaigns={data.getCampaigns}
+        onEdit={(campaign) => {
+          setSelectedCampaign(campaign);
+          setIsModalOpen(true);
+        }}
+        onDelete={(campaign) => {
+          setCampaignToDelete(campaign);
+          setIsDeleteDialogOpen(true);
+        }}
+      />
 
-              <div className="flex flex-wrap gap-4 pt-2">
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>{campaign.daysLeft} дни остават</span>
-                </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span>{campaign.supporters} дарители</span>
-                </div>
-              </div>
+      <CampaignFormModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        campaign={selectedCampaign}
+        onSubmit={handleCreateOrUpdate}
+      />
 
-              <div className="pt-2 flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">Преглед</Button>
-                <Button size="sm" className="flex-1">Редактиране</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Предстоящи кампании</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>Планирани кампании</CardTitle>
-            <CardDescription>Кампании, които са в процес на подготовка</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="flex items-center p-2 rounded-lg hover:bg-slate-100">
-                  <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-lg mr-4">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Планирана кампания {i}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Начало: {new Date(Date.now() + i * 20 * 86400000).toLocaleDateString("bg-BG")}
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Детайли
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Сигурни ли сте?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Това действие не може да бъде отменено. Ще изтрие кампанията и всички свързани с нея данни.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отказ</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Изтрий</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 
