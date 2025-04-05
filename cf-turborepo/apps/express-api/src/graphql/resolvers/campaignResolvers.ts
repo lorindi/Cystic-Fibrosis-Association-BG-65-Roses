@@ -2,6 +2,7 @@ import { AuthenticationError } from '../utils/errors';
 import { UserRole } from '../../types/user.types';
 import Campaign from '../../models/campaign.model';
 import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
+import { UserGroup } from '../../types/user.types';
 
 export const campaignResolvers = {
   Query: {
@@ -69,19 +70,23 @@ export const campaignResolvers = {
       context: ContextType
     ) => {
       const user = checkAuth(context);
-      // Only admin users can create campaigns
-      checkPermissions(user, UserRole.ADMIN);
+      // Администратори или потребители с група CAMPAIGNS могат да създават кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to create campaigns');
+      }
       
       try {
         const newCampaign = new Campaign({
           ...input,
           createdBy: user.id,
+          // Не добавяме създателя автоматично като участник
         });
         
         const savedCampaign = await newCampaign.save();
         return await Campaign.findById(savedCampaign._id)
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate('pendingParticipants');
       } catch (err: unknown) {
         if (err instanceof Error) {
           throw new Error(`Error creating campaign: ${err.message}`);
@@ -96,8 +101,10 @@ export const campaignResolvers = {
       context: ContextType
     ) => {
       const user = checkAuth(context);
-      // Only admin users can update campaigns
-      checkPermissions(user, UserRole.ADMIN);
+      // Администратори или потребители с група CAMPAIGNS могат да редактират кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to update campaigns');
+      }
       
       try {
         const campaign = await Campaign.findById(id);
@@ -111,7 +118,8 @@ export const campaignResolvers = {
           { new: true, runValidators: true }
         )
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate('pendingParticipants');
           
         return updatedCampaign;
       } catch (err: unknown) {
@@ -124,8 +132,10 @@ export const campaignResolvers = {
     
     deleteCampaign: async (_: unknown, { id }: { id: string }, context: ContextType) => {
       const user = checkAuth(context);
-      // Only admin users can delete campaigns
-      checkPermissions(user, UserRole.ADMIN);
+      // Администратори или потребители с група CAMPAIGNS могат да изтриват кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to delete campaigns');
+      }
       
       try {
         const campaign = await Campaign.findById(id);
@@ -146,8 +156,10 @@ export const campaignResolvers = {
       context: ContextType
     ) => {
       const user = checkAuth(context);
-      // Only admin users can add events to campaigns
-      checkPermissions(user, UserRole.ADMIN);
+      // Администратори или потребители с група CAMPAIGNS могат да добавят събития към кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to add events to campaigns');
+      }
       
       try {
         const campaign = await Campaign.findById(campaignId);
@@ -173,8 +185,10 @@ export const campaignResolvers = {
       context: ContextType
     ) => {
       const user = checkAuth(context);
-      // Only admin users can update campaign events
-      checkPermissions(user, UserRole.ADMIN);
+      // Администратори или потребители с група CAMPAIGNS могат да редактират събития от кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to update campaign events');
+      }
       
       try {
         const campaign = await Campaign.findOne({ 'events._id': eventId });
@@ -202,8 +216,10 @@ export const campaignResolvers = {
     
     deleteCampaignEvent: async (_: unknown, { eventId }: { eventId: string }, context: ContextType) => {
       const user = checkAuth(context);
-      // Only admin users can delete campaign events
-      checkPermissions(user, UserRole.ADMIN);
+      // Администратори или потребители с група CAMPAIGNS могат да изтриват събития от кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to delete campaign events');
+      }
       
       try {
         const campaign = await Campaign.findOne({ 'events._id': eventId });
