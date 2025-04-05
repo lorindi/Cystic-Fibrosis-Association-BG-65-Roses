@@ -40,6 +40,10 @@ const CampaignSchema = new Schema<ICampaignDocument>({
     type: Schema.Types.ObjectId, 
     ref: 'User'
   }],
+  pendingParticipants: [{ 
+    type: Schema.Types.ObjectId, 
+    ref: 'User'
+  }],
   createdBy: { 
     type: Schema.Types.ObjectId, 
     ref: 'User',
@@ -56,6 +60,7 @@ CampaignSchema.index({ startDate: 1 });
 CampaignSchema.index({ endDate: 1 });
 CampaignSchema.index({ createdBy: 1 });
 CampaignSchema.index({ participants: 1 });
+CampaignSchema.index({ pendingParticipants: 1 });
 
 // Виртуално поле за процента на изпълнение
 CampaignSchema.virtual('percentCompleted').get(function() {
@@ -80,6 +85,11 @@ CampaignSchema.virtual('isActive').get(function() {
 // Виртуално поле за броя на участниците
 CampaignSchema.virtual('participantsCount').get(function() {
   return this.participants.length;
+});
+
+// Виртуално поле за броя на чакащите
+CampaignSchema.virtual('pendingParticipantsCount').get(function() {
+  return this.pendingParticipants.length;
 });
 
 const Campaign = mongoose.model<ICampaignDocument>('Campaign', CampaignSchema);
