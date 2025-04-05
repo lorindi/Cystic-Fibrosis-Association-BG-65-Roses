@@ -22,18 +22,10 @@ export const GET_CAMPAIGNS = gql`
 
 export const CREATE_CAMPAIGN = gql`
   mutation CreateCampaign(
-    $title: String!
-    $description: String!
-    $goal: Float!
-    $startDate: DateTime!
-    $endDate: DateTime!
+    $input: CampaignInput!
   ) {
     createCampaign(
-      title: $title
-      description: $description
-      goal: $goal
-      startDate: $startDate
-      endDate: $endDate
+      input: $input
     ) {
       id
       title
@@ -48,19 +40,11 @@ export const CREATE_CAMPAIGN = gql`
 export const UPDATE_CAMPAIGN = gql`
   mutation UpdateCampaign(
     $id: ID!
-    $title: String!
-    $description: String!
-    $goal: Float!
-    $startDate: DateTime!
-    $endDate: DateTime!
+    $input: CampaignInput!
   ) {
     updateCampaign(
       id: $id
-      title: $title
-      description: $description
-      goal: $goal
-      startDate: $startDate
-      endDate: $endDate
+      input: $input
     ) {
       id
       title
