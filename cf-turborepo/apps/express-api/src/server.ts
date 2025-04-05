@@ -4,6 +4,7 @@ import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { typeDefs } from './graphql/schema/index';
@@ -36,6 +37,14 @@ async function startApolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ 
+        embed: true,
+        includeCookies: true 
+      })
+    ],
+    introspection: true,
   });
 
   await server.start();
@@ -56,7 +65,7 @@ async function startApolloServer() {
   
   console.log(`Express server started on port ${PORT}`);
   console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
-  console.log(`GraphQL Playground available at: http://localhost:${PORT}/graphql`);
+  console.log(`GraphQL Explorer available at: http://localhost:${PORT}/graphql`);
 }
 
 connectDB().then(() => {
