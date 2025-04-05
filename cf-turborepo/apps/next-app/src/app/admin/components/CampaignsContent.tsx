@@ -52,7 +52,7 @@ export default function CampaignsContent() {
         await updateCampaign({
           variables: {
             id: selectedCampaign.id,
-            ...formData,
+            input: formData,
           },
         });
         toast({
@@ -61,7 +61,9 @@ export default function CampaignsContent() {
         });
       } else {
         await createCampaign({
-          variables: formData,
+          variables: {
+            input: formData,
+          },
         });
         toast({
           title: "Успешно",
