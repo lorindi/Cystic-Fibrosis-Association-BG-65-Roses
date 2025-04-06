@@ -110,6 +110,10 @@ export default function UsersContent() {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
   
+  // Fake current user - в реалния случай това ще идва от auth context или подобен източник
+  const currentUserRole = UserRole.ADMIN; // За тестови цели приемаме, че сме админ
+  const isCurrentUserAdmin = currentUserRole === UserRole.ADMIN;
+  
   // Fetch users data
   const { data: allUsersData, loading: allUsersLoading, error: allUsersError } = useQuery(GET_USERS);
   
@@ -120,23 +124,50 @@ export default function UsersContent() {
   });
 
   // Fetch single user details when needed for profile view
-  const { data: userData, loading: userLoading } = useQuery(GET_USER, {
+  const { data: userData, loading: userLoading, refetch: refetchUserData } = useQuery(GET_USER, {
     variables: { id: selectedUser },
     skip: !selectedUser,
   });
 
   const [setUserRole, { loading: setRoleLoading }] = useMutation(SET_USER_ROLE, {
-    refetchQueries: [{ query: GET_USERS }],
+    refetchQueries: selectedUser 
+      ? [{ query: GET_USERS }, { query: GET_USER, variables: { id: selectedUser } }]
+      : [{ query: GET_USERS }],
+    onCompleted: () => {
+      // Актуализирай данните за текущия потребител, ако гледаме профила
+      if (viewProfileOpen && selectedUser) {
+        // Изпълни повторна заявка за актуализиране на данните в профила
+        refetchUserData();
+      }
+    }
   });
 
   // Set up the ADD_USER_TO_GROUP mutation
   const [addUserToGroup, { loading: addToGroupLoading }] = useMutation(ADD_USER_TO_GROUP, {
-    refetchQueries: [{ query: GET_USERS }],
+    refetchQueries: selectedUser 
+      ? [{ query: GET_USERS }, { query: GET_USER, variables: { id: selectedUser } }]
+      : [{ query: GET_USERS }],
+    onCompleted: () => {
+      // Актуализирай данните за текущия потребител, ако гледаме профила
+      if (viewProfileOpen && selectedUser) {
+        // Изпълни повторна заявка за актуализиране на данните в профила
+        refetchUserData();
+      }
+    }
   });
 
   // Set up the REMOVE_USER_FROM_GROUP mutation
   const [removeUserFromGroup, { loading: removeFromGroupLoading }] = useMutation(REMOVE_USER_FROM_GROUP, {
-    refetchQueries: [{ query: GET_USERS }],
+    refetchQueries: selectedUser 
+      ? [{ query: GET_USERS }, { query: GET_USER, variables: { id: selectedUser } }]
+      : [{ query: GET_USERS }],
+    onCompleted: () => {
+      // Актуализирай данните за текущия потребител, ако гледаме профила
+      if (viewProfileOpen && selectedUser) {
+        // Изпълни повторна заявка за актуализиране на данните в профила
+        refetchUserData();
+      }
+    }
   });
 
   // Use filtered data if a role is selected, otherwise use all users
@@ -239,6 +270,7 @@ export default function UsersContent() {
           role: newRole
         }
       });
+      // Успешно обновихме ролята, данните вече са обновени чрез onCompleted
     } catch (error) {
       console.error("Error changing user role:", error);
       // You could add toast notifications here
@@ -319,6 +351,10 @@ export default function UsersContent() {
           group
         }
       });
+      // Ако добавяме група от профила, актуализирайте го
+      if (viewProfileOpen && userId === selectedUser) {
+        await refetchUserData();
+      }
     } catch (error) {
       console.error("Error adding user to group:", error);
       // You could add toast notifications here
@@ -334,6 +370,10 @@ export default function UsersContent() {
           group
         }
       });
+      // Ако премахваме група от профила, актуализирайте го
+      if (viewProfileOpen && userId === selectedUser) {
+        await refetchUserData();
+      }
     } catch (error) {
       console.error("Error removing user from group:", error);
       // You could add toast notifications here
@@ -478,34 +518,6 @@ export default function UsersContent() {
                                     Edit Details
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                                  {Object.values(UserRole).map((role) => (
-                                    <DropdownMenuItem 
-                                      key={role}
-                                      onClick={() => handleRoleChange(user._id, role as UserRole)}
-                                      disabled={user.role === role || setRoleLoading}
-                                    >
-                                      {role === user.role ? `Current: ${translateRole(role)}` : translateRole(role)}
-                                    </DropdownMenuItem>
-                                  ))}
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuLabel>Manage Groups</DropdownMenuLabel>
-                                  {Object.values(UserGroup).map((group) => (
-                                    <DropdownMenuItem 
-                                      key={group}
-                                      onClick={() => {
-                                        if(user.groups?.includes(group)) {
-                                          handleRemoveFromGroup(user._id, group as UserGroup);
-                                        } else {
-                                          handleAddToGroup(user._id, group as UserGroup);
-                                        }
-                                      }}
-                                      disabled={addToGroupLoading || removeFromGroupLoading}
-                                    >
-                                      {user.groups?.includes(group) ? `Remove from ${group}` : `Add to ${group}`}
-                                    </DropdownMenuItem>
-                                  ))}
-                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem 
                                     className="text-red-600"
                                     onClick={() => handleDeactivateAccount(user._id)}
@@ -524,7 +536,7 @@ export default function UsersContent() {
                               <TableCell colSpan={6} className="p-4 bg-muted/20">
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="text-sm font-medium">User Groups</h4>
+                                    <h4 className="text-sm font-medium">Допълнителна информация</h4>
                                     <Button 
                                       variant="ghost" 
                                       size="sm" 
@@ -538,134 +550,34 @@ export default function UsersContent() {
                                     </Button>
                                   </div>
                                   
-                                  {user.groups && user.groups.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {user.groups.map((group: UserGroup) => (
-                                        <div key={group} className="flex items-center">
-                                          <Badge variant="secondary" className="mr-2">{group}</Badge>
-                                          <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-6 w-6 rounded-full" 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleRemoveFromGroup(user._id, group as UserGroup);
-                                            }}
-                                            disabled={removeFromGroupLoading}
-                                          >
-                                            <X className="h-3 w-3" />
-                                            <span className="sr-only">Remove from {group}</span>
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">User is not a member of any groups</p>
-                                  )}
-                                  
-                                  {/* Участие в кампании и събития */}
-                                  <div className="mt-3 border-t pt-3">
-                                    <h4 className="text-sm font-medium mb-2">Participation in Events & Campaigns</h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                      <div className="p-2 rounded-md bg-muted/50">
-                                        <h5 className="text-xs font-medium mb-1 flex items-center">
-                                          <Calendar className="h-3 w-3 mr-1" /> Campaigns
-                                        </h5>
-                                        {user.groups?.includes(UserGroup.CAMPAIGNS) ? (
-                                          <div className="text-xs space-y-1">
-                                            <div className="px-2 py-1 rounded bg-white/50 flex justify-between">
-                                              <span>Набиране на средства за медицински център</span>
-                                              <Badge variant="outline" className="text-[10px] h-4">Active</Badge>
-                                            </div>
-                                            <div className="px-2 py-1 rounded bg-white/50 flex justify-between">
-                                              <span>Лекарства за деца с кистична фиброза</span>
-                                              <Badge variant="outline" className="text-[10px] h-4">Active</Badge>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <p className="text-xs text-muted-foreground">Not participating in any campaigns</p>
-                                        )}
+                                  <div className="grid gap-3 mt-2">
+                                    {user.profile?.contact?.phone && (
+                                      <div>
+                                        <h5 className="text-sm font-medium">Телефон:</h5>
+                                        <p className="text-sm text-muted-foreground">{user.profile.contact.phone}</p>
                                       </div>
-                                      
-                                      <div className="p-2 rounded-md bg-muted/50">
-                                        <h5 className="text-xs font-medium mb-1 flex items-center">
-                                          <Users className="h-3 w-3 mr-1" /> Initiatives
-                                        </h5>
-                                        {user.groups?.includes(UserGroup.INITIATIVES) ? (
-                                          <div className="text-xs space-y-1">
-                                            <div className="px-2 py-1 rounded bg-white/50 flex justify-between">
-                                              <span>Информационна кампания в училища</span>
-                                              <Badge variant="outline" className="text-[10px] h-4">Active</Badge>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <p className="text-xs text-muted-foreground">Not participating in any initiatives</p>
-                                        )}
+                                    )}
+                                    
+                                    {user.profile?.address && (
+                                      <div>
+                                        <h5 className="text-sm font-medium">Адрес:</h5>
+                                        <p className="text-sm text-muted-foreground">
+                                          {user.profile.address.street}, {user.profile.address.city} {user.profile.address.postalCode}
+                                        </p>
                                       </div>
-                                      
-                                      <div className="p-2 rounded-md bg-muted/50">
-                                        <h5 className="text-xs font-medium mb-1 flex items-center">
-                                          <BadgeDollarSign className="h-3 w-3 mr-1" /> Conferences
-                                        </h5>
-                                        {user.groups?.includes(UserGroup.CONFERENCES) ? (
-                                          <div className="text-xs space-y-1">
-                                            <div className="px-2 py-1 rounded bg-white/50 flex justify-between">
-                                              <span>Годишна конференция за кистична фиброза</span>
-                                              <Badge variant="outline" className="text-[10px] h-4">Upcoming</Badge>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <p className="text-xs text-muted-foreground">Not registered for any conferences</p>
-                                        )}
+                                    )}
+                                    
+                                    {user.profile?.bio && (
+                                      <div>
+                                        <h5 className="text-sm font-medium">Биография:</h5>
+                                        <p className="text-sm text-muted-foreground">{user.profile.bio}</p>
                                       </div>
-                                      
-                                      <div className="p-2 rounded-md bg-muted/50">
-                                        <h5 className="text-xs font-medium mb-1 flex items-center">
-                                          <Clock className="h-3 w-3 mr-1" /> Events
-                                        </h5>
-                                        {user.groups?.includes(UserGroup.EVENTS) ? (
-                                          <div className="text-xs space-y-1">
-                                            <div className="px-2 py-1 rounded bg-white/50 flex justify-between">
-                                              <span>Благотворителен концерт "65 рози"</span>
-                                              <Badge variant="outline" className="text-[10px] h-4">Upcoming</Badge>
-                                            </div>
-                                            <div className="px-2 py-1 rounded bg-white/50 flex justify-between">
-                                              <span>Семинар за родители</span>
-                                              <Badge variant="outline" className="text-[10px] h-4">Completed</Badge>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <p className="text-xs text-muted-foreground">Not participating in any events</p>
-                                        )}
-                                      </div>
-                                    </div>
+                                    )}
+                                    
+                                    {(!user.profile?.contact?.phone && !user.profile?.address && !user.profile?.bio) && (
+                                      <p className="text-sm text-muted-foreground">Няма допълнителна информация за този потребител.</p>
+                                    )}
                                   </div>
-                                  
-                                  {Object.values(UserGroup).length > 0 && (
-                                    <div>
-                                      <h5 className="text-xs font-medium text-muted-foreground mt-3 mb-2">Add to Group</h5>
-                                      <div className="flex flex-wrap gap-2">
-                                        {Object.values(UserGroup)
-                                          .filter(group => !user.groups?.includes(group))
-                                          .map((group: UserGroup) => (
-                                            <Button 
-                                              key={group}
-                                              variant="outline" 
-                                              size="sm"
-                                              className="text-xs"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleAddToGroup(user._id, group as UserGroup);
-                                              }}
-                                              disabled={addToGroupLoading}
-                                            >
-                                              <PlusCircle className="h-3 w-3 mr-1" /> {group}
-                                            </Button>
-                                          ))
-                                        }
-                                      </div>
-                                    </div>
-                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -780,85 +692,43 @@ export default function UsersContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Change user role */}
+              {isCurrentUserAdmin && (
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Joined</h4>
-                  <p>{selectedUserData.createdAt ? formatDate(selectedUserData.createdAt) : "N/A"}</p>
-                </div>
-                {selectedUserData.profile?.birthDate && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Date of Birth</h4>
-                    <p>{formatDate(selectedUserData.profile.birthDate)}</p>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Roles</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {/* Показваме текущата роля, но със запълнен цвят */}
+                    <Button 
+                      key={selectedUserData.role}
+                      variant="default"
+                      size="sm"
+                    >
+                      {translateRole(selectedUserData.role)}
+                    </Button>
+                    
+                    {/* Показваме останалите роли като опции, но без ADMIN */}
+                    {Object.values(UserRole)
+                      .filter(role => role !== selectedUserData.role && role !== UserRole.ADMIN)
+                      .map((role: UserRole) => (
+                        <Button 
+                          key={role}
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleRoleChange(selectedUserData._id, role as UserRole)}
+                          disabled={setRoleLoading}
+                        >
+                          {translateRole(role)}
+                        </Button>
+                      ))
+                    }
                   </div>
-                )}
-                {selectedUserData.profile?.diagnosed !== undefined && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Diagnosis Status</h4>
-                    <p>{selectedUserData.profile.diagnosed ? "Diagnosed with CF" : "Not diagnosed"}</p>
-                  </div>
-                )}
-                {selectedUserData.profile?.diagnosisYear && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Diagnosis Year</h4>
-                    <p>{selectedUserData.profile.diagnosisYear}</p>
-                  </div>
-                )}
-                {selectedUserData.profile?.childName && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Child's Name</h4>
-                    <p>{selectedUserData.profile.childName}</p>
-                  </div>
-                )}
-                {selectedUserData.profile?.companyName && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Company</h4>
-                    <p>{selectedUserData.profile.companyName}</p>
-                  </div>
-                )}
-              </div>
-
-              {selectedUserData.profile?.address && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Address</h4>
-                  <p>{selectedUserData.profile.address.street}</p>
-                  <p>{selectedUserData.profile.address.city} {selectedUserData.profile.address.postalCode}</p>
                 </div>
               )}
 
-              {selectedUserData.profile?.contact && (
+              {/* Groups management */}
+              {selectedUserData.groups && selectedUserData.groups.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Contact Information</h4>
-                  {selectedUserData.profile.contact.phone && (
-                    <p className="mb-1">
-                      <span className="font-medium">Phone:</span> {selectedUserData.profile.contact.phone}
-                    </p>
-                  )}
-                  {selectedUserData.profile.contact.alternativeEmail && (
-                    <p className="mb-1">
-                      <span className="font-medium">Alternative Email:</span> {selectedUserData.profile.contact.alternativeEmail}
-                    </p>
-                  )}
-                  {selectedUserData.profile.contact.emergencyContact && (
-                    <div className="mt-2">
-                      <h5 className="text-sm font-medium">Emergency Contact</h5>
-                      <p className="ml-2">{selectedUserData.profile.contact.emergencyContact.name} ({selectedUserData.profile.contact.emergencyContact.relation})</p>
-                      <p className="ml-2">{selectedUserData.profile.contact.emergencyContact.phone}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {selectedUserData.profile?.bio && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Bio</h4>
-                  <p className="text-sm">{selectedUserData.profile.bio}</p>
-                </div>
-              )}
-
-              {/* Profile dialog with event participation */}
-              {selectedUserData?.groups && selectedUserData.groups.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Groups</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Current Groups</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedUserData.groups.map((group: UserGroup) => (
                       <div key={group} className="flex items-center">
@@ -878,105 +748,13 @@ export default function UsersContent() {
                   </div>
                 </div>
               )}
-              
-              {/* Events and campaigns section */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Event & Campaign Participation</h4>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {selectedUserData?.groups?.includes(UserGroup.CAMPAIGNS) && (
-                    <div className="p-3 rounded-md border">
-                      <h5 className="text-sm font-medium mb-2 flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-primary" /> Campaigns
-                      </h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Набиране на средства за медицински център</span>
-                          <Badge variant="outline">Active</Badge>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Лекарства за деца с кистична фиброза</span>
-                          <Badge variant="outline">Active</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {selectedUserData?.groups?.includes(UserGroup.CONFERENCES) && (
-                    <div className="p-3 rounded-md border">
-                      <h5 className="text-sm font-medium mb-2 flex items-center">
-                        <BadgeDollarSign className="h-4 w-4 mr-2 text-primary" /> Conferences
-                      </h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Годишна конференция за кистична фиброза</span>
-                          <Badge variant="outline">Upcoming</Badge>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Международен симпозиум</span>
-                          <Badge variant="outline">Completed</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedUserData?.groups?.includes(UserGroup.INITIATIVES) && (
-                    <div className="p-3 rounded-md border">
-                      <h5 className="text-sm font-medium mb-2 flex items-center">
-                        <Users className="h-4 w-4 mr-2 text-primary" /> Initiatives
-                      </h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Информационна кампания в училища</span>
-                          <Badge variant="outline">Active</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedUserData?.groups?.includes(UserGroup.EVENTS) && (
-                    <div className="p-3 rounded-md border">
-                      <h5 className="text-sm font-medium mb-2 flex items-center">
-                        <Clock className="h-4 w-4 mr-2 text-primary" /> Events
-                      </h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Благотворителен концерт "65 рози"</span>
-                          <Badge variant="outline">Upcoming</Badge>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Семинар за родители</span>
-                          <Badge variant="outline">Completed</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {(!selectedUserData?.groups || 
-                    !(selectedUserData.groups.includes(UserGroup.CAMPAIGNS) || 
-                      selectedUserData.groups.includes(UserGroup.CONFERENCES) ||
-                      selectedUserData.groups.includes(UserGroup.INITIATIVES) ||
-                      selectedUserData.groups.includes(UserGroup.EVENTS))
-                  ) && (
-                    <div className="col-span-2 p-3 rounded-md border text-center text-muted-foreground">
-                      This user is not participating in any events or campaigns
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Button to view all participation */}
-              <div className="flex justify-center mt-4">
-                <Button variant="outline" size="sm">
-                  View All Participation History
-                </Button>
-              </div>
-              
               {/* Add UI to add user to groups they're not already in */}
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Add to Group</h4>
                 <div className="flex flex-wrap gap-2">
                   {Object.values(UserGroup)
-                    .filter(group => !selectedUserData.groups?.includes(group))
+                    .filter(group => !selectedUserData?.groups?.includes(group))
                     .map((group: UserGroup) => (
                       <Button 
                         key={group}
