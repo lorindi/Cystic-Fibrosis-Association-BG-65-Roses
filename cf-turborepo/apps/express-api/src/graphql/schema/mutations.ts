@@ -25,6 +25,7 @@ export const mutationTypeDefs = gql`
     joinCampaign(id: ID!): Campaign!
     leaveCampaign(id: ID!): Campaign!
     approveCampaignParticipant(campaignId: ID!, userId: ID!): Campaign!
+    rejectCampaignParticipant(campaignId: ID!, userId: ID!): Campaign!
     
     # Initiatives
     createInitiative(input: InitiativeInput!): Initiative!
