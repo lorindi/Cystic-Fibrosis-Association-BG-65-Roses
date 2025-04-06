@@ -86,7 +86,7 @@ export const GET_PENDING_CAMPAIGN_REQUESTS = gql`
       startDate
       endDate
       pendingParticipants {
-        id
+        _id
         name
         email
         role
@@ -174,7 +174,7 @@ export const APPROVE_CAMPAIGN_PARTICIPANT = gql`
       id
       title
       participants {
-        id
+        _id
         name
       }
       participantsCount
