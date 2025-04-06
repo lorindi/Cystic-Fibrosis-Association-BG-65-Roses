@@ -11,8 +11,30 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, CheckCircle, User, Calendar, X } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  CheckCircle, 
+  User, 
+  Calendar, 
+  X,
+  MoreHorizontal,
+  Info,
+  AlertCircle 
+} from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 interface PendingParticipantsTableProps {
   pendingRequests: Array<{
@@ -22,7 +44,7 @@ interface PendingParticipantsTableProps {
     endDate?: string;
     pendingParticipantsCount: number;
     pendingParticipants: Array<{
-      id: string;
+      _id: string;
       name: string;
       email: string;
       role: string;
@@ -77,15 +99,10 @@ export function PendingParticipantsTable({
 
   return (
     <div className="space-y-8">
-      {pendingRequests.length === 0 ? (
-        <div className="rounded-md border p-8 text-center">
-          <p className="text-muted-foreground">
-            Няма чакащи заявки за одобрение.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="rounded-md border p-4 bg-muted/20">
+      <div className="rounded-md border p-4 bg-muted/20">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
+          <div>
             <p className="text-sm text-muted-foreground mb-2">
               <strong>Забележка:</strong> Тази функционалност позволява одобряване или отхвърляне на заявки за участие в кампании.
             </p>
@@ -93,126 +110,158 @@ export function PendingParticipantsTable({
               Потребителите сами се записват за кампаниите, след което администратори или потребители с група "campaigns" могат да одобрят или отхвърлят заявките.
             </p>
           </div>
+        </div>
+      </div>
 
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">
-                Общ брой чакащи заявки:
-                <Badge variant="secondary" className="ml-2">
-                  {campaignsWithPendingParticipants.reduce(
-                    (total, campaign) => total + campaign.pendingParticipantsCount,
-                    0
-                  )}
-                </Badge>
-              </h2>
-            </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">
+            Общ брой чакащи заявки:
+            <Badge variant="secondary" className="ml-2">
+              {campaignsWithPendingParticipants.reduce(
+                (total, campaign) => total + campaign.pendingParticipantsCount,
+                0
+              )}
+            </Badge>
+          </h2>
+        </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Кампания</TableHead>
-                  <TableHead>Период</TableHead>
-                  <TableHead>Брой чакащи</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaignsWithPendingParticipants.map((campaign) => (
-                  <React.Fragment key={campaign.id}>
-                    <TableRow className="cursor-pointer hover:bg-muted/50">
-                      <TableCell
-                        className="font-medium"
-                        onClick={() => toggleCampaignExpand(campaign.id)}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40%]">Кампания</TableHead>
+              <TableHead className="w-[40%]">Период</TableHead>
+              <TableHead className="w-[20%] text-center">Брой чакащи</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {campaignsWithPendingParticipants.map((campaign) => (
+              <React.Fragment key={campaign.id}>
+                <TableRow 
+                  className={`cursor-pointer hover:bg-muted/50 ${
+                    expandedCampaigns[campaign.id] ? "bg-muted/30" : ""
+                  }`}
+                  onClick={() => toggleCampaignExpand(campaign.id)}
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCampaignExpand(campaign.id);
+                        }}
+                        className="p-1 rounded-full hover:bg-muted"
                       >
-                        {campaign.title}
-                      </TableCell>
-                      <TableCell onClick={() => toggleCampaignExpand(campaign.id)}>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>
-                            {formatDate(campaign.startDate)}
-                            {campaign.endDate && ` - ${formatDate(campaign.endDate)}`}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell onClick={() => toggleCampaignExpand(campaign.id)}>
-                        <Badge variant="secondary">{campaign.pendingParticipantsCount}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleCampaignExpand(campaign.id)}
-                        >
-                          {expandedCampaigns[campaign.id] ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                        {expandedCampaigns[campaign.id] ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2">
+                              {campaign.title}
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Натиснете за подробности за чакащите участници</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>
+                        {formatDate(campaign.startDate)}
+                        {campaign.endDate && ` - ${formatDate(campaign.endDate)}`}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                      {campaign.pendingParticipantsCount}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
 
-                    {expandedCampaigns[campaign.id] && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="p-0">
-                          <div className="p-4 bg-muted/30">
-                            <h3 className="font-medium mb-2">Чакащи одобрение участници:</h3>
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Име</TableHead>
-                                  <TableHead>Email</TableHead>
-                                  <TableHead>Роля</TableHead>
-                                  <TableHead className="text-right">Действия</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {campaign.pendingParticipants.map((participant) => (
-                                  <TableRow key={participant.id}>
-                                    <TableCell className="flex items-center gap-2">
-                                      <User className="h-4 w-4" />
-                                      {participant.name}
-                                    </TableCell>
-                                    <TableCell>{participant.email}</TableCell>
-                                    <TableCell>
-                                      <Badge variant="outline">{translateRole(participant.role)}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      <div className="flex justify-end gap-2">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="border-destructive text-destructive hover:bg-destructive/10"
-                                          onClick={() => onReject(campaign.id, participant.id)}
-                                        >
-                                          <X className="h-4 w-4 mr-2" />
-                                          Откажи
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          onClick={() => onApprove(campaign.id, participant.id)}
-                                        >
-                                          <CheckCircle className="h-4 w-4 mr-2" />
-                                          Одобри
-                                        </Button>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      )}
+                {expandedCampaigns[campaign.id] && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="p-0">
+                      <div className="p-4 bg-muted/30 border-t">
+                        <h3 className="font-medium mb-3 flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          Чакащи одобрение участници
+                        </h3>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Име</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Роля</TableHead>
+                              <TableHead className="text-right">Действия</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {campaign.pendingParticipants.map((participant) => (
+                              <TableRow key={participant._id}>
+                                <TableCell className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                  {participant.name}
+                                </TableCell>
+                                <TableCell>{participant.email}</TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={
+                                      participant.role === "patient" 
+                                        ? "border-blue-200 bg-blue-50 text-blue-700"
+                                        : participant.role === "parent"
+                                        ? "border-green-200 bg-green-50 text-green-700"
+                                        : "border-gray-200 bg-gray-50 text-gray-700"
+                                    }
+                                  >
+                                    {translateRole(participant.role)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="border-red-200 text-red-600 hover:bg-red-50 flex items-center"
+                                      onClick={() => onReject(campaign.id, participant._id)}
+                                    >
+                                      <X className="h-4 w-4 mr-2" />
+                                      Откажи
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="bg-black text-white hover:bg-black/80 flex items-center"
+                                      onClick={() => onApprove(campaign.id, participant._id)}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      Одобри
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 } 
