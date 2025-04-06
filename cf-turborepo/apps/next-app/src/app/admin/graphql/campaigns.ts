@@ -13,7 +13,9 @@ export const GET_CAMPAIGNS = gql`
       events {
         id
         title
+        description
         date
+        location
       }
       participantsCount
       pendingParticipantsCount
@@ -31,20 +33,14 @@ export const GET_CAMPAIGN = gql`
       currentAmount
       startDate
       endDate
+      createdAt
+      updatedAt
       createdBy {
         id
         name
+        email
+        role
       }
-      participants {
-        id
-        name
-      }
-      pendingParticipants {
-        id
-        name
-      }
-      participantsCount
-      pendingParticipantsCount
       events {
         id
         title
@@ -52,6 +48,20 @@ export const GET_CAMPAIGN = gql`
         date
         location
       }
+      participants {
+        id
+        name
+        email
+        role
+      }
+      pendingParticipants {
+        id
+        name
+        email
+        role
+      }
+      participantsCount
+      pendingParticipantsCount
     }
   }
 `;
@@ -133,6 +143,7 @@ export const ADD_CAMPAIGN_EVENT = gql`
     addCampaignEvent(campaignId: $campaignId, input: $input) {
       id
       title
+      description
       date
       location
     }
@@ -144,6 +155,7 @@ export const UPDATE_CAMPAIGN_EVENT = gql`
     updateCampaignEvent(eventId: $eventId, input: $input) {
       id
       title
+      description
       date
       location
     }
