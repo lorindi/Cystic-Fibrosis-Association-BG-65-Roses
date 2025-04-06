@@ -36,7 +36,9 @@ export function CampaignsTable({
   onDelete,
   onManageEvents,
 }: CampaignsTableProps) {
-  const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
+  const [expandedRows, setExpandedRows] = React.useState<
+    Record<string, boolean>
+  >({});
 
   const toggleRow = (campaignId: string) => {
     setExpandedRows((prev) => ({
@@ -74,7 +76,7 @@ export function CampaignsTable({
           ) : (
             campaigns.map((campaign) => (
               <React.Fragment key={campaign.id}>
-                <TableRow 
+                <TableRow
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => toggleRow(campaign.id)}
                 >
@@ -105,7 +107,7 @@ export function CampaignsTable({
                       </Badge>
                       {(campaign.pendingParticipantsCount ?? 0) > 0 && (
                         <Badge variant="destructive">
-                          {campaign.pendingParticipantsCount} чакащи
+                          {campaign.pendingParticipantsCount ?? 0} чакащи
                         </Badge>
                       )}
                     </div>
@@ -124,7 +126,9 @@ export function CampaignsTable({
                             <Edit className="mr-2 h-4 w-4" />
                             Редактирай
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onManageEvents(campaign)}>
+                          <DropdownMenuItem
+                            onClick={() => onManageEvents(campaign)}
+                          >
                             <Calendar className="mr-2 h-4 w-4" />
                             Управлявай събития
                           </DropdownMenuItem>
@@ -146,7 +150,7 @@ export function CampaignsTable({
                           <p className="text-sm text-muted-foreground mb-4">
                             {campaign.description || "Няма описание"}
                           </p>
-                          
+
                           <h4 className="font-semibold mb-2">Прогрес:</h4>
                           <div className="flex flex-col gap-1 mb-4">
                             <Progress
@@ -160,7 +164,7 @@ export function CampaignsTable({
                             </span>
                           </div>
                         </div>
-                        
+
                         <div>
                           <h4 className="font-semibold mb-2">Събития:</h4>
                           {campaign.events && campaign.events.length > 0 ? (
@@ -172,12 +176,14 @@ export function CampaignsTable({
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-sm text-muted-foreground">Няма добавени събития</p>
+                            <p className="text-sm text-muted-foreground">
+                              Няма добавени събития
+                            </p>
                           )}
-                          
+
                           <div className="flex gap-2 mt-4">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -194,10 +200,12 @@ export function CampaignsTable({
                       {(campaign.pendingParticipantsCount ?? 0) > 0 && (
                         <div className="mt-4 p-3 border rounded-md bg-amber-50">
                           <p className="text-sm font-medium text-amber-700 mb-1">
-                            Има {campaign.pendingParticipantsCount} чакащи заявки за тази кампания!
+                            Има {campaign.pendingParticipantsCount ?? 0} чакащи
+                            заявки за тази кампания!
                           </p>
                           <p className="text-xs text-amber-600">
-                            Можете да одобрите или отхвърлите заявките от таб "Чакащи участници"
+                            Можете да одобрите или отхвърлите заявките от таб
+                            "Чакащи участници"
                           </p>
                         </div>
                       )}
@@ -211,4 +219,4 @@ export function CampaignsTable({
       </Table>
     </div>
   );
-} 
+}
