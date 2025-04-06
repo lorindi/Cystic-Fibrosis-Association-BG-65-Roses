@@ -73,6 +73,8 @@ export const GET_PENDING_CAMPAIGN_REQUESTS = gql`
     getPendingCampaignRequests {
       id
       title
+      startDate
+      endDate
       pendingParticipants {
         id
         name
@@ -165,6 +167,43 @@ export const APPROVE_CAMPAIGN_PARTICIPANT = gql`
       }
       participantsCount
       pendingParticipantsCount
+    }
+  }
+`;
+
+// Мутация за директно добавяне на потребител към кампания от администратор
+export const ADD_USER_TO_CAMPAIGN = gql`
+  mutation AddUserToCampaign($campaignId: ID!, $userId: ID!) {
+    addUserToCampaign(campaignId: $campaignId, userId: $userId) {
+      id
+      title
+      participants {
+        id
+        name
+      }
+      participantsCount
+    }
+  }
+`;
+
+// Мутация за отхвърляне на заявка за участие в кампания
+export const REJECT_CAMPAIGN_PARTICIPANT = gql`
+  mutation RejectCampaignParticipant($campaignId: ID!, $userId: ID!) {
+    rejectCampaignParticipant(campaignId: $campaignId, userId: $userId) {
+      id
+      title
+      pendingParticipantsCount
+    }
+  }
+`;
+
+// Мутация за премахване на потребител от кампания
+export const REMOVE_USER_FROM_CAMPAIGN = gql`
+  mutation RemoveUserFromCampaign($campaignId: ID!, $userId: ID!) {
+    removeUserFromCampaign(campaignId: $campaignId, userId: $userId) {
+      id
+      title
+      participantsCount
     }
   }
 `; 
