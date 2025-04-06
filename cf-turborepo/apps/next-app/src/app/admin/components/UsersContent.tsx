@@ -260,17 +260,11 @@ export default function UsersContent() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Users</h2>
-        <Button>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          New User
-        </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
-          <CardDescription>Manage system users</CardDescription>
+          <CardTitle>Управление на потребители</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4">
