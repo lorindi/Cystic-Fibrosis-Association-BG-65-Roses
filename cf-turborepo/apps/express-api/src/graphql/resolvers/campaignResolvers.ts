@@ -33,6 +33,30 @@ export const campaignResolvers = {
       }
     },
     
+    getPendingCampaignRequests: async (_: unknown, __: unknown, context: ContextType) => {
+      const user = checkAuth(context);
+      
+      // Само администратори или потребители с група CAMPAIGNS могат да виждат чакащи заявки
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to view pending requests');
+      }
+      
+      try {
+        // Намираме всички кампании с поне един чакащ участник
+        const campaigns = await Campaign.find({
+          pendingParticipants: { $exists: true, $not: { $size: 0 } }
+        })
+          .populate('createdBy')
+          .populate('participants')
+          .populate('pendingParticipants')
+          .sort({ startDate: -1 });
+          
+        return campaigns;
+      } catch (err) {
+        throw new Error('Error fetching pending campaign requests');
+      }
+    },
+    
     getCampaignEvents: async (_: unknown, { campaignId }: { campaignId: string }) => {
       try {
         const campaign = await Campaign.findById(campaignId);
@@ -256,18 +280,26 @@ export const campaignResolvers = {
           throw new Error('Campaign not found');
         }
         
-        // Проверка дали потребителят вече е записан
+        // Проверка дали потребителят вече е записан или чака одобрение
         if (campaign.participants.some(p => p.toString() === user.id)) {
           throw new Error('You are already registered for this campaign');
         }
         
-        // Записване за кампанията
-        campaign.participants.push(user.id);
+        if (campaign.pendingParticipants && campaign.pendingParticipants.some(p => p.toString() === user.id)) {
+          throw new Error('Your registration is already pending approval');
+        }
+        
+        // Добавяне към чакащите одобрение
+        if (!campaign.pendingParticipants) {
+          campaign.pendingParticipants = [];
+        }
+        campaign.pendingParticipants.push(user.id);
         await campaign.save();
         
         return await Campaign.findById(id)
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate('pendingParticipants');
       } catch (err: unknown) {
         if (err instanceof Error) {
           throw new Error(`Error registering for campaign: ${err.message}`);
@@ -305,6 +337,91 @@ export const campaignResolvers = {
           throw new Error(`Error unregistering from campaign: ${err.message}`);
         }
         throw new Error('Unexpected error during campaign unregistration');
+      }
+    },
+    
+    // Одобряване на чакащ участник
+    approveCampaignParticipant: async (
+      _: unknown, 
+      { campaignId, userId }: { campaignId: string, userId: string }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Само администратори или потребители с група CAMPAIGNS могат да одобряват участници
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to approve participants');
+      }
+      
+      try {
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        
+        // Проверка дали потребителят е в списъка с чакащи
+        if (!campaign.pendingParticipants || !campaign.pendingParticipants.some(p => p.toString() === userId)) {
+          throw new Error('User is not in the pending list for this campaign');
+        }
+        
+        // Премахване от чакащите и добавяне към одобрените участници
+        campaign.pendingParticipants = campaign.pendingParticipants.filter(
+          p => p.toString() !== userId
+        );
+        campaign.participants.push(userId);
+        await campaign.save();
+        
+        return await Campaign.findById(campaignId)
+          .populate('createdBy')
+          .populate('participants')
+          .populate('pendingParticipants');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error approving participant: ${err.message}`);
+        }
+        throw new Error('Unexpected error during participant approval');
+      }
+    },
+    
+    // Отхвърляне на чакащ участник
+    rejectCampaignParticipant: async (
+      _: unknown, 
+      { campaignId, userId }: { campaignId: string, userId: string }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Само администратори или потребители с група CAMPAIGNS могат да отхвърлят участници
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to reject participants');
+      }
+      
+      try {
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        
+        // Проверка дали потребителят е в списъка с чакащи
+        if (!campaign.pendingParticipants || !campaign.pendingParticipants.some(p => p.toString() === userId)) {
+          throw new Error('User is not in the pending list for this campaign');
+        }
+        
+        // Премахване от чакащите
+        campaign.pendingParticipants = campaign.pendingParticipants.filter(
+          p => p.toString() !== userId
+        );
+        await campaign.save();
+        
+        return await Campaign.findById(campaignId)
+          .populate('createdBy')
+          .populate('participants')
+          .populate('pendingParticipants');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error rejecting participant: ${err.message}`);
+        }
+        throw new Error('Unexpected error during participant rejection');
       }
     },
   },
