@@ -563,7 +563,43 @@ mutation {
 
 Тази мутация премества потребител от чакащ одобрение (`pendingParticipants`) към одобрени участници (`participants`).
 
-### 9. Отписване от кампания
+### 9. Отхвърляне на заявка за участие (само за администратори и потребители с група CAMPAIGNS)
+
+```graphql
+mutation RejectCampaignParticipant($campaignId: ID!, $userId: ID!) {
+  rejectCampaignParticipant(campaignId: $campaignId, userId: $userId) {
+    id
+    title
+    pendingParticipantsCount
+  }
+}
+```
+
+**Пример с променливи:**
+```json
+{
+  "campaignId": "5f8d0c1f6e1b7a001c8e1a6d",
+  "userId": "5f7c1d2e6b3a8f001e9d2b3c"
+}
+```
+
+**Пример с директно подадени данни:**
+```graphql
+mutation {
+  rejectCampaignParticipant(
+    campaignId: "5f8d0c1f6e1b7a001c8e1a6d",
+    userId: "5f7c1d2e6b3a8f001e9d2b3c"
+  ) {
+    id
+    title
+    pendingParticipantsCount
+  }
+}
+```
+
+Тази мутация премахва потребител от списъка с чакащи одобрение (`pendingParticipants`), без да го добавя към одобрените участници.
+
+### 10. Отписване от кампания
 
 ```graphql
 mutation LeaveCampaign($id: ID!) {
