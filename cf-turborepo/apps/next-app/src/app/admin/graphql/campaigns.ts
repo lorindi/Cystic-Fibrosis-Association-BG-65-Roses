@@ -16,6 +16,70 @@ export const GET_CAMPAIGNS = gql`
         date
       }
       participantsCount
+      pendingParticipantsCount
+    }
+  }
+`;
+
+export const GET_CAMPAIGN = gql`
+  query GetCampaign($id: ID!) {
+    getCampaign(id: $id) {
+      id
+      title
+      description
+      goal
+      currentAmount
+      startDate
+      endDate
+      createdBy {
+        id
+        name
+      }
+      participants {
+        id
+        name
+      }
+      pendingParticipants {
+        id
+        name
+      }
+      participantsCount
+      pendingParticipantsCount
+      events {
+        id
+        title
+        description
+        date
+        location
+      }
+    }
+  }
+`;
+
+export const GET_CAMPAIGN_EVENTS = gql`
+  query GetCampaignEvents($campaignId: ID!) {
+    getCampaignEvents(campaignId: $campaignId) {
+      id
+      title
+      description
+      date
+      location
+    }
+  }
+`;
+
+export const GET_PENDING_CAMPAIGN_REQUESTS = gql`
+  query GetPendingCampaignRequests {
+    getPendingCampaignRequests {
+      id
+      title
+      pendingParticipants {
+        id
+        name
+        email
+        role
+      }
+      pendingParticipantsCount
     }
   }
 `;
@@ -59,5 +123,48 @@ export const UPDATE_CAMPAIGN = gql`
 export const DELETE_CAMPAIGN = gql`
   mutation DeleteCampaign($id: ID!) {
     deleteCampaign(id: $id)
+  }
+`;
+
+export const ADD_CAMPAIGN_EVENT = gql`
+  mutation AddCampaignEvent($campaignId: ID!, $input: CampaignEventInput!) {
+    addCampaignEvent(campaignId: $campaignId, input: $input) {
+      id
+      title
+      date
+      location
+    }
+  }
+`;
+
+export const UPDATE_CAMPAIGN_EVENT = gql`
+  mutation UpdateCampaignEvent($eventId: ID!, $input: CampaignEventInput!) {
+    updateCampaignEvent(eventId: $eventId, input: $input) {
+      id
+      title
+      date
+      location
+    }
+  }
+`;
+
+export const DELETE_CAMPAIGN_EVENT = gql`
+  mutation DeleteCampaignEvent($eventId: ID!) {
+    deleteCampaignEvent(eventId: $eventId)
+  }
+`;
+
+export const APPROVE_CAMPAIGN_PARTICIPANT = gql`
+  mutation ApproveCampaignParticipant($campaignId: ID!, $userId: ID!) {
+    approveCampaignParticipant(campaignId: $campaignId, userId: $userId) {
+      id
+      title
+      participants {
+        id
+        name
+      }
+      participantsCount
+      pendingParticipantsCount
+    }
   }
 `; 
