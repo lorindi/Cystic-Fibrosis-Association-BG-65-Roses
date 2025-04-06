@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/types/campaign";
-import { Calendar, ChevronDown, ChevronUp, Pencil, Trash, Users } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Pencil, Trash } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,7 +28,6 @@ interface CampaignsTableProps {
   onEdit: (campaign: Campaign) => void;
   onDelete: (campaign: Campaign) => void;
   onManageEvents: (campaign: Campaign) => void;
-  onManageParticipants: (campaign: Campaign) => void;
 }
 
 export function CampaignsTable({
@@ -36,7 +35,6 @@ export function CampaignsTable({
   onEdit,
   onDelete,
   onManageEvents,
-  onManageParticipants,
 }: CampaignsTableProps) {
   const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
 
@@ -130,10 +128,6 @@ export function CampaignsTable({
                             <Calendar className="mr-2 h-4 w-4" />
                             Управлявай събития
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onManageParticipants(campaign)}>
-                            <Users className="mr-2 h-4 w-4" />
-                            Управлявай участници
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onDelete(campaign)}>
                             <Trash className="mr-2 h-4 w-4" />
                             Изтрий
@@ -193,21 +187,20 @@ export function CampaignsTable({
                               <Calendar className="h-4 w-4 mr-2" />
                               Управлявай събития
                             </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onManageParticipants(campaign);
-                              }}
-                            >
-                              <Users className="h-4 w-4 mr-2" />
-                              Управлявай участници
-                            </Button>
                           </div>
                         </div>
                       </div>
+
+                      {campaign.pendingParticipantsCount > 0 && (
+                        <div className="mt-4 p-3 border rounded-md bg-amber-50">
+                          <p className="text-sm font-medium text-amber-700 mb-1">
+                            Има {campaign.pendingParticipantsCount} чакащи заявки за тази кампания!
+                          </p>
+                          <p className="text-xs text-amber-600">
+                            Можете да одобрите или отхвърлите заявките от таб "Чакащи участници"
+                          </p>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
