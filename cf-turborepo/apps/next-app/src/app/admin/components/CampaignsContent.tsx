@@ -17,11 +17,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CampaignsTable } from "../features/campaigns/components/CampaignsTable";
-import { CampaignFormModal } from "../features/campaigns/components/CampaignFormModal";
-import { CampaignEventsTable } from "../features/campaigns/components/CampaignEventsTable";
-import { CampaignEventFormModal } from "../features/campaigns/components/CampaignEventFormModal";
-import { PendingParticipantsTable } from "../features/campaigns/components/PendingParticipantsTable";
+import {
+  CampaignsTable,
+  CampaignFormModal,
+  CampaignEventsTable, 
+  CampaignEventFormModal,
+  PendingParticipantsTable,
+  CampaignParticipantsDialog
+} from "../features/campaigns/components";
 import {
   GET_CAMPAIGNS,
   GET_CAMPAIGN,
@@ -33,6 +36,9 @@ import {
   UPDATE_CAMPAIGN_EVENT,
   DELETE_CAMPAIGN_EVENT,
   APPROVE_CAMPAIGN_PARTICIPANT,
+  REJECT_CAMPAIGN_PARTICIPANT,
+  ADD_USER_TO_CAMPAIGN,
+  REMOVE_USER_FROM_CAMPAIGN,
 } from "../graphql/campaigns";
 
 export default function CampaignsContent() {
@@ -49,11 +55,21 @@ export default function CampaignsContent() {
   const [isEventDeleteDialogOpen, setIsEventDeleteDialogOpen] = React.useState(false);
   const [eventToDelete, setEventToDelete] = React.useState<any | undefined>();
   
+  // Participants management states
+  const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = React.useState(false);
+  const [campaignForParticipants, setCampaignForParticipants] = React.useState<Campaign | undefined>();
+  
   // Tab state
   const [activeTab, setActiveTab] = React.useState("campaigns");
 
-  const { data, loading, error } = useQuery(GET_CAMPAIGNS);
+  const { data, loading, error, refetch } = useQuery(GET_CAMPAIGNS);
   const { data: pendingRequestsData, loading: pendingLoading, refetch: refetchPending } = useQuery(GET_PENDING_CAMPAIGN_REQUESTS);
+  
+  // Детайлна заявка за кампания
+  const { data: campaignDetailsData, loading: campaignDetailsLoading, refetch: refetchCampaignDetails } = useQuery(GET_CAMPAIGN, {
+    variables: { id: campaignForParticipants?.id || "" },
+    skip: !campaignForParticipants,
+  });
 
   const [createCampaign] = useMutation(CREATE_CAMPAIGN, {
     refetchQueries: [{ query: GET_CAMPAIGNS }],
@@ -80,13 +96,23 @@ export default function CampaignsContent() {
     refetchQueries: [{ query: GET_CAMPAIGNS }],
   });
 
-  // Participant approval mutation
+  // Participant management mutations
   const [approveCampaignParticipant] = useMutation(APPROVE_CAMPAIGN_PARTICIPANT, {
     refetchQueries: [
       { query: GET_PENDING_CAMPAIGN_REQUESTS },
       { query: GET_CAMPAIGNS }
     ],
   });
+  
+  const [rejectCampaignParticipant] = useMutation(REJECT_CAMPAIGN_PARTICIPANT, {
+    refetchQueries: [
+      { query: GET_PENDING_CAMPAIGN_REQUESTS }
+    ],
+  });
+  
+  const [addUserToCampaign] = useMutation(ADD_USER_TO_CAMPAIGN);
+  
+  const [removeUserFromCampaign] = useMutation(REMOVE_USER_FROM_CAMPAIGN);
 
   const handleCreateOrUpdate = async (formData: any) => {
     try {
@@ -222,6 +248,7 @@ export default function CampaignsContent() {
         description: "Участникът беше одобрен успешно",
       });
       refetchPending();
+      refetch();
     } catch (error: any) {
       toast({
         title: "Грешка",
@@ -229,6 +256,87 @@ export default function CampaignsContent() {
         variant: "destructive",
       });
     }
+  };
+  
+  // Participant rejection function
+  const handleRejectParticipant = async (campaignId: string, userId: string) => {
+    try {
+      await rejectCampaignParticipant({
+        variables: {
+          campaignId,
+          userId,
+        },
+      });
+      toast({
+        title: "Успешно",
+        description: "Заявката за участие беше отхвърлена",
+      });
+      refetchPending();
+    } catch (error: any) {
+      toast({
+        title: "Грешка",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Функция за директно добавяне на потребител към кампания
+  const handleAddUserToCampaign = async (userId: string) => {
+    if (!campaignForParticipants) return;
+
+    try {
+      await addUserToCampaign({
+        variables: {
+          campaignId: campaignForParticipants.id,
+          userId,
+        },
+      });
+      toast({
+        title: "Успешно",
+        description: "Потребителят беше добавен към кампанията",
+      });
+      refetch();
+      refetchCampaignDetails();
+    } catch (error: any) {
+      toast({
+        title: "Грешка",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Функция за премахване на потребител от кампания
+  const handleRemoveUserFromCampaign = async (userId: string) => {
+    if (!campaignForParticipants) return;
+
+    try {
+      await removeUserFromCampaign({
+        variables: {
+          campaignId: campaignForParticipants.id,
+          userId,
+        },
+      });
+      toast({
+        title: "Успешно",
+        description: "Потребителят беше премахнат от кампанията",
+      });
+      refetch();
+      refetchCampaignDetails();
+    } catch (error: any) {
+      toast({
+        title: "Грешка",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Функция за отваряне на диалога за управление на участниците
+  const handleManageParticipants = (campaign: Campaign) => {
+    setCampaignForParticipants(campaign);
+    setIsParticipantsDialogOpen(true);
   };
 
   if (loading || pendingLoading) return <div>Зареждане...</div>;
@@ -282,6 +390,7 @@ export default function CampaignsContent() {
               setCurrentCampaignId(campaign.id);
               setActiveTab("events");
             }}
+            onManageParticipants={handleManageParticipants}
           />
         </TabsContent>
 
@@ -293,6 +402,7 @@ export default function CampaignsContent() {
           <PendingParticipantsTable
             pendingRequests={pendingRequestsData?.getPendingCampaignRequests || []}
             onApprove={handleApproveParticipant}
+            onReject={handleRejectParticipant}
           />
         </TabsContent>
 
@@ -326,11 +436,11 @@ export default function CampaignsContent() {
 
               <CampaignEventsTable
                 campaign={data.getCampaigns.find((c: any) => c.id === currentCampaignId)}
-                onEdit={(event) => {
+                onEdit={(event: any) => {
                   setSelectedEvent(event);
                   setIsEventModalOpen(true);
                 }}
-                onDelete={(event) => {
+                onDelete={(event: any) => {
                   setEventToDelete(event);
                   setIsEventDeleteDialogOpen(true);
                 }}
@@ -355,6 +465,17 @@ export default function CampaignsContent() {
         event={selectedEvent}
         onSubmit={handleCreateOrUpdateEvent}
       />
+      
+      {/* Participants Management Dialog */}
+      {campaignForParticipants && campaignDetailsData?.getCampaign && (
+        <CampaignParticipantsDialog
+          open={isParticipantsDialogOpen}
+          onOpenChange={setIsParticipantsDialogOpen}
+          campaign={campaignDetailsData.getCampaign}
+          onAddUser={handleAddUserToCampaign}
+          onRemoveUser={handleRemoveUserFromCampaign}
+        />
+      )}
 
       {/* Delete Campaign Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
