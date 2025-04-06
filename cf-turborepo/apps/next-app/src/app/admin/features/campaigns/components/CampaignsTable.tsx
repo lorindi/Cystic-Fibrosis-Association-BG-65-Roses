@@ -90,12 +90,12 @@ export function CampaignsTable({
                   </TableCell>
                   <TableCell>
                     {campaign.startDate
-                      ? formatDate(new Date(campaign.startDate))
+                      ? formatDate(campaign.startDate)
                       : "Няма начална дата"}
                   </TableCell>
                   <TableCell>
                     {campaign.endDate
-                      ? formatDate(new Date(campaign.endDate))
+                      ? formatDate(campaign.endDate)
                       : "Няма крайна дата"}
                   </TableCell>
                   <TableCell>
@@ -103,7 +103,7 @@ export function CampaignsTable({
                       <Badge variant="outline">
                         {campaign.participantsCount || 0} участници
                       </Badge>
-                      {campaign.pendingParticipantsCount > 0 && (
+                      {(campaign.pendingParticipantsCount ?? 0) > 0 && (
                         <Badge variant="destructive">
                           {campaign.pendingParticipantsCount} чакащи
                         </Badge>
@@ -191,7 +191,7 @@ export function CampaignsTable({
                         </div>
                       </div>
 
-                      {campaign.pendingParticipantsCount > 0 && (
+                      {(campaign.pendingParticipantsCount ?? 0) > 0 && (
                         <div className="mt-4 p-3 border rounded-md bg-amber-50">
                           <p className="text-sm font-medium text-amber-700 mb-1">
                             Има {campaign.pendingParticipantsCount} чакащи заявки за тази кампания!
