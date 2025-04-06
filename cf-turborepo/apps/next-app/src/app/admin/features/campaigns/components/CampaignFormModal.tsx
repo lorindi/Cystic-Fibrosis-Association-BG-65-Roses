@@ -61,6 +61,54 @@ export function CampaignFormModal({
     },
   });
 
+  // Актуализиране на стойностите на формата при промяна на campaign пропъртито
+  React.useEffect(() => {
+    if (campaign) {
+      // Ресетваме формата със стойностите от campaign обекта
+      form.reset({
+        title: campaign.title || "",
+        description: campaign.description || "",
+        goal: campaign.goal || 0,
+        startDate: campaign.startDate
+          ? new Date(campaign.startDate).toISOString().split("T")[0]
+          : "",
+        endDate: campaign.endDate
+          ? new Date(campaign.endDate).toISOString().split("T")[0]
+          : "",
+      });
+    } else {
+      // Ако няма campaign, ресетваме към празни стойности
+      form.reset({
+        title: "",
+        description: "",
+        goal: 0,
+        startDate: "",
+        endDate: "",
+      });
+    }
+  }, [campaign, form]);
+
+  // Функция за форматиране на датите при изпращане
+  const handleSubmit = (values: CampaignFormValues) => {
+    // Копираме стойностите, за да не променяме директно входните данни
+    const formattedValues = { ...values };
+    
+    // Конвертираме дата стринговете към ISO формат
+    if (formattedValues.startDate) {
+      const startDate = new Date(formattedValues.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      formattedValues.startDate = startDate.toISOString();
+    }
+    
+    if (formattedValues.endDate) {
+      const endDate = new Date(formattedValues.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      formattedValues.endDate = endDate.toISOString();
+    }
+    
+    onSubmit(formattedValues);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -70,7 +118,7 @@ export function CampaignFormModal({
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
