@@ -20,9 +20,29 @@ const authLink = setContext((_, { headers }) => {
   }
 });
 
+// Създаваме кеш с типови политики
+const cache = new InMemoryCache({
+  typePolicies: {
+    User: {
+      fields: {
+        profile: {
+          // Функция за сливане на profile обектите
+          merge(existing, incoming, { mergeObjects }) {
+            // Ако нямаме съществуващ обект, просто връщаме новия
+            if (!existing) return incoming;
+            
+            // Обединяваме съществуващите и новите данни
+            return mergeObjects(existing, incoming);
+          }
+        }
+      }
+    }
+  }
+});
+
 // Create the Apollo Client instance
 export const client = new ApolloClient({
   link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
+  cache, // Използваме новоконфигурирания кеш
   ssrMode: typeof window === 'undefined',
 }); 
