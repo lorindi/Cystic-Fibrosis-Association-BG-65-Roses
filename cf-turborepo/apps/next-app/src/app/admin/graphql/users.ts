@@ -8,6 +8,8 @@ export const GET_USERS_BY_ROLE = gql`
       name
       email
       role
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -20,6 +22,8 @@ export const GET_USERS = gql`
       name
       email
       role
+      createdAt
+      updatedAt
     }
   }
 `;
