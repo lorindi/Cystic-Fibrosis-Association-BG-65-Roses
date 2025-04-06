@@ -59,18 +59,18 @@ export function CampaignsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Заглавие</TableHead>
-            <TableHead>Начало</TableHead>
-            <TableHead>Край</TableHead>
-            <TableHead>Участници</TableHead>
-            <TableHead className="w-[100px] text-right">Действия</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Start date</TableHead>
+            <TableHead>End date</TableHead>
+            <TableHead>Participants</TableHead>
+            <TableHead className="w-[100px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {campaigns.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-6">
-                Няма налични кампании.
+                No campaigns available.
               </TableCell>
             </TableRow>
           ) : (
@@ -93,21 +93,21 @@ export function CampaignsTable({
                   <TableCell>
                     {campaign.startDate
                       ? formatDate(campaign.startDate)
-                      : "Няма начална дата"}
+                      : "No start date"}
                   </TableCell>
                   <TableCell>
                     {campaign.endDate
                       ? formatDate(campaign.endDate)
-                      : "Няма крайна дата"}
+                      : "No end date"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Badge variant="outline">
-                        {campaign.participantsCount || 0} участници
+                        {campaign.participantsCount || 0} participants
                       </Badge>
                       {(campaign.pendingParticipantsCount ?? 0) > 0 && (
                         <Badge variant="destructive">
-                          {campaign.pendingParticipantsCount ?? 0} чакащи
+                          {campaign.pendingParticipantsCount ?? 0} pending
                         </Badge>
                       )}
                     </div>
@@ -117,24 +117,24 @@ export function CampaignsTable({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Отвори меню</span>
+                            <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => onEdit(campaign)}>
                             <Edit className="mr-2 h-4 w-4" />
-                            Редактирай
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onManageEvents(campaign)}
                           >
                             <Calendar className="mr-2 h-4 w-4" />
-                            Управлявай събития
+                            Manage events
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onDelete(campaign)}>
                             <Trash className="mr-2 h-4 w-4" />
-                            Изтрий
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -146,12 +146,12 @@ export function CampaignsTable({
                     <TableCell colSpan={5} className="bg-muted/20 p-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="font-semibold mb-2">Описание:</h4>
+                          <h4 className="font-semibold mb-2">Description:</h4>
                           <p className="text-sm text-muted-foreground mb-4">
-                            {campaign.description || "Няма описание"}
+                            {campaign.description || "No description"}
                           </p>
 
-                          <h4 className="font-semibold mb-2">Прогрес:</h4>
+                          <h4 className="font-semibold mb-2">Progress:</h4>
                           <div className="flex flex-col gap-1 mb-4">
                             <Progress
                               value={calculateProgress(
@@ -160,13 +160,13 @@ export function CampaignsTable({
                               )}
                             />
                             <span className="text-xs text-muted-foreground">
-                              {campaign.currentAmount} / {campaign.goal} лв.
+                              {campaign.currentAmount} / {campaign.goal} lv.
                             </span>
                           </div>
                         </div>
 
                         <div>
-                          <h4 className="font-semibold mb-2">Събития:</h4>
+                          <h4 className="font-semibold mb-2">Events:</h4>
                           {campaign.events && campaign.events.length > 0 ? (
                             <ul className="list-disc list-inside text-sm text-muted-foreground">
                               {campaign.events.map((event) => (
@@ -177,7 +177,7 @@ export function CampaignsTable({
                             </ul>
                           ) : (
                             <p className="text-sm text-muted-foreground">
-                              Няма добавени събития
+                              No events added
                             </p>
                           )}
 
@@ -191,7 +191,7 @@ export function CampaignsTable({
                               }}
                             >
                               <Calendar className="h-4 w-4 mr-2" />
-                              Управлявай събития
+                              Manage events
                             </Button>
                           </div>
                         </div>
@@ -200,12 +200,10 @@ export function CampaignsTable({
                       {(campaign.pendingParticipantsCount ?? 0) > 0 && (
                         <div className="mt-4 p-3 border rounded-md bg-amber-50">
                           <p className="text-sm font-medium text-amber-700 mb-1">
-                            Има {campaign.pendingParticipantsCount ?? 0} чакащи
-                            заявки за тази кампания!
+                            There are {campaign.pendingParticipantsCount ?? 0} pending requests for this campaign!
                           </p>
                           <p className="text-xs text-amber-600">
-                            Можете да одобрите или отхвърлите заявките от таб
-                            "Чакащи участници"
+                            You can approve or reject the requests from the "Pending participants " tab.
                           </p>
                         </div>
                       )}

@@ -37,10 +37,10 @@ export function CampaignParticipantsDialog({
   // Функция за превод на потребителската роля на български
   const translateRole = (role: string) => {
     const roles: Record<string, string> = {
-      "admin": "Администратор",
-      "patient": "Пациент",
-      "parent": "Родител",
-      "donor": "Дарител",
+      "admin": "Administrator",
+      "patient": "Patient",
+      "parent": "Parent",
+      "donor": "Donor",
     };
     return roles[role] || role;
   };
@@ -49,22 +49,22 @@ export function CampaignParticipantsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
-          <DialogTitle>Преглед на участници в кампания</DialogTitle>
+          <DialogTitle>View campaign participants</DialogTitle>
           <DialogDescription>
-            {campaign?.title || "Кампания"} - {campaign?.participants?.length || 0} активни участници
+            {campaign?.title || "Campaign"} - {campaign?.participants?.length || 0} active participants
           </DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[500px] overflow-y-auto">
           {campaign?.participants && campaign.participants.length > 0 ? (
             <div>
-              <h3 className="text-lg font-medium my-2">Одобрени участници</h3>
+              <h3 className="text-lg font-medium my-2">Approved participants</h3>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Име</TableHead>
-                    <TableHead>Имейл</TableHead>
-                    <TableHead>Роля</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -84,22 +84,22 @@ export function CampaignParticipantsDialog({
             </div>
           ) : (
             <div className="text-center p-6 bg-muted/50 rounded-md">
-              <p className="text-muted-foreground">Няма одобрени участници в тази кампания.</p>
+              <p className="text-muted-foreground">No approved participants in this campaign.</p>
             </div>
           )}
 
           {campaign?.pendingParticipants && campaign.pendingParticipants.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-lg font-medium my-2">Чакащи одобрение участници</h3>
+              <h3 className="text-lg font-medium my-2">Pending approval participants</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Тези заявки могат да бъдат одобрени или отхвърлени от таб "Чакащи участници" в главното меню.
+                These requests can be approved or rejected from the "Pending participants" tab in the main menu.
               </p>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Име</TableHead>
-                    <TableHead>Имейл</TableHead>
-                    <TableHead>Роля</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -121,8 +121,8 @@ export function CampaignParticipantsDialog({
         </div>
 
         <div className="mt-4 text-sm text-muted-foreground">
-          <p>Забележка: Потребителите сами трябва да се запишат за участие в кампанията.</p>
-          <p>Администраторите могат да одобрят или отхвърлят техните заявки от таб "Чакащи участници".</p>
+          <p>Note: The users themselves must sign up for the campaign.</p>
+          <p>Administrators can approve or reject their requests from the "Pending participants" tab.</p>
         </div>
       </DialogContent>
     </Dialog>

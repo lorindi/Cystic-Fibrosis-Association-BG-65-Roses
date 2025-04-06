@@ -264,7 +264,7 @@ export default function UsersContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Управление на потребители</CardTitle>
+          <CardTitle>User Management</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4">

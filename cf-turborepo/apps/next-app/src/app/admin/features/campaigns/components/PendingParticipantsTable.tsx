@@ -72,13 +72,13 @@ export function PendingParticipantsTable({
   const translateRole = (role: string) => {
     switch (role) {
       case "admin":
-        return "Администратор";
+        return "Administrator";
       case "patient":
-        return "Пациент";
+        return "Patient";
       case "parent":
-        return "Родител";
+        return "Parent";
       case "donor":
-        return "Дарител";
+        return "Donor";
       default:
         return role;
     }
@@ -92,7 +92,7 @@ export function PendingParticipantsTable({
   if (campaignsWithPendingParticipants.length === 0) {
     return (
       <div className="text-center p-6 bg-muted/50 rounded-md">
-        <p className="text-muted-foreground">Няма чакащи заявки за одобрение.</p>
+            <p className="text-muted-foreground">No pending approval requests.</p>
       </div>
     );
   }
@@ -104,10 +104,10 @@ export function PendingParticipantsTable({
           <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
           <div>
             <p className="text-sm text-muted-foreground mb-2">
-              <strong>Забележка:</strong> Тази функционалност позволява одобряване или отхвърляне на заявки за участие в кампании.
+              <strong>Note:</strong> This functionality allows you to approve or reject participation requests in campaigns.
             </p>
             <p className="text-sm text-muted-foreground">
-              Потребителите сами се записват за кампаниите, след което администратори или потребители с група "campaigns" могат да одобрят или отхвърлят заявките.
+              The users themselves sign up for the campaigns, after which administrators or users with the "campaigns" group can approve or reject the requests.
             </p>
           </div>
         </div>
@@ -116,7 +116,7 @@ export function PendingParticipantsTable({
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">
-            Общ брой чакащи заявки:
+            Total number of pending requests:
             <Badge variant="secondary" className="ml-2">
               {campaignsWithPendingParticipants.reduce(
                 (total, campaign) => total + campaign.pendingParticipantsCount,
@@ -129,9 +129,9 @@ export function PendingParticipantsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40%]">Кампания</TableHead>
-              <TableHead className="w-[40%]">Период</TableHead>
-              <TableHead className="w-[20%] text-center">Брой чакащи</TableHead>
+              <TableHead className="w-[40%]">Campaign</TableHead>
+              <TableHead className="w-[40%]">Period</TableHead>
+              <TableHead className="w-[20%] text-center">Number of pending</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -167,7 +167,7 @@ export function PendingParticipantsTable({
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Натиснете за подробности за чакащите участници</p>
+                            <p>Click for more details about the pending participants</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -195,15 +195,15 @@ export function PendingParticipantsTable({
                       <div className="p-4 bg-muted/30 border-t">
                         <h3 className="font-medium mb-3 flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          Чакащи одобрение участници
+                          Pending approval participants
                         </h3>
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Име</TableHead>
+                              <TableHead>Name</TableHead>
                               <TableHead>Email</TableHead>
-                              <TableHead>Роля</TableHead>
-                              <TableHead className="text-right">Действия</TableHead>
+                              <TableHead>Role</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -237,7 +237,7 @@ export function PendingParticipantsTable({
                                       onClick={() => onReject(campaign.id, participant._id)}
                                     >
                                       <X className="h-4 w-4 mr-2" />
-                                      Откажи
+                                      Reject
                                     </Button>
                                     <Button
                                       size="sm"
@@ -245,7 +245,7 @@ export function PendingParticipantsTable({
                                       onClick={() => onApprove(campaign.id, participant._id)}
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
-                                      Одобри
+                                      Approve
                                     </Button>
                                   </div>
                                 </TableCell>

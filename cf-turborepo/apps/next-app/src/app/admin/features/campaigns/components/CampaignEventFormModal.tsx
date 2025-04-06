@@ -25,16 +25,16 @@ import { Textarea } from "@/components/ui/textarea";
 
 const eventFormSchema = z.object({
   title: z.string().min(3, {
-    message: "Заглавието трябва да бъде поне 3 символа.",
+    message: "The title must be at least 3 characters.",
   }),
   description: z.string().min(10, {
-    message: "Описанието трябва да бъде поне 10 символа.",
+    message: "The description must be at least 10 characters.",
   }),
   date: z.string().min(1, {
-    message: "Датата е задължителна.",
+        message: "The date is required.",
   }),
   location: z.string().min(3, {
-    message: "Местоположението трябва да бъде поне 3 символа.",
+    message: "The location must be at least 3 characters.",
   }),
 });
 
@@ -141,7 +141,7 @@ export function CampaignEventFormModal({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {event ? "Редактиране на събитие" : "Добавяне на ново събитие"}
+            {event ? "Edit event" : "Add new event"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -151,9 +151,9 @@ export function CampaignEventFormModal({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Заглавие</FormLabel>
+                  <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Заглавие на събитието" {...field} />
+                    <Input placeholder="Event title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,10 +164,10 @@ export function CampaignEventFormModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Описание</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Описание на събитието"
+                      placeholder="Event description"
                       className="min-h-[100px]"
                       {...field}
                     />
@@ -181,7 +181,7 @@ export function CampaignEventFormModal({
               name="date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Дата</FormLabel>
+                  <FormLabel>Date</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
@@ -194,9 +194,9 @@ export function CampaignEventFormModal({
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Местоположение</FormLabel>
+                  <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="Местоположение на събитието" {...field} />
+                    <Input placeholder="Event location" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -204,10 +204,10 @@ export function CampaignEventFormModal({
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Отказ
+                Cancel
               </Button>
               <Button type="submit">
-                {event ? "Обнови" : "Създай"}
+                {event ? "Update" : "Create"}
               </Button>
             </DialogFooter>
           </form>

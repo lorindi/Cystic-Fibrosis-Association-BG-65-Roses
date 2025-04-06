@@ -24,11 +24,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Campaign } from "@/types/campaign";
 
 const campaignFormSchema = z.object({
-  title: z.string().min(1, "Заглавието е задължително"),
-  description: z.string().min(1, "Описанието е задължително"),
-  goal: z.number().min(0, "Целта трябва да бъде положително число"),
-  startDate: z.string().min(1, "Началната дата е задължителна"),
-  endDate: z.string().min(1, "Крайната дата е задължителна"),
+  title: z.string().min(1, "The title is required"),
+  description: z.string().min(1, "The description is required"),
+  goal: z.number().min(0, "The goal must be a positive number"),
+  startDate: z.string().min(1, "The start date is required"),
+  endDate: z.string().min(1, "The end date is required"),
 });
 
 type CampaignFormValues = z.infer<typeof campaignFormSchema>;
@@ -114,7 +114,7 @@ export function CampaignFormModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {campaign ? "Редактиране на кампания" : "Създаване на кампания"}
+            {campaign ? "Edit campaign" : "Create campaign"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -126,7 +126,7 @@ export function CampaignFormModal({
                 <FormItem>
                   <FormLabel>Заглавие</FormLabel>
                   <FormControl>
-                    <Input placeholder="Заглавие на кампанията" {...field} />
+                    <Input placeholder="Campaign title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,7 +140,7 @@ export function CampaignFormModal({
                   <FormLabel>Описание</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Описание на кампанията"
+                      placeholder="Campaign description"
                       className="resize-none"
                       {...field}
                     />
@@ -154,7 +154,7 @@ export function CampaignFormModal({
               name="goal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Цел (сума)</FormLabel>
+                  <FormLabel>Goal (amount)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -173,7 +173,7 @@ export function CampaignFormModal({
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Начална дата</FormLabel>
+                    <FormLabel>Start date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -186,7 +186,7 @@ export function CampaignFormModal({
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Крайна дата</FormLabel>
+                    <FormLabel>End date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -204,7 +204,7 @@ export function CampaignFormModal({
                 Отказ
               </Button>
               <Button type="submit">
-                {campaign ? "Обнови" : "Създай"}
+                {campaign ? "Update" : "Create"}
               </Button>
             </div>
           </form>

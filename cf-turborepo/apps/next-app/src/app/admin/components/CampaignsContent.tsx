@@ -106,8 +106,8 @@ export default function CampaignsContent() {
           },
         });
         toast({
-          title: "Успешно",
-          description: "Кампанията беше обновена успешно",
+          title: "Success",
+          description: "The campaign has been updated successfully",
         });
       } else {
         await createCampaign({
@@ -116,15 +116,15 @@ export default function CampaignsContent() {
           },
         });
         toast({
-          title: "Успешно",
-          description: "Кампанията беше създадена успешно",
+          title: "Success",
+          description: "The campaign has been created successfully",
         });
       }
       setIsModalOpen(false);
       setSelectedCampaign(undefined);
     } catch (error: any) {
       toast({
-        title: "Грешка",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -141,14 +141,14 @@ export default function CampaignsContent() {
         },
       });
       toast({
-        title: "Успешно",
-        description: "Кампанията беше изтрита успешно",
+        title: "Success",
+        description: "The campaign has been deleted successfully",
       });
       setIsDeleteDialogOpen(false);
       setCampaignToDelete(undefined);
     } catch (error: any) {
       toast({
-        title: "Грешка",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -166,8 +166,8 @@ export default function CampaignsContent() {
           },
         });
         toast({
-          title: "Успешно",
-          description: "Събитието беше обновено успешно",
+          title: "Success",
+          description: "The event has been updated successfully",
         });
       } else if (currentCampaignId) {
         await addCampaignEvent({
@@ -177,15 +177,15 @@ export default function CampaignsContent() {
           },
         });
         toast({
-          title: "Успешно",
-          description: "Събитието беше добавено успешно",
+          title: "Success",
+          description: "The event has been added successfully",
         });
       }
       setIsEventModalOpen(false);
       setSelectedEvent(undefined);
     } catch (error: any) {
       toast({
-        title: "Грешка",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -202,14 +202,14 @@ export default function CampaignsContent() {
         },
       });
       toast({
-        title: "Успешно",
-        description: "Събитието беше изтрито успешно",
+        title: "Success",
+        description: "The event has been deleted successfully",
       });
       setIsEventDeleteDialogOpen(false);
       setEventToDelete(undefined);
     } catch (error: any) {
       toast({
-        title: "Грешка",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -226,14 +226,14 @@ export default function CampaignsContent() {
         },
       });
       toast({
-        title: "Успешно",
-        description: "Участникът беше одобрен успешно",
+        title: "Success",
+        description: "The participant has been approved successfully",
       });
       refetchPending();
       refetch();
     } catch (error: any) {
       toast({
-        title: "Грешка",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -250,32 +250,32 @@ export default function CampaignsContent() {
         },
       });
       toast({
-        title: "Успешно",
-        description: "Заявката за участие беше отхвърлена",
+        title: "Success",
+        description: "The participant request has been rejected",
       });
       refetchPending();
     } catch (error: any) {
       toast({
-        title: "Грешка",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  if (loading || pendingLoading) return <div>Зареждане...</div>;
-  if (error) return <div>Грешка: {error.message}</div>;
+  if (loading || pendingLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div className="container mx-auto py-10">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="campaigns">Кампании</TabsTrigger>
+              <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger 
             value="pending" 
             className="relative"
           >
-            Чакащи участници
+            Pending participants
             {pendingRequestsData?.getPendingCampaignRequests?.some(
               (c: any) => c.pendingParticipantsCount > 0
             ) && (
@@ -289,14 +289,14 @@ export default function CampaignsContent() {
 
         <TabsContent value="campaigns">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Кампании</h1>
+            <h1 className="text-3xl font-bold">Campaigns</h1>
             <Button
               onClick={() => {
                 setSelectedCampaign(undefined);
                 setIsModalOpen(true);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" /> Добави кампания
+              <Plus className="mr-2 h-4 w-4" /> Add Campaign
             </Button>
           </div>
 
@@ -319,7 +319,7 @@ export default function CampaignsContent() {
 
         <TabsContent value="pending">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Чакащи одобрение участници</h1>
+            <h1 className="text-3xl font-bold">Pending approval participants</h1>
           </div>
 
           <PendingParticipantsTable
@@ -334,7 +334,7 @@ export default function CampaignsContent() {
             <>
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">
-                  {data.getCampaigns.find((c: any) => c.id === currentCampaignId)?.title} - Събития
+                  {data.getCampaigns.find((c: any) => c.id === currentCampaignId)?.title} - Events
                 </h1>
                 <div className="flex gap-2">
                   <Button
@@ -344,7 +344,7 @@ export default function CampaignsContent() {
                       setCurrentCampaignId(undefined);
                     }}
                   >
-                    Назад към кампании
+                    Back to campaigns
                   </Button>
                   <Button
                     onClick={() => {
@@ -352,7 +352,7 @@ export default function CampaignsContent() {
                       setIsEventModalOpen(true);
                     }}
                   >
-                    <Plus className="mr-2 h-4 w-4" /> Добави събитие
+                    <Plus className="mr-2 h-4 w-4" /> Add Event
                   </Button>
                 </div>
               </div>
@@ -393,14 +393,14 @@ export default function CampaignsContent() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Сигурни ли сте?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Това действие не може да бъде отменено. Ще изтрие кампанията и всички свързани с нея данни.
+              This action cannot be undone. It will delete the campaign and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Отказ</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Изтрий</AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -409,14 +409,14 @@ export default function CampaignsContent() {
       <AlertDialog open={isEventDeleteDialogOpen} onOpenChange={setIsEventDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Сигурни ли сте?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Това действие не може да бъде отменено. Ще изтрие събитието.
+              This action cannot be undone. It will delete the event.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Отказ</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteEvent}>Изтрий</AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEvent}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

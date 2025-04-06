@@ -34,7 +34,7 @@ export function CampaignEventsTable({
   if (!campaign || !campaign.events || campaign.events.length === 0) {
     return (
       <div className="text-center p-6 bg-muted/50 rounded-md">
-        <p className="text-muted-foreground">Няма добавени събития за тази кампания.</p>
+        <p className="text-muted-foreground">No events added for this campaign.</p>
       </div>
     );
   }
@@ -43,10 +43,10 @@ export function CampaignEventsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Заглавие</TableHead>
-          <TableHead>Дата</TableHead>
-          <TableHead>Местоположение</TableHead>
-          <TableHead>Действия</TableHead>
+          <TableHead>Title</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Location</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -97,8 +97,8 @@ export function CampaignEventsTable({
               <TableRow className="bg-muted/30">
                 <TableCell colSpan={4} className="p-4">
                   <div className="text-sm">
-                    <h4 className="font-semibold mb-2">Описание:</h4>
-                    <p className="whitespace-pre-wrap text-muted-foreground">{event.description || "Няма описание"}</p>
+                    <h4 className="font-semibold mb-2">Description:</h4>
+                    <p className="whitespace-pre-wrap text-muted-foreground">{event.description || "No description"}</p>
                   </div>
                 </TableCell>
               </TableRow>
