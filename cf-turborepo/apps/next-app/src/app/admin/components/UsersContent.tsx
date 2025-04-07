@@ -174,7 +174,22 @@ export default function UsersContent() {
   // Functions to handle user actions
   const handleViewProfile = (userId: string) => {
     setSelectedUser(userId);
-    setViewProfileOpen(true);
+    
+    // Логваме за дебъгване
+    console.log("Selected user ID:", userId);
+    
+    // Правим директен refetch на данните преди да отворим модала
+    refetchUserData({ id: userId }).then(result => {
+      console.log("Refetched user data:", result.data?.getUser);
+      if (result.data?.getUser) {
+        // Данните са заредени, отваряме модала
+        setViewProfileOpen(true);
+      } else {
+        console.error("Failed to load user data after direct refetch");
+      }
+    }).catch(error => {
+      console.error("Error refetching user data:", error);
+    });
   };
 
   const handleEditDetails = (userId: string) => {
@@ -326,7 +341,13 @@ export default function UsersContent() {
       {/* View Profile Dialog */}
       <UserProfile 
         open={viewProfileOpen}
-        onOpenChange={setViewProfileOpen}
+        onOpenChange={(isOpen) => {
+          setViewProfileOpen(isOpen);
+          // Ако модалът се затваря, нулираме избрания потребител
+          if (!isOpen) {
+            setSelectedUser(null);
+          }
+        }}
         user={selectedUserData}
         loading={userLoading}
         currentUserRole={currentUserRole}
