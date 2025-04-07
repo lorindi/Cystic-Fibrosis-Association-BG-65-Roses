@@ -3,4 +3,6 @@ export * from "./CampaignFormModal";
 export * from "./CampaignEventsTable";
 export * from "./CampaignEventFormModal";
 export * from "./PendingParticipantsTable";
-export * from "./CampaignParticipantsDialog"; 
+export * from "./CampaignParticipantsDialog";
+export * from "./CampaignManageParticipantsDialog";
+export * from "./CampaignNotificationsIndicator"; 

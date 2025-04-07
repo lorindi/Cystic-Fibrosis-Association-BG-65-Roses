@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/types/campaign";
-import { Calendar, ChevronDown, ChevronUp, Pencil, Trash } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Pencil, Trash, Users } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,6 +28,7 @@ interface CampaignsTableProps {
   onEdit: (campaign: Campaign) => void;
   onDelete: (campaign: Campaign) => void;
   onManageEvents: (campaign: Campaign) => void;
+  onManageParticipants: (campaign: Campaign) => void;
 }
 
 export function CampaignsTable({
@@ -35,6 +36,7 @@ export function CampaignsTable({
   onEdit,
   onDelete,
   onManageEvents,
+  onManageParticipants,
 }: CampaignsTableProps) {
   const [expandedRows, setExpandedRows] = React.useState<
     Record<string, boolean>
@@ -132,6 +134,12 @@ export function CampaignsTable({
                             <Calendar className="mr-2 h-4 w-4" />
                             Manage events
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onManageParticipants(campaign)}
+                          >
+                            <Users className="mr-2 h-4 w-4" />
+                            Manage participants
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onDelete(campaign)}>
                             <Trash className="mr-2 h-4 w-4" />
                             Delete
@@ -192,6 +200,18 @@ export function CampaignsTable({
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               Manage events
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onManageParticipants(campaign);
+                              }}
+                            >
+                              <Users className="h-4 w-4 mr-2" />
+                              Manage participants
                             </Button>
                           </div>
                         </div>

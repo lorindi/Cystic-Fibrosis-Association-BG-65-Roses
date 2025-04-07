@@ -23,6 +23,8 @@ import {
   CampaignEventsTable, 
   CampaignEventFormModal,
   PendingParticipantsTable,
+  CampaignManageParticipantsDialog,
+  CampaignNotificationsIndicator
 } from "../features/campaigns/components";
 import {
   GET_CAMPAIGNS,
@@ -36,9 +38,16 @@ import {
   APPROVE_CAMPAIGN_PARTICIPANT,
   REJECT_CAMPAIGN_PARTICIPANT,
 } from "../graphql/campaigns";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function CampaignsContent() {
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Извличаме tab параметъра от URL, ако има такъв
+  const tabParam = searchParams.get('tab');
+  
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedCampaign, setSelectedCampaign] = React.useState<Campaign | undefined>();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -51,8 +60,25 @@ export default function CampaignsContent() {
   const [isEventDeleteDialogOpen, setIsEventDeleteDialogOpen] = React.useState(false);
   const [eventToDelete, setEventToDelete] = React.useState<any | undefined>();
   
-  // Tab state
-  const [activeTab, setActiveTab] = React.useState("campaigns");
+  // Participants management state
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = React.useState(false);
+  const [participantsCampaignId, setParticipantsCampaignId] = React.useState<string | undefined>();
+  
+  // Tab state - по подразбиране или от URL
+  const [activeTab, setActiveTab] = React.useState(tabParam || "campaigns");
+
+  // Актуализация на URL при смяна на таб
+  const updateTabInUrl = (tab: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tab);
+    router.push(`?${params.toString()}`);
+  };
+
+  // Промяна на активния таб
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    updateTabInUrl(value);
+  };
 
   // Pagination states
   const [campaignsPage, setCampaignsPage] = React.useState(1);
@@ -391,6 +417,12 @@ export default function CampaignsContent() {
     }
   };
 
+  // Функция за управление на участниците
+  const handleManageParticipants = (campaign: Campaign) => {
+    setParticipantsCampaignId(campaign.id);
+    setIsParticipantsModalOpen(true);
+  };
+
   // Pagination handlers
   const handleCampaignsPageChange = (newPage: number) => {
     setCampaignsPage(newPage);
@@ -423,36 +455,45 @@ export default function CampaignsContent() {
 
   return (
     <div className="container mx-auto py-10">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-              <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger 
-            value="pending" 
-            className="relative"
-          >
-            Pending participants
-            {pendingRequests.some(
-              (c: any) => c.pendingParticipantsCount > 0
-            ) && (
-              <span className="absolute top-0 right-0 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-              </span>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <div className="flex justify-between items-center mb-6">
+          <TabsList>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger 
+              value="pending" 
+              className="relative"
+            >
+              Pending participants
+              {pendingRequests.some(
+                (c: any) => c.pendingParticipantsCount > 0
+              ) && (
+                <span className="absolute top-0 right-0 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="flex items-center gap-2">
+            <CampaignNotificationsIndicator />
+            
+            {activeTab === "campaigns" && (
+              <Button
+                onClick={() => {
+                  setSelectedCampaign(undefined);
+                  setIsModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Campaign
+              </Button>
             )}
-          </TabsTrigger>
-        </TabsList>
+          </div>
+        </div>
 
         <TabsContent value="campaigns">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Campaigns</h1>
-            <Button
-              onClick={() => {
-                setSelectedCampaign(undefined);
-                setIsModalOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Campaign
-            </Button>
           </div>
 
           <CampaignsTable
@@ -467,8 +508,9 @@ export default function CampaignsContent() {
             }}
             onManageEvents={(campaign) => {
               setCurrentCampaignId(campaign.id);
-              setActiveTab("events");
+              handleTabChange("events");
             }}
+            onManageParticipants={handleManageParticipants}
           />
 
           {/* Pagination Controls */}
@@ -577,7 +619,7 @@ export default function CampaignsContent() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setActiveTab("campaigns");
+                      handleTabChange("campaigns");
                       setCurrentCampaignId(undefined);
                     }}
                   >
@@ -625,6 +667,15 @@ export default function CampaignsContent() {
         event={selectedEvent}
         onSubmit={handleCreateOrUpdateEvent}
       />
+
+      {/* Participants Management Dialog */}
+      {participantsCampaignId && (
+        <CampaignManageParticipantsDialog
+          open={isParticipantsModalOpen}
+          onOpenChange={setIsParticipantsModalOpen}
+          campaignId={participantsCampaignId}
+        />
+      )}
 
       {/* Delete Campaign Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

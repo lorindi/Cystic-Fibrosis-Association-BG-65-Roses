@@ -96,6 +96,50 @@ export const GET_PENDING_CAMPAIGN_REQUESTS = gql`
   }
 `;
 
+export const GET_CAMPAIGN_NOTIFICATIONS = gql`
+  query GetCampaignNotifications {
+    getCampaignNotifications {
+      id
+      title
+      pendingParticipantsCount
+      pendingParticipants {
+        _id
+        name
+        email
+        role
+      }
+    }
+  }
+`;
+
+export const GET_USER_CAMPAIGNS = gql`
+  query GetUserCampaigns($limit: Int, $offset: Int, $noLimit: Boolean) {
+    getUserCampaigns(limit: $limit, offset: $offset, noLimit: $noLimit) {
+      id
+      title
+      description
+      goal
+      currentAmount
+      startDate
+      endDate
+      participantsCount
+    }
+  }
+`;
+
+export const GET_USER_CAMPAIGN_STATUS = gql`
+  query GetUserCampaignStatus {
+    getUserCampaignStatus {
+      campaign {
+        id
+        title
+      }
+      status
+      registeredAt
+    }
+  }
+`;
+
 export const CREATE_CAMPAIGN = gql`
   mutation CreateCampaign(
     $input: CampaignInput!
@@ -183,7 +227,6 @@ export const APPROVE_CAMPAIGN_PARTICIPANT = gql`
   }
 `;
 
-// Мутация за директно добавяне на потребител към кампания от администратор
 export const ADD_USER_TO_CAMPAIGN = gql`
   mutation AddUserToCampaign($campaignId: ID!, $userId: ID!) {
     addUserToCampaign(campaignId: $campaignId, userId: $userId) {
@@ -198,7 +241,6 @@ export const ADD_USER_TO_CAMPAIGN = gql`
   }
 `;
 
-// Мутация за отхвърляне на заявка за участие в кампания
 export const REJECT_CAMPAIGN_PARTICIPANT = gql`
   mutation RejectCampaignParticipant($campaignId: ID!, $userId: ID!) {
     rejectCampaignParticipant(campaignId: $campaignId, userId: $userId) {
@@ -209,13 +251,28 @@ export const REJECT_CAMPAIGN_PARTICIPANT = gql`
   }
 `;
 
-// Мутация за премахване на потребител от кампания
 export const REMOVE_USER_FROM_CAMPAIGN = gql`
   mutation RemoveUserFromCampaign($campaignId: ID!, $userId: ID!) {
     removeUserFromCampaign(campaignId: $campaignId, userId: $userId) {
       id
       title
       participantsCount
+    }
+  }
+`;
+
+export const CAMPAIGN_PARTICIPANT_PENDING_SUBSCRIPTION = gql`
+  subscription CampaignParticipantPending {
+    campaignParticipantPending {
+      id
+      title
+      pendingParticipantsCount
+      pendingParticipants {
+        _id
+        name
+        email
+        role
+      }
     }
   }
 `; 
