@@ -54,45 +54,140 @@ export default function CampaignsContent() {
   // Tab state
   const [activeTab, setActiveTab] = React.useState("campaigns");
 
-  const { data, loading, error, refetch } = useQuery(GET_CAMPAIGNS);
-  const { data: pendingRequestsData, loading: pendingLoading, refetch: refetchPending } = useQuery(GET_PENDING_CAMPAIGN_REQUESTS);
+  // Pagination states
+  const [campaignsPage, setCampaignsPage] = React.useState(1);
+  const [pendingPage, setPendingPage] = React.useState(1);
+  const [campaignsPerPage, setCampaignsPerPage] = React.useState(10);
+  const [pendingPerPage, setPendingPerPage] = React.useState(10);
+  const [totalCampaigns, setTotalCampaigns] = React.useState(0);
+  const [totalPending, setTotalPending] = React.useState(0);
+
+  const { data, loading, error, refetch } = useQuery(GET_CAMPAIGNS, {
+    variables: {
+      limit: campaignsPerPage,
+      offset: (campaignsPage - 1) * campaignsPerPage,
+    },
+    onCompleted: (data) => {
+      // Assuming the total count is available or can be approximated
+      if (data?.getCampaigns?.length < campaignsPerPage && campaignsPage === 1) {
+        setTotalCampaigns(data?.getCampaigns?.length || 0);
+      } else if (data?.getCampaigns?.length === campaignsPerPage) {
+        // We'll need to do a separate query to get the total count or have the backend provide it
+        // For now, we'll set it to a safe value to allow pagination
+        setTotalCampaigns(campaignsPage * campaignsPerPage + campaignsPerPage);
+      }
+    },
+  });
+
+  const { 
+    data: pendingRequestsData, 
+    loading: pendingLoading, 
+    refetch: refetchPending 
+  } = useQuery(GET_PENDING_CAMPAIGN_REQUESTS, {
+    variables: {
+      limit: pendingPerPage,
+      offset: (pendingPage - 1) * pendingPerPage,
+    },
+    onCompleted: (data) => {
+      // Similar approach for total count
+      if (data?.getPendingCampaignRequests?.length < pendingPerPage && pendingPage === 1) {
+        setTotalPending(data?.getPendingCampaignRequests?.length || 0);
+      } else if (data?.getPendingCampaignRequests?.length === pendingPerPage) {
+        setTotalPending(pendingPage * pendingPerPage + pendingPerPage);
+      }
+    },
+  });
 
   const [createCampaign] = useMutation(CREATE_CAMPAIGN, {
-    refetchQueries: [{ query: GET_CAMPAIGNS }],
+    refetchQueries: [{ 
+      query: GET_CAMPAIGNS,
+      variables: {
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      }
+    }],
   });
 
   const [updateCampaign] = useMutation(UPDATE_CAMPAIGN, {
-    refetchQueries: [{ query: GET_CAMPAIGNS }],
+    refetchQueries: [{ 
+      query: GET_CAMPAIGNS,
+      variables: {
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      }
+    }],
   });
 
   const [deleteCampaign] = useMutation(DELETE_CAMPAIGN, {
-    refetchQueries: [{ query: GET_CAMPAIGNS }],
+    refetchQueries: [{ 
+      query: GET_CAMPAIGNS,
+      variables: {
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      }
+    }],
   });
 
   // Event mutations
   const [addCampaignEvent] = useMutation(ADD_CAMPAIGN_EVENT, {
-    refetchQueries: [{ query: GET_CAMPAIGNS }],
+    refetchQueries: [{ 
+      query: GET_CAMPAIGNS,
+      variables: {
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      }
+    }],
   });
 
   const [updateCampaignEvent] = useMutation(UPDATE_CAMPAIGN_EVENT, {
-    refetchQueries: [{ query: GET_CAMPAIGNS }],
+    refetchQueries: [{ 
+      query: GET_CAMPAIGNS,
+      variables: {
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      }
+    }],
   });
 
   const [deleteCampaignEvent] = useMutation(DELETE_CAMPAIGN_EVENT, {
-    refetchQueries: [{ query: GET_CAMPAIGNS }],
+    refetchQueries: [{ 
+      query: GET_CAMPAIGNS,
+      variables: {
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      } 
+    }],
   });
 
   // Participant management mutations
   const [approveCampaignParticipant] = useMutation(APPROVE_CAMPAIGN_PARTICIPANT, {
     refetchQueries: [
-      { query: GET_PENDING_CAMPAIGN_REQUESTS },
-      { query: GET_CAMPAIGNS }
+      { 
+        query: GET_PENDING_CAMPAIGN_REQUESTS,
+        variables: {
+          limit: pendingPerPage,
+          offset: (pendingPage - 1) * pendingPerPage,
+        }
+      },
+      { 
+        query: GET_CAMPAIGNS,
+        variables: {
+          limit: campaignsPerPage,
+          offset: (campaignsPage - 1) * campaignsPerPage,
+        }
+      }
     ],
   });
   
   const [rejectCampaignParticipant] = useMutation(REJECT_CAMPAIGN_PARTICIPANT, {
     refetchQueries: [
-      { query: GET_PENDING_CAMPAIGN_REQUESTS }
+      { 
+        query: GET_PENDING_CAMPAIGN_REQUESTS,
+        variables: {
+          limit: pendingPerPage,
+          offset: (pendingPage - 1) * pendingPerPage,
+        }
+      }
     ],
   });
 
@@ -122,6 +217,12 @@ export default function CampaignsContent() {
       }
       setIsModalOpen(false);
       setSelectedCampaign(undefined);
+      
+      // Refresh data with pagination
+      refetch({
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -146,6 +247,12 @@ export default function CampaignsContent() {
       });
       setIsDeleteDialogOpen(false);
       setCampaignToDelete(undefined);
+      
+      // Refresh data with pagination
+      refetch({
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -183,6 +290,12 @@ export default function CampaignsContent() {
       }
       setIsEventModalOpen(false);
       setSelectedEvent(undefined);
+      
+      // Refresh data with pagination
+      refetch({
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -207,6 +320,12 @@ export default function CampaignsContent() {
       });
       setIsEventDeleteDialogOpen(false);
       setEventToDelete(undefined);
+      
+      // Refresh data with pagination
+      refetch({
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -229,8 +348,14 @@ export default function CampaignsContent() {
         title: "Success",
         description: "The participant has been approved successfully",
       });
-      refetchPending();
-      refetch();
+      refetchPending({
+        limit: pendingPerPage,
+        offset: (pendingPage - 1) * pendingPerPage,
+      });
+      refetch({
+        limit: campaignsPerPage,
+        offset: (campaignsPage - 1) * campaignsPerPage,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -253,7 +378,10 @@ export default function CampaignsContent() {
         title: "Success",
         description: "The participant request has been rejected",
       });
-      refetchPending();
+      refetchPending({
+        limit: pendingPerPage,
+        offset: (pendingPage - 1) * pendingPerPage,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -263,8 +391,35 @@ export default function CampaignsContent() {
     }
   };
 
+  // Pagination handlers
+  const handleCampaignsPageChange = (newPage: number) => {
+    setCampaignsPage(newPage);
+  };
+
+  const handlePendingPageChange = (newPage: number) => {
+    setPendingPage(newPage);
+  };
+
+  const handleCampaignsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPerPage = parseInt(e.target.value);
+    setCampaignsPerPage(newPerPage);
+    setCampaignsPage(1); // Reset to first page when changing items per page
+  };
+
+  const handlePendingPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPerPage = parseInt(e.target.value);
+    setPendingPerPage(newPerPage);
+    setPendingPage(1); // Reset to first page when changing items per page
+  };
+
   if (loading || pendingLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
+
+  const campaigns = data?.getCampaigns || [];
+  const pendingRequests = pendingRequestsData?.getPendingCampaignRequests || [];
+
+  const campaignsMaxPage = Math.ceil(totalCampaigns / campaignsPerPage);
+  const pendingMaxPage = Math.ceil(totalPending / pendingPerPage);
 
   return (
     <div className="container mx-auto py-10">
@@ -276,7 +431,7 @@ export default function CampaignsContent() {
             className="relative"
           >
             Pending participants
-            {pendingRequestsData?.getPendingCampaignRequests?.some(
+            {pendingRequests.some(
               (c: any) => c.pendingParticipantsCount > 0
             ) && (
               <span className="absolute top-0 right-0 flex h-3 w-3">
@@ -301,7 +456,7 @@ export default function CampaignsContent() {
           </div>
 
           <CampaignsTable
-            campaigns={data.getCampaigns}
+            campaigns={campaigns}
             onEdit={(campaign) => {
               setSelectedCampaign(campaign);
               setIsModalOpen(true);
@@ -315,6 +470,47 @@ export default function CampaignsContent() {
               setActiveTab("events");
             }}
           />
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={campaignsPerPage}
+                onChange={handleCampaignsPerPageChange}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCampaignsPageChange(campaignsPage - 1)}
+                disabled={campaignsPage <= 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm">
+                Page {campaignsPage} of {campaignsMaxPage || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCampaignsPageChange(campaignsPage + 1)}
+                disabled={campaignsPage >= campaignsMaxPage || campaigns.length < campaignsPerPage}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="pending">
@@ -323,10 +519,51 @@ export default function CampaignsContent() {
           </div>
 
           <PendingParticipantsTable
-            pendingRequests={pendingRequestsData?.getPendingCampaignRequests || []}
+            pendingRequests={pendingRequests}
             onApprove={handleApproveParticipant}
             onReject={handleRejectParticipant}
           />
+
+          {/* Pending Requests Pagination Controls */}
+          <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={pendingPerPage}
+                onChange={handlePendingPerPageChange}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePendingPageChange(pendingPage - 1)}
+                disabled={pendingPage <= 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm">
+                Page {pendingPage} of {pendingMaxPage || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePendingPageChange(pendingPage + 1)}
+                disabled={pendingPage >= pendingMaxPage || pendingRequests.length < pendingPerPage}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="events">
@@ -334,7 +571,7 @@ export default function CampaignsContent() {
             <>
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">
-                  {data.getCampaigns.find((c: any) => c.id === currentCampaignId)?.title} - Events
+                  {campaigns.find((c: any) => c.id === currentCampaignId)?.title} - Events
                 </h1>
                 <div className="flex gap-2">
                   <Button
@@ -358,7 +595,7 @@ export default function CampaignsContent() {
               </div>
 
               <CampaignEventsTable
-                campaign={data.getCampaigns.find((c: any) => c.id === currentCampaignId)}
+                campaign={campaigns.find((c: any) => c.id === currentCampaignId)}
                 onEdit={(event: any) => {
                   setSelectedEvent(event);
                   setIsEventModalOpen(true);

@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_CAMPAIGNS = gql`
-  query GetCampaigns {
-    getCampaigns {
+  query GetCampaigns($limit: Int, $offset: Int, $noLimit: Boolean) {
+    getCampaigns(limit: $limit, offset: $offset, noLimit: $noLimit) {
       id
       title
       description
@@ -79,8 +79,8 @@ export const GET_CAMPAIGN_EVENTS = gql`
 `;
 
 export const GET_PENDING_CAMPAIGN_REQUESTS = gql`
-  query GetPendingCampaignRequests {
-    getPendingCampaignRequests {
+  query GetPendingCampaignRequests($limit: Int, $offset: Int, $noLimit: Boolean) {
+    getPendingCampaignRequests(limit: $limit, offset: $offset, noLimit: $noLimit) {
       id
       title
       startDate
