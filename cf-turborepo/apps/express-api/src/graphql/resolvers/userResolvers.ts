@@ -42,7 +42,7 @@ export const userResolvers = {
 
     getUsers: async (
       _: unknown, 
-      { limit, offset }: { limit?: number; offset?: number },
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean },
       context: ContextType
     ) => {
       const user = checkAuth(context);
@@ -52,13 +52,15 @@ export const userResolvers = {
       try {
         let query = User.find();
         
-        // Прилагаме пагинация, само ако са зададени параметри
-        if (offset !== undefined) {
-          query = query.skip(offset);
-        }
-        
-        if (limit !== undefined) {
-          query = query.limit(limit);
+        // Прилагаме пагинация, само ако са зададени параметри и noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
         }
         
         return await query;
@@ -69,7 +71,7 @@ export const userResolvers = {
     
     getPaginatedUsers: async (
       _: unknown,
-      { limit = 10, offset = 0 }: { limit?: number; offset?: number },
+      { limit = 10, offset = 0, noLimit = false }: { limit?: number; offset?: number; noLimit?: boolean },
       context: ContextType
     ) => {
       const user = checkAuth(context);
@@ -80,15 +82,21 @@ export const userResolvers = {
         // Изпълняваме две заявки - една за общия брой и една за данните с пагинация
         const totalCount = await User.countDocuments();
         
-        const users = await User.find()
-          .skip(offset)
-          .limit(limit + 1); // +1 за да проверим дали има още
+        let query = User.find();
         
-        const hasMore = users.length > limit;
+        // Ако noLimit е false, прилагаме стандартна пагинация
+        if (!noLimit) {
+          query = query.skip(offset).limit(limit + 1); // +1 за да проверим дали има още
+        }
         
-        // Връщаме само исканите потребители
+        const users = await query;
+        
+        // Проверяваме дали има още страници само ако не е поискан целият списък
+        const hasMore = !noLimit ? users.length > limit : false;
+        
+        // Връщаме само исканите потребители или всички, ако noLimit е true
         return {
-          users: users.slice(0, limit),
+          users: noLimit ? users : users.slice(0, limit),
           totalCount,
           hasMore
         };
@@ -99,7 +107,7 @@ export const userResolvers = {
 
     getUsersByRole: async (
       _: unknown,
-      { role, limit, offset }: { role: UserRole; limit?: number; offset?: number },
+      { role, limit, offset, noLimit }: { role: UserRole; limit?: number; offset?: number; noLimit?: boolean },
       context: ContextType
     ) => {
       const user = checkAuth(context);
@@ -109,13 +117,15 @@ export const userResolvers = {
       try {
         let query = User.find({ role });
         
-        // Прилагаме пагинация, само ако са зададени параметри
-        if (offset !== undefined) {
-          query = query.skip(offset);
-        }
-        
-        if (limit !== undefined) {
-          query = query.limit(limit);
+        // Прилагаме пагинация, само ако са зададени параметри и noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
         }
         
         return await query;
@@ -126,7 +136,7 @@ export const userResolvers = {
 
     getUsersByGroup: async (
       _: unknown,
-      { group, limit, offset }: { group: UserGroup; limit?: number; offset?: number },
+      { group, limit, offset, noLimit }: { group: UserGroup; limit?: number; offset?: number; noLimit?: boolean },
       context: ContextType
     ) => {
       const user = checkAuth(context);
@@ -136,13 +146,15 @@ export const userResolvers = {
       try {
         let query = User.find({ groups: group });
         
-        // Прилагаме пагинация, само ако са зададени параметри
-        if (offset !== undefined) {
-          query = query.skip(offset);
-        }
-        
-        if (limit !== undefined) {
-          query = query.limit(limit);
+        // Прилагаме пагинация, само ако са зададени параметри и noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
         }
         
         return await query;

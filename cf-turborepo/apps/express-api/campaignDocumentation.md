@@ -103,8 +103,8 @@ query {
 ### 2. Получаване на всички кампании
 
 ```graphql
-query GetCampaigns {
-  getCampaigns {
+query GetCampaigns($limit: Int, $offset: Int, $noLimit: Boolean) {
+  getCampaigns(limit: $limit, offset: $offset, noLimit: $noLimit) {
     id
     title
     description
@@ -114,6 +114,33 @@ query GetCampaigns {
     endDate
     participantsCount
     pendingParticipantsCount
+  }
+}
+```
+
+**Примери с променливи:**
+
+Стандартна пагинация (първите 10 кампании):
+```json
+{
+  "limit": 10,
+  "offset": 0
+}
+```
+
+Без пагинация (връща всички кампании):
+```json
+{
+  "noLimit": true
+}
+```
+
+Само заглавия без пагинация (по-ефективно за големи колекции):
+```graphql
+query {
+  getCampaigns(noLimit: true) {
+    id
+    title
   }
 }
 ```
@@ -155,8 +182,8 @@ query {
 ### 4. Получаване на кампаниите, в които потребителят участва
 
 ```graphql
-query GetUserCampaigns {
-  getUserCampaigns {
+query GetUserCampaigns($limit: Int, $offset: Int, $noLimit: Boolean) {
+  getUserCampaigns(limit: $limit, offset: $offset, noLimit: $noLimit) {
     id
     title
     description
@@ -167,11 +194,28 @@ query GetUserCampaigns {
 }
 ```
 
+**Примери:**
+
+Стандартна пагинация (първите 5 кампании):
+```json
+{
+  "limit": 5,
+  "offset": 0
+}
+```
+
+Без пагинация (връща всички кампании на потребителя):
+```json
+{
+  "noLimit": true
+}
+```
+
 ### 5. Получаване на кампании с чакащи заявки (за администратори и потребители с група CAMPAIGNS)
 
 ```graphql
-query GetPendingCampaignRequests {
-  getPendingCampaignRequests {
+query GetPendingCampaignRequests($limit: Int, $offset: Int, $noLimit: Boolean) {
+  getPendingCampaignRequests(limit: $limit, offset: $offset, noLimit: $noLimit) {
     id
     title
     pendingParticipants {
@@ -182,6 +226,23 @@ query GetPendingCampaignRequests {
     }
     pendingParticipantsCount
   }
+}
+```
+
+**Примери:**
+
+Стандартна пагинация (първите 10 кампании):
+```json
+{
+  "limit": 10,
+  "offset": 0
+}
+```
+
+Без пагинация (връща всички кампании с чакащи заявки):
+```json
+{
+  "noLimit": true
 }
 ```
 
@@ -649,4 +710,48 @@ mutation {
 - **Създаване/Редактиране/Изтриване на кампании:** Администратори ИЛИ потребители с група CAMPAIGNS
 - **Записване за кампании:** Само потребители с роля PATIENT или PARENT
 - **Одобрение на участници:** Администратори ИЛИ потребители с група CAMPAIGNS
-- **Преглед на чакащи заявки:** Администратори ИЛИ потребители с група CAMPAIGNS 
+- **Преглед на чакащи заявки:** Администратори ИЛИ потребители с група CAMPAIGNS
+
+## Опции за пагинация
+
+Всички заявки, които връщат списъци от кампании, поддържат следните параметри:
+
+- `limit: Int` - максимален брой записи, които да бъдат върнати
+- `offset: Int` - брой записи, които да бъдат пропуснати (използва се за пагинация)
+- `noLimit: Boolean` - когато е `true`, игнорира параметрите за пагинация и връща всички записи
+
+### Примери за използване на пагинация:
+
+1. **Стандартна пагинация** - подходящо за списъци, които се показват по страници:
+   ```graphql
+   query {
+     getCampaigns(limit: 10, offset: 20) {
+       id
+       title
+       description
+     }
+   }
+   ```
+   Тази заявка връща 10 кампании, започвайки от 21-вата (offset: 20).
+
+2. **Без лимит** - когато се нуждаете от всички записи:
+   ```graphql
+   query {
+     getCampaigns(noLimit: true) {
+       id
+       title
+     }
+   }
+   ```
+   Тази заявка връща всички кампании, без ограничение. Препоръчително е да заявявате само нужните ви полета.
+
+3. **Ефективно извличане само на заглавия** - за падащи менюта, етикети и др.:
+   ```graphql
+   query {
+     getCampaigns(noLimit: true) {
+       id
+       title
+     }
+   }
+   ```
+   Тази заявка връща само ID и заглавие на всички кампании, което е ефективно дори при по-голям брой записи. 

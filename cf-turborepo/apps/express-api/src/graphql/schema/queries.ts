@@ -6,54 +6,54 @@ export const queryTypeDefs = gql`
     # Users
     getUser(id: ID!): User
     getCurrentUser: User
-    getUsers(limit: Int, offset: Int): [User!]
-    getPaginatedUsers(limit: Int, offset: Int): PaginatedUsers!
-    getUsersByRole(role: UserRole!, limit: Int, offset: Int): [User!]
-    getUsersByGroup(group: UserGroup!, limit: Int, offset: Int): [User!]
+    getUsers(limit: Int, offset: Int, noLimit: Boolean): [User!]
+    getPaginatedUsers(limit: Int, offset: Int, noLimit: Boolean): PaginatedUsers!
+    getUsersByRole(role: UserRole!, limit: Int, offset: Int, noLimit: Boolean): [User!]
+    getUsersByGroup(group: UserGroup!, limit: Int, offset: Int, noLimit: Boolean): [User!]
     
     # Campaigns
     getCampaign(id: ID!): Campaign
-    getCampaigns: [Campaign!]
+    getCampaigns(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
     getCampaignEvents(campaignId: ID!): [CampaignEvent!]
-    getUserCampaigns: [Campaign!]
-    getPendingCampaignRequests: [Campaign!]
+    getUserCampaigns(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
+    getPendingCampaignRequests(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
     getUserCampaignStatus: [UserCampaignStatus!]
     
     # Initiatives
     getInitiative(id: ID!): Initiative
-    getInitiatives: [Initiative!]
-    getUserInitiatives: [Initiative!]
+    getInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]
+    getUserInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]
     
     # Conferences
     getConference(id: ID!): Conference
-    getConferences: [Conference!]
+    getConferences(limit: Int, offset: Int, noLimit: Boolean): [Conference!]
     
     # Events
     getEvent(id: ID!): Event
-    getEvents: [Event!]
+    getEvents(limit: Int, offset: Int, noLimit: Boolean): [Event!]
     
     # Donors
-    getDonors: [Donor!]
+    getDonors(limit: Int, offset: Int, noLimit: Boolean): [Donor!]
     getDonor(id: ID!): Donor
     
     # Charity shop
-    getStoreItems: [StoreItem!]
+    getStoreItems(limit: Int, offset: Int, noLimit: Boolean): [StoreItem!]
     getStoreItem(id: ID!): StoreItem
     
     # News
-    getNews: [News!]
+    getNews(limit: Int, offset: Int, noLimit: Boolean): [News!]
     getNewsItem(id: ID!): News
     
     # Blog
-    getBlogPosts: [BlogPost!]
+    getBlogPosts(limit: Int, offset: Int, noLimit: Boolean): [BlogPost!]
     getBlogPost(id: ID!): BlogPost
     
     # Recipes
-    getRecipes: [Recipe!]
+    getRecipes(limit: Int, offset: Int, noLimit: Boolean): [Recipe!]
     getRecipe(id: ID!): Recipe
     
     # Stories
-    getStories: [Story!]
+    getStories(limit: Int, offset: Int, noLimit: Boolean): [Story!]
     getStory(id: ID!): Story
     
     # Chat

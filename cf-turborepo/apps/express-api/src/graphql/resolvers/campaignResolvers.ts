@@ -22,18 +22,38 @@ export const campaignResolvers = {
       }
     },
     
-    getCampaigns: async () => {
+    getCampaigns: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await Campaign.find()
+        let query = Campaign.find()
           .populate('createdBy')
           .populate('participants')
           .sort({ createdAt: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching campaigns');
       }
     },
     
-    getPendingCampaignRequests: async (_: unknown, __: unknown, context: ContextType) => {
+    getPendingCampaignRequests: async (
+      _: unknown, 
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean },
+      context: ContextType
+    ) => {
       const user = checkAuth(context);
       
       // Само администратори или потребители с група CAMPAIGNS могат да виждат чакащи заявки
@@ -43,15 +63,26 @@ export const campaignResolvers = {
       
       try {
         // Намираме всички кампании с поне един чакащ участник
-        const campaigns = await Campaign.find({
+        let query = Campaign.find({
           pendingParticipants: { $exists: true, $not: { $size: 0 } }
         })
           .populate('createdBy')
           .populate('participants')
           .populate('pendingParticipants')
           .sort({ startDate: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
           
-        return campaigns;
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+          
+        return await query;
       } catch (err) {
         throw new Error('Error fetching pending campaign requests');
       }
@@ -70,17 +101,32 @@ export const campaignResolvers = {
       }
     },
     
-    getUserCampaigns: async (_: unknown, __: unknown, context: ContextType) => {
+    getUserCampaigns: async (
+      _: unknown, 
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean },
+      context: ContextType
+    ) => {
       const user = checkAuth(context);
       
       try {
         // Търсим всички кампании, в които потребителят е записан като участник
-        const campaigns = await Campaign.find({ participants: user.id })
+        let query = Campaign.find({ participants: user.id })
           .populate('createdBy')
           .populate('participants')
           .sort({ startDate: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
           
-        return campaigns;
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+          
+        return await query;
       } catch (err) {
         throw new Error('Error fetching user campaigns');
       }

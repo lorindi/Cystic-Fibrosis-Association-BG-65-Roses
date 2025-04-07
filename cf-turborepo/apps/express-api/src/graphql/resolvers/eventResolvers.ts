@@ -21,12 +21,28 @@ export const eventResolvers = {
       }
     },
     
-    getEvents: async () => {
+    getEvents: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await Event.find()
+        let query = Event.find()
           .populate('createdBy')
           .populate('participants')
           .sort({ date: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching events');
       }

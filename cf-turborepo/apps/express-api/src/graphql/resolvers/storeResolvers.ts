@@ -6,9 +6,25 @@ import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
 
 export const storeResolvers = {
   Query: {
-    getStoreItems: async () => {
+    getStoreItems: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await StoreItem.find({ available: true }).sort({ category: 1 });
+        let query = StoreItem.find({ available: true }).sort({ category: 1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching store items');
       }
@@ -26,10 +42,25 @@ export const storeResolvers = {
       }
     },
     
-    getDonors: async () => {
+    getDonors: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        const donors = await Donor.find().sort({ totalDonations: -1 });
-        return donors;
+        let query = Donor.find().sort({ totalDonations: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching donors');
       }

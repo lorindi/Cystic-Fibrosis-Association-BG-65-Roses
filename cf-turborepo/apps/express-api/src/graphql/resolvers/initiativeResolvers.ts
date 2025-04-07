@@ -21,30 +21,61 @@ export const initiativeResolvers = {
       }
     },
     
-    getInitiatives: async () => {
+    getInitiatives: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await Initiative.find()
+        let query = Initiative.find()
           .populate('createdBy')
           .populate('participants')
           .sort({ createdAt: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching initiatives');
       }
     },
     
-    getUserInitiatives: async (_: unknown, __: unknown, context: ContextType) => {
+    getUserInitiatives: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean },
+      context: ContextType
+    ) => {
       const user = checkAuth(context);
       
       try {
         // Търсим всички инициативи, в които потребителят е записан като участник
-        const initiatives = await Initiative.find({ participants: user.id })
+        let query = Initiative.find({ participants: user.id })
           .populate('createdBy')
           .populate('participants')
           .sort({ startDate: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
           
-        return initiatives;
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+          
+        return await query;
       } catch (err) {
-            throw new Error('Error fetching user initiatives');
+        throw new Error('Error fetching user initiatives');
       }
     },
   },
