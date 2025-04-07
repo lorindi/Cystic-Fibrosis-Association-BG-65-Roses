@@ -40,21 +40,66 @@ export const userResolvers = {
       }
     },
 
-    getUsers: async (_: unknown, __: unknown, context: ContextType) => {
+    getUsers: async (
+      _: unknown, 
+      { limit, offset }: { limit?: number; offset?: number },
+      context: ContextType
+    ) => {
       const user = checkAuth(context);
       // Only admins can see all users
       checkPermissions(user, UserRole.ADMIN);
 
       try {
-        return await User.find();
+        let query = User.find();
+        
+        // Прилагаме пагинация, само ако са зададени параметри
+        if (offset !== undefined) {
+          query = query.skip(offset);
+        }
+        
+        if (limit !== undefined) {
+          query = query.limit(limit);
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error("Error fetching users");
+      }
+    },
+    
+    getPaginatedUsers: async (
+      _: unknown,
+      { limit = 10, offset = 0 }: { limit?: number; offset?: number },
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      // Only admins can see all users
+      checkPermissions(user, UserRole.ADMIN);
+
+      try {
+        // Изпълняваме две заявки - една за общия брой и една за данните с пагинация
+        const totalCount = await User.countDocuments();
+        
+        const users = await User.find()
+          .skip(offset)
+          .limit(limit + 1); // +1 за да проверим дали има още
+        
+        const hasMore = users.length > limit;
+        
+        // Връщаме само исканите потребители
+        return {
+          users: users.slice(0, limit),
+          totalCount,
+          hasMore
+        };
+      } catch (err) {
+        throw new Error("Error fetching paginated users");
       }
     },
 
     getUsersByRole: async (
       _: unknown,
-      { role }: { role: UserRole },
+      { role, limit, offset }: { role: UserRole; limit?: number; offset?: number },
       context: ContextType
     ) => {
       const user = checkAuth(context);
@@ -62,7 +107,18 @@ export const userResolvers = {
       checkPermissions(user, UserRole.ADMIN);
 
       try {
-        return await User.find({ role });
+        let query = User.find({ role });
+        
+        // Прилагаме пагинация, само ако са зададени параметри
+        if (offset !== undefined) {
+          query = query.skip(offset);
+        }
+        
+        if (limit !== undefined) {
+          query = query.limit(limit);
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error("Error fetching users");
       }
@@ -70,7 +126,7 @@ export const userResolvers = {
 
     getUsersByGroup: async (
       _: unknown,
-      { group }: { group: UserGroup },
+      { group, limit, offset }: { group: UserGroup; limit?: number; offset?: number },
       context: ContextType
     ) => {
       const user = checkAuth(context);
@@ -78,7 +134,18 @@ export const userResolvers = {
       checkPermissions(user, UserRole.ADMIN);
 
       try {
-        return await User.find({ groups: group });
+        let query = User.find({ groups: group });
+        
+        // Прилагаме пагинация, само ако са зададени параметри
+        if (offset !== undefined) {
+          query = query.skip(offset);
+        }
+        
+        if (limit !== undefined) {
+          query = query.limit(limit);
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error("Error fetching users");
       }
