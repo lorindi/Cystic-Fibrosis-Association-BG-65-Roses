@@ -28,6 +28,14 @@ export const campaignTypeDefs = gql`
     location: String!
   }
   
+  # Campaign notification type
+  type CampaignNotification {
+    id: ID!
+    title: String!
+    pendingParticipants: [User!]!
+    pendingParticipantsCount: Int!
+  }
+  
   # Campaign status for users
   enum CampaignParticipationStatus {
     PENDING

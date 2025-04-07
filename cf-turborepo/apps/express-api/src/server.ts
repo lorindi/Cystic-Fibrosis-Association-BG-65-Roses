@@ -5,6 +5,9 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { WebSocketServer } from 'ws';
+import { useServer as useWsServer } from 'graphql-ws/lib/use/ws';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { typeDefs } from './graphql/schema/index';
@@ -12,6 +15,14 @@ import { resolvers } from './graphql/resolvers/index';
 import { testEmailConnection, testOAuth2Connection } from './services/emailService';
 
 dotenv.config();
+
+// Създаваме тип за конфигурирането на WebSocket сървъра
+declare module 'graphql-ws/lib/use/ws' {
+  interface ServerOptions {
+    schema: any;
+    context?: (ctx: { connectionParams?: any }) => any;
+  }
+}
 
 const connectDB = async () => {
   try {
@@ -34,11 +45,43 @@ async function startApolloServer() {
   const httpServer = http.createServer(app);
   const PORT = process.env.PORT || 5000;
 
+  // Schema за GraphQL
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // Настройка на WebSocket сървъра за абонаменти
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: '/graphql',
+  });
+
+  // Типове за WebSocket контекста
+  interface WSConnectionParams {
+    authorization?: string;
+    [key: string]: any; // За да позволи други параметри
+  }
+
+  // Функция за почистване на WebSocket ресурсите
+  const serverCleanup = useWsServer({
+    schema,
+    // Контекст за абонаментите
+    context: async (ctx: { connectionParams?: WSConnectionParams }) => {
+      return { req: { headers: ctx.connectionParams } };
+    }
+  }, wsServer);
+
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
       ApolloServerPluginLandingPageLocalDefault({ 
         embed: true,
         includeCookies: true 
@@ -66,6 +109,7 @@ async function startApolloServer() {
   console.log(`Express server started on port ${PORT}`);
   console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
   console.log(`GraphQL Explorer available at: http://localhost:${PORT}/graphql`);
+  console.log(`WebSocket endpoint for subscriptions: ws://localhost:${PORT}/graphql`);
 }
 
 connectDB().then(() => {

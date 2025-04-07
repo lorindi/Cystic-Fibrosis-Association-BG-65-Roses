@@ -3,6 +3,7 @@ import { UserRole } from '../../types/user.types';
 import Campaign from '../../models/campaign.model';
 import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
 import { UserGroup } from '../../types/user.types';
+import { pubsub, EVENTS } from './index';
 
 export const campaignResolvers = {
   Query: {
@@ -46,6 +47,39 @@ export const campaignResolvers = {
         return await query;
       } catch (err) {
         throw new Error('Error fetching campaigns');
+      }
+    },
+    
+    getCampaignNotifications: async (
+      _: unknown,
+      __: unknown,
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Само администратори или потребители с група CAMPAIGNS могат да виждат известия
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to view campaign notifications');
+      }
+      
+      try {
+        // Намираме всички кампании с поне един чакащ участник и извличаме необходимите полета
+        const campaigns = await Campaign.find({
+          pendingParticipants: { $exists: true, $not: { $size: 0 } }
+        })
+          .select('_id title pendingParticipants')
+          .populate('pendingParticipants')
+          .sort({ updatedAt: -1 });
+        
+        // Форматираме данните за известията
+        return campaigns.map(campaign => ({
+          id: campaign._id,
+          title: campaign.title,
+          pendingParticipants: campaign.pendingParticipants,
+          pendingParticipantsCount: campaign.pendingParticipants.length
+        }));
+      } catch (err) {
+        throw new Error('Error fetching campaign notifications');
       }
     },
     
@@ -342,10 +376,29 @@ export const campaignResolvers = {
         campaign.pendingParticipants.push(user.id);
         await campaign.save();
         
-        return await Campaign.findById(id)
+        // Вземаме обновената кампания с populating
+        const updatedCampaign = await Campaign.findById(id)
           .populate('createdBy')
           .populate('participants')
           .populate('pendingParticipants');
+         
+        if (!updatedCampaign) {
+          throw new Error('Failed to retrieve updated campaign');
+        }
+          
+        // Публикуваме събитие за нов чакащ участник
+        const notification = {
+          id: campaign._id,
+          title: campaign.title,
+          pendingParticipants: updatedCampaign.pendingParticipants,
+          pendingParticipantsCount: updatedCampaign.pendingParticipants.length
+        };
+        
+        pubsub.publish(EVENTS.CAMPAIGN_PARTICIPANT_PENDING, { 
+          campaignParticipantPending: notification 
+        });
+        
+        return updatedCampaign;
       } catch (err: unknown) {
         if (err instanceof Error) {
           throw new Error(`Error registering for campaign: ${err.message}`);

@@ -17,6 +17,7 @@ export const queryTypeDefs = gql`
     getCampaignEvents(campaignId: ID!): [CampaignEvent!]
     getUserCampaigns(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
     getPendingCampaignRequests(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
+    getCampaignNotifications: [CampaignNotification!]
     getUserCampaignStatus: [UserCampaignStatus!]
     
     # Initiatives
