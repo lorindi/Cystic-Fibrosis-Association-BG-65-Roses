@@ -1,149 +1,434 @@
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle, 
-  CardFooter 
-} from "@/components/ui/card";
+"use client";
+
+import * as React from "react";
+import { useQuery, useMutation } from "@apollo/client";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShoppingBag, Users, Calendar, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Plus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Initiative } from "@/types/initiative";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  InitiativesTable,
+  InitiativeFormModal,
+  InitiativeItemsTable,
+} from "../features/initiatives/components";
+import {
+  GET_INITIATIVES,
+  GET_INITIATIVE,
+  CREATE_INITIATIVE,
+  UPDATE_INITIATIVE,
+  DELETE_INITIATIVE,
+  ADD_INITIATIVE_ITEM,
+  DELETE_INITIATIVE_ITEM,
+} from "../graphql/initiatives";
 
 export default function InitiativesContent() {
-  // Примерни данни за инициативи
-  const initiatives = [
-    {
-      id: 1,
-      title: "Безплатни инхалатори",
-      description: "Инициатива за предоставяне на безплатни инхалатори за пациенти с кистична фиброза",
-      status: "active",
-      participants: 42,
-      startDate: "01.03.2023",
-      endDate: "01.03.2024",
-      availableCount: 65,
-      distributedCount: 37,
-      type: "equipment"
+  const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedInitiative, setSelectedInitiative] = React.useState<Initiative | undefined>();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [initiativeToDelete, setInitiativeToDelete] = React.useState<Initiative | undefined>();
+  
+  // Item management states
+  const [isItemDeleteDialogOpen, setIsItemDeleteDialogOpen] = React.useState(false);
+  const [itemToDelete, setItemToDelete] = React.useState<string | undefined>();
+  const [currentInitiativeId, setCurrentInitiativeId] = React.useState<string | undefined>();
+  
+  // Tab state
+  const [activeTab, setActiveTab] = React.useState("initiatives");
+
+  // Pagination states
+  const [page, setPage] = React.useState(1);
+  const [itemsPerPage, setItemsPerPage] = React.useState(10);
+  const [totalInitiatives, setTotalInitiatives] = React.useState(0);
+
+  // Calculate max page
+  const maxPage = Math.ceil(totalInitiatives / itemsPerPage) || 1;
+
+  // Load initiatives
+  const { loading, error, data } = useQuery(GET_INITIATIVES, {
+    variables: {
+      limit: itemsPerPage,
+      offset: (page - 1) * itemsPerPage,
     },
-    {
-      id: 2,
-      title: "Kavisep програма",
-      description: "Предоставяне на достъп до медикамента Kavisep за пациенти с кистична фиброза",
-      status: "active",
-      participants: 28,
-      startDate: "15.01.2023",
-      endDate: "15.01.2024",
-      availableCount: 50,
-      distributedCount: 22,
-      type: "medication"
+    fetchPolicy: "network-only",
+  });
+
+  // Load current initiative details (when viewing items)
+  const {
+    data: currentInitiativeData,
+    loading: currentInitiativeLoading,
+    refetch: refetchCurrentInitiative,
+  } = useQuery(GET_INITIATIVE, {
+    variables: {
+      id: currentInitiativeId || "",
     },
-    {
-      id: 3,
-      title: "MukoClear терапия",
-      description: "Инициатива за осигуряване на MukoClear терапия за улесняване на дишането",
-      status: "pending",
-      participants: 0,
-      startDate: "01.05.2023",
-      endDate: "01.05.2024",
-      availableCount: 30,
-      distributedCount: 0,
-      type: "medication"
+    skip: !currentInitiativeId,
+    fetchPolicy: "network-only",
+  });
+
+  // Initiative mutations
+  const [createInitiative] = useMutation(CREATE_INITIATIVE, {
+    refetchQueries: [
+      {
+        query: GET_INITIATIVES,
+        variables: {
+          limit: itemsPerPage,
+          offset: (page - 1) * itemsPerPage,
+        },
+      },
+    ],
+    onCompleted: () => {
+      toast({
+        title: "Success",
+        description: "Initiative created successfully",
+      });
     },
-  ];
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [updateInitiative] = useMutation(UPDATE_INITIATIVE, {
+    refetchQueries: [
+      {
+        query: GET_INITIATIVES,
+        variables: {
+          limit: itemsPerPage,
+          offset: (page - 1) * itemsPerPage,
+        },
+      },
+    ],
+    onCompleted: () => {
+      toast({
+        title: "Success",
+        description: "Initiative updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [deleteInitiative] = useMutation(DELETE_INITIATIVE, {
+    refetchQueries: [
+      {
+        query: GET_INITIATIVES,
+        variables: {
+          limit: itemsPerPage,
+          offset: (page - 1) * itemsPerPage,
+        },
+      },
+    ],
+    onCompleted: () => {
+      toast({
+        title: "Success",
+        description: "Initiative deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [deleteInitiativeItem] = useMutation(DELETE_INITIATIVE_ITEM, {
+    onCompleted: () => {
+      toast({
+        title: "Success",
+        description: "Item deleted successfully",
+      });
+      if (currentInitiativeId) {
+        refetchCurrentInitiative();
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= maxPage) {
+      setPage(newPage);
+    }
+  };
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newItemsPerPage = parseInt(e.target.value);
+    setItemsPerPage(newItemsPerPage);
+    setPage(1); // Reset to first page
+  };
+
+  // Callbacks
+  const handleCreateOrUpdateInitiative = (formData: any, items: any[]) => {
+    if (selectedInitiative) {
+      // Update existing initiative
+      updateInitiative({
+        variables: {
+          id: selectedInitiative.id,
+          input: {
+            ...formData,
+            items: items.map((item) => ({
+              name: item.name,
+              description: item.description,
+              quantity: item.quantity,
+            })),
+          },
+        },
+      });
+    } else {
+      // Create new initiative
+      createInitiative({
+        variables: {
+          input: {
+            ...formData,
+            items: items.map((item) => ({
+              name: item.name,
+              description: item.description,
+              quantity: item.quantity,
+            })),
+          },
+        },
+      });
+    }
+  };
+
+  const handleDeleteInitiative = () => {
+    if (initiativeToDelete) {
+      deleteInitiative({
+        variables: {
+          id: initiativeToDelete.id,
+        },
+      });
+      setIsDeleteDialogOpen(false);
+      setInitiativeToDelete(undefined);
+    }
+  };
+
+  const handleDeleteItem = () => {
+    if (itemToDelete) {
+      deleteInitiativeItem({
+        variables: {
+          itemId: itemToDelete,
+        },
+      });
+      setIsItemDeleteDialogOpen(false);
+      setItemToDelete(undefined);
+    }
+  };
+
+  const initiatives = data?.getInitiatives || [];
+  const currentInitiative = currentInitiativeData?.getInitiative;
+  const initiativeItems = currentInitiative?.items || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Всички инициативи</h2>
-        <Button>Нова инициатива</Button>
-      </div>
+    <div className="p-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="initiatives">Initiatives</TabsTrigger>
+          {currentInitiativeId && (
+            <TabsTrigger value="items">
+              {currentInitiative?.title || "Initiative"} Items
+            </TabsTrigger>
+          )}
+        </TabsList>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {initiatives.map(initiative => (
-          <Card key={initiative.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {initiative.title}
-                    <Badge variant={initiative.status === "active" ? "default" : "secondary"}>
-                      {initiative.status === "active" ? "Активна" : "Планирана"}
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription className="mt-1">{initiative.description}</CardDescription>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span><span className="font-medium">{initiative.participants}</span> участници</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{initiative.startDate} - {initiative.endDate}</span>
-                </div>
-              </div>
+        <TabsContent value="initiatives">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Initiatives</h1>
+            <Button
+              onClick={() => {
+                setSelectedInitiative(undefined);
+                setIsModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Initiative
+            </Button>
+          </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Разпределени</span>
-                  <span className="font-medium">{initiative.distributedCount} / {initiative.availableCount}</span>
-                </div>
-                <Progress value={(initiative.distributedCount / initiative.availableCount) * 100} />
-              </div>
-            </CardContent>
-            <CardFooter className="flex gap-2">
-              <Button variant="outline" className="flex-1">Участници</Button>
-              <Button className="flex-1">Редактиране</Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Отчети за инициативи</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>Статистика за инициативи</CardTitle>
-            <CardDescription>Обобщена информация за всички инициативи</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <span className="text-3xl font-bold">98</span>
-                    <p className="text-sm text-muted-foreground mt-1">Общо участници</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <span className="text-3xl font-bold">59</span>
-                    <p className="text-sm text-muted-foreground mt-1">Разпределени продукти</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <span className="text-3xl font-bold">3</span>
-                    <p className="text-sm text-muted-foreground mt-1">Активни инициативи</p>
-                  </div>
-                </CardContent>
-              </Card>
+          {loading ? (
+            <div className="text-center py-10">Loading initiatives...</div>
+          ) : error ? (
+            <div className="text-center py-10 text-red-500">
+              Error loading initiatives: {error.message}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <InitiativesTable
+              initiatives={initiatives}
+              onEdit={(initiative) => {
+                setSelectedInitiative(initiative);
+                setIsModalOpen(true);
+              }}
+              onDelete={(initiative) => {
+                setInitiativeToDelete(initiative);
+                setIsDeleteDialogOpen(true);
+              }}
+              onManageItems={(initiative) => {
+                setCurrentInitiativeId(initiative.id);
+                setActiveTab("items");
+              }}
+            />
+          )}
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page <= 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm">
+                Page {page} of {maxPage}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= maxPage || initiatives.length < itemsPerPage}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        {currentInitiativeId && (
+          <TabsContent value="items">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <Button
+                  variant="outline"
+                  className="mb-4"
+                  onClick={() => {
+                    setActiveTab("initiatives");
+                    setCurrentInitiativeId(undefined);
+                  }}
+                >
+                  Back to Initiatives
+                </Button>
+                <h1 className="text-3xl font-bold">
+                  {currentInitiative?.title || "Initiative"} Items
+                </h1>
+              </div>
+            </div>
+
+            {currentInitiativeLoading ? (
+              <div className="text-center py-10">Loading items...</div>
+            ) : (
+              <InitiativeItemsTable
+                items={initiativeItems}
+                onDelete={(itemId) => {
+                  setItemToDelete(itemId);
+                  setIsItemDeleteDialogOpen(true);
+                }}
+              />
+            )}
+          </TabsContent>
+        )}
+      </Tabs>
+
+      {/* Initiative Form Modal */}
+      <InitiativeFormModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedInitiative(undefined);
+        }}
+        onSubmit={handleCreateOrUpdateInitiative}
+        initiative={selectedInitiative}
+      />
+
+      {/* Delete Initiative Confirmation */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the initiative
+              {initiativeToDelete?.title && (
+                <span className="font-medium"> "{initiativeToDelete.title}"</span>
+              )}{" "}
+              and all its related data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteInitiative}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Item Confirmation */}
+      <AlertDialog
+        open={isItemDeleteDialogOpen}
+        onOpenChange={setIsItemDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this item and its related data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteItem}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 
