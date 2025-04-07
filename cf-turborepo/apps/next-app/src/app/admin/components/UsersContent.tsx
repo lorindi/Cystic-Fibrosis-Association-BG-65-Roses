@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_USERS, GET_USERS_BY_ROLE, GET_USER } from "@/lib/apollo/queries";
+import { GET_USERS, GET_USERS_BY_ROLE, GET_USER, GET_PAGINATED_USERS } from "@/lib/apollo/queries";
 import { SET_USER_ROLE, ADD_USER_TO_GROUP, REMOVE_USER_FROM_GROUP } from "@/lib/apollo/mutations";
 import { User, UserRole, UserGroup } from "@/lib/apollo/types";
 import { 
@@ -17,6 +17,8 @@ import {
   Search,
   PlusCircle,
   Filter,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,6 +28,13 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Импортираме компонентите от features/users
 import {
@@ -33,6 +42,7 @@ import {
   UserProfile,
   EditUserForm,
   UserStats,
+  CompactUserStats,
   DeactivateUserDialog,
   userFormSchema
 } from "../features/users";
@@ -46,15 +56,22 @@ export default function UsersContent() {
   const [editDetailsOpen, setEditDetailsOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   
+  // Пагинация
+  const [limit, setLimit] = useState<number>(10);
+  const [offset, setOffset] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  
   // Fake current user - в реалния случай това ще идва от auth context или подобен източник
   const currentUserRole = UserRole.ADMIN; // За тестови цели приемаме, че сме админ
   
-  // Fetch users data
-  const { data: allUsersData, loading: allUsersLoading, error: allUsersError } = useQuery(GET_USERS);
+  // Fetch users data with pagination
+  const { data: paginatedUsersData, loading: paginatedUsersLoading, error: paginatedUsersError, fetchMore: fetchMoreUsers } = useQuery(GET_PAGINATED_USERS, {
+    variables: { limit, offset },
+  });
   
   // Fetch users by role if a role is selected
   const { data: filteredUsersData, loading: filteredUsersLoading } = useQuery(GET_USERS_BY_ROLE, {
-    variables: { role: selectedRole },
+    variables: { role: selectedRole, limit, offset },
     skip: !selectedRole,
   });
 
@@ -66,8 +83,20 @@ export default function UsersContent() {
 
   const [setUserRole, { loading: setRoleLoading }] = useMutation(SET_USER_ROLE, {
     refetchQueries: selectedUser 
-      ? [{ query: GET_USERS }, { query: GET_USER, variables: { id: selectedUser } }]
-      : [{ query: GET_USERS }],
+      ? [
+          { 
+            query: GET_PAGINATED_USERS, 
+            variables: { limit, offset } 
+          }, 
+          { 
+            query: GET_USER, 
+            variables: { id: selectedUser } 
+          }
+        ]
+      : [{ 
+          query: GET_PAGINATED_USERS, 
+          variables: { limit, offset } 
+        }],
     onCompleted: () => {
       // Актуализирай данните за текущия потребител, ако гледаме профила
       if (viewProfileOpen && selectedUser) {
@@ -80,8 +109,20 @@ export default function UsersContent() {
   // Set up the ADD_USER_TO_GROUP mutation
   const [addUserToGroup, { loading: addToGroupLoading }] = useMutation(ADD_USER_TO_GROUP, {
     refetchQueries: selectedUser 
-      ? [{ query: GET_USERS }, { query: GET_USER, variables: { id: selectedUser } }]
-      : [{ query: GET_USERS }],
+      ? [
+          { 
+            query: GET_PAGINATED_USERS, 
+            variables: { limit, offset } 
+          }, 
+          { 
+            query: GET_USER, 
+            variables: { id: selectedUser } 
+          }
+        ]
+      : [{ 
+          query: GET_PAGINATED_USERS, 
+          variables: { limit, offset } 
+        }],
     onCompleted: () => {
       // Актуализирай данните за текущия потребител, ако гледаме профила
       if (viewProfileOpen && selectedUser) {
@@ -93,8 +134,20 @@ export default function UsersContent() {
   // Set up the REMOVE_USER_FROM_GROUP mutation
   const [removeUserFromGroup, { loading: removeFromGroupLoading }] = useMutation(REMOVE_USER_FROM_GROUP, {
     refetchQueries: selectedUser 
-      ? [{ query: GET_USERS }, { query: GET_USER, variables: { id: selectedUser } }]
-      : [{ query: GET_USERS }],
+      ? [
+          { 
+            query: GET_PAGINATED_USERS, 
+            variables: { limit, offset } 
+          }, 
+          { 
+            query: GET_USER, 
+            variables: { id: selectedUser } 
+          }
+        ]
+      : [{ 
+          query: GET_PAGINATED_USERS, 
+          variables: { limit, offset } 
+        }],
     onCompleted: () => {
       // Актуализирай данните за текущия потребител, ако гледаме профила
       if (viewProfileOpen && selectedUser) {
@@ -103,10 +156,43 @@ export default function UsersContent() {
     }
   });
 
-  // Use filtered data if a role is selected, otherwise use all users
-  const users = selectedRole ? filteredUsersData?.getUsersByRole : allUsersData?.getUsers;
-  const isLoading = allUsersLoading || filteredUsersLoading || setRoleLoading;
+  // Use filtered data if a role is selected, otherwise use paginated data
+  const users = selectedRole ? filteredUsersData?.getUsersByRole : paginatedUsersData?.getPaginatedUsers?.users;
+  const totalUsers = paginatedUsersData?.getPaginatedUsers?.totalCount || 0;
+  const hasMoreUsers = paginatedUsersData?.getPaginatedUsers?.hasMore || false;
+  const isLoading = paginatedUsersLoading || filteredUsersLoading || setRoleLoading;
   const selectedUserData = userData?.getUser;
+  
+  // Изчисляваме общия брой страници
+  const totalPages = Math.ceil(totalUsers / limit);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    // Validate new page
+    if (newPage < 1 || newPage > totalPages) {
+      return;
+    }
+    
+    const newOffset = (newPage - 1) * limit;
+    setOffset(newOffset);
+    setPage(newPage);
+    
+    // Fetch more users if needed
+    fetchMoreUsers({
+      variables: {
+        offset: newOffset,
+        limit,
+      },
+    });
+  };
+  
+  // Handle page size change
+  const handlePageSizeChange = (newSize: string) => {
+    const size = parseInt(newSize);
+    setLimit(size);
+    setOffset(0); // Reset to first page
+    setPage(1);
+  };
 
   // Handle form submission
   function onSubmit(data: UserFormValues) {
@@ -116,10 +202,10 @@ export default function UsersContent() {
   }
 
   // Error handling
-  if (allUsersError) {
+  if (paginatedUsersError) {
     return (
       <div className="p-8 text-center">
-        <p className="text-red-500">Error loading users: {allUsersError.message}</p>
+        <p className="text-red-500">Error loading users: {paginatedUsersError.message}</p>
         <Button 
           variant="outline" 
           className="mt-4"
@@ -144,10 +230,10 @@ export default function UsersContent() {
 
   // Counts for stats cards
   const userCounts = {
-    total: allUsersData?.getUsers?.length || 0,
-    patient: allUsersData?.getUsers?.filter((u: User) => u.role === UserRole.PATIENT).length || 0,
-    parent: allUsersData?.getUsers?.filter((u: User) => u.role === UserRole.PARENT).length || 0,
-    donor: allUsersData?.getUsers?.filter((u: User) => u.role === UserRole.DONOR).length || 0,
+    total: totalUsers,
+    patient: paginatedUsersData?.getPaginatedUsers?.users.filter((u: User) => u.role === UserRole.PATIENT).length || 0,
+    parent: paginatedUsersData?.getPaginatedUsers?.users.filter((u: User) => u.role === UserRole.PARENT).length || 0,
+    donor: paginatedUsersData?.getPaginatedUsers?.users.filter((u: User) => u.role === UserRole.DONOR).length || 0,
   };
 
   // Calculate percentages
@@ -278,8 +364,17 @@ export default function UsersContent() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle>User Management</CardTitle>
+          </div>
+          <CompactUserStats 
+            totalUsers={userCounts.total}
+            patientCount={userCounts.patient}
+            parentCount={userCounts.parent}
+            donorCount={userCounts.donor}
+            getPercentage={getPercentage}
+          />
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4">
@@ -312,7 +407,7 @@ export default function UsersContent() {
               </DropdownMenu>
             </div>
 
-            <div className="rounded-md border">
+            <div className="rounded-md border h-[550px] overflow-y-auto">
               <UsersTable 
                 users={filteredUsers}
                 isLoading={isLoading}
@@ -325,18 +420,62 @@ export default function UsersContent() {
                 getRoleBadgeVariant={getRoleBadgeVariant}
               />
             </div>
+            
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm text-muted-foreground">
+                  Showing {offset + 1} to {Math.min(offset + limit, totalUsers)} of {totalUsers} users
+                </p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm text-muted-foreground">Rows per page:</p>
+                  <Select
+                    value={limit.toString()}
+                    onValueChange={handlePageSizeChange}
+                  >
+                    <SelectTrigger className="h-8 w-[70px]">
+                      <SelectValue placeholder={limit.toString()} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || isLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous page</span>
+                </Button>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm">{page}</span>
+                  <span className="text-sm text-muted-foreground">of</span>
+                  <span className="text-sm">{totalPages}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!hasMoreUsers || isLoading || page >= totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next page</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Stats Cards */}
-      <UserStats 
-        totalUsers={userCounts.total}
-        patientCount={userCounts.patient}
-        parentCount={userCounts.parent}
-        donorCount={userCounts.donor}
-        getPercentage={getPercentage}
-      />
 
       {/* View Profile Dialog */}
       <UserProfile 
