@@ -6,9 +6,10 @@ export const queryTypeDefs = gql`
     # Users
     getUser(id: ID!): User
     getCurrentUser: User
-    getUsers: [User!]
-    getUsersByRole(role: UserRole!): [User!]
-    getUsersByGroup(group: UserGroup!): [User!]
+    getUsers(limit: Int, offset: Int): [User!]
+    getPaginatedUsers(limit: Int, offset: Int): PaginatedUsers!
+    getUsersByRole(role: UserRole!, limit: Int, offset: Int): [User!]
+    getUsersByGroup(group: UserGroup!, limit: Int, offset: Int): [User!]
     
     # Campaigns
     getCampaign(id: ID!): Campaign
