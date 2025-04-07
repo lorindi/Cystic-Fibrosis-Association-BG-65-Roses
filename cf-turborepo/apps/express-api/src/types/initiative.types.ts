@@ -15,6 +15,7 @@ export interface IInitiativeDocument extends Document {
   startDate: Date;
   endDate?: Date;
   participants: IUserDocument['_id'][];
+  pendingParticipants: IUserDocument['_id'][];
   createdBy: IUserDocument['_id'];
   items: IInitiativeItem[];
   createdAt: Date;

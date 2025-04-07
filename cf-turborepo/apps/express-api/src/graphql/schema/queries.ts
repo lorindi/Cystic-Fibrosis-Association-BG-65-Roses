@@ -20,9 +20,10 @@ export const queryTypeDefs = gql`
     getUserCampaignStatus: [UserCampaignStatus!]
     
     # Initiatives
-    getInitiative(id: ID!): Initiative
-    getInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]
-    getUserInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]
+    getInitiative(id: ID!): Initiative!
+    getInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]!
+    getUserInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]!
+    getPendingInitiativeRequests(initiativeId: ID!): [User!]!
     
     # Conferences
     getConference(id: ID!): Conference

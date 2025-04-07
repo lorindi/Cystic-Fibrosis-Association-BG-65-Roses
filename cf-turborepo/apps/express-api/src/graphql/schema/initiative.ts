@@ -9,10 +9,14 @@ export const initiativeTypeDefs = gql`
     startDate: Date!
     endDate: Date
     participants: [User!]!
+    pendingParticipants: [User!]!
     createdBy: User!
     items: [InitiativeItem!]!
     createdAt: Date!
     updatedAt: Date!
+    participantsCount: Int!
+    pendingParticipantsCount: Int!
+    isActive: Boolean!
   }
   
   type InitiativeItem {

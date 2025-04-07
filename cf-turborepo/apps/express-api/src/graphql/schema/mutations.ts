@@ -31,8 +31,10 @@ export const mutationTypeDefs = gql`
     createInitiative(input: InitiativeInput!): Initiative!
     updateInitiative(id: ID!, input: InitiativeInput!): Initiative!
     deleteInitiative(id: ID!): Boolean!
-    joinInitiative(id: ID!): Initiative!
-    leaveInitiative(id: ID!): Initiative!
+    joinInitiative(initiativeId: ID!): Boolean!
+    leaveInitiative(initiativeId: ID!): Boolean!
+    approveInitiativeParticipant(initiativeId: ID!, userId: ID!): Boolean!
+    rejectInitiativeParticipant(initiativeId: ID!, userId: ID!): Boolean!
     addInitiativeItem(initiativeId: ID!, input: InitiativeItemInput!): InitiativeItem!
     updateInitiativeItem(itemId: ID!, input: InitiativeItemInput!): InitiativeItem!
     deleteInitiativeItem(itemId: ID!): Boolean!
