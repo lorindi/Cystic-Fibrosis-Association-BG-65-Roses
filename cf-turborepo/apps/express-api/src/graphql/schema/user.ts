@@ -14,6 +14,13 @@ export const userTypeDefs = gql`
     updatedAt: Date!
   }
 
+  # Pagination types
+  type PaginatedUsers {
+    users: [User!]!
+    totalCount: Int!
+    hasMore: Boolean!
+  }
+
   type VerificationResponse {
     success: Boolean!
     message: String!
