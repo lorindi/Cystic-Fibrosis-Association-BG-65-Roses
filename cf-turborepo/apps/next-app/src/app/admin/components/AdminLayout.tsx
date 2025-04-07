@@ -159,7 +159,7 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
         </header>
 
         {/* Main content area */}
-        <main className="flex-1 overflow-auto p-6 bg-slate-50">
+        <main className="flex-1 overflow-auto px-4 py-2 bg-slate-50">
           {children}
         </main>
       </div>
