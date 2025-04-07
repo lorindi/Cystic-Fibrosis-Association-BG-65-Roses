@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
-  Bell, 
   Settings, 
   LogOut, 
   Menu, 
@@ -20,6 +19,7 @@ import { menuItems, MenuItem } from "../data/menuItems";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { CampaignNotificationsIndicator } from "../features/campaigns/components";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -129,9 +129,7 @@ export function AdminLayout({ children, activeMenu, setActiveMenu }: AdminLayout
             <h1 className="text-2xl font-semibold">{menuItems.find((item: MenuItem) => item.id === activeMenu)?.label || "Dashboard"}</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
+            <CampaignNotificationsIndicator />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
