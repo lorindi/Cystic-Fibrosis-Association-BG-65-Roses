@@ -1,10 +1,3 @@
-export enum UserRole {
-  ADMIN = "admin",
-  PATIENT = "patient",
-  PARENT = "parent",
-  DONOR = "donor",
-}
-
 export interface User {
   _id: string;
   name: string;
@@ -14,4 +7,14 @@ export interface User {
   isEmailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GetUsersQuery {
+  getUsers: User[];
+}
+
+export interface GetUsersQueryVariables {
+  limit?: number;
+  offset?: number;
+  noLimit?: boolean;
 } 
