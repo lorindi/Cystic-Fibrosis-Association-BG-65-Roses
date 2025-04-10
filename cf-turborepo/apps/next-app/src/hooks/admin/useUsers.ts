@@ -2,7 +2,13 @@ import { useQuery } from '@apollo/client';
 import { GetUsersQuery, GetUsersQueryVariables } from '@/gql/graphql';
 import { USERS_QUERY } from '@/graphql/queries/user';
 
-export const useUsers = (options: { limit?: number; offset?: number; noLimit?: boolean } = {}) => {
+interface UseUsersOptions {
+  limit?: number;
+  offset?: number;
+  noLimit?: boolean;
+}
+
+export const useUsers = (options: UseUsersOptions = { limit: 10, offset: 0 }) => {
   const { data, loading, error, refetch } = useQuery<GetUsersQuery, GetUsersQueryVariables>(
     USERS_QUERY,
     {

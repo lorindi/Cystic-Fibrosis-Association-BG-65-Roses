@@ -2,7 +2,9 @@ import { useMutation } from '@apollo/client';
 import { 
   REGISTER, 
   UPDATE_USER, 
-  SET_USER_ROLE 
+  SET_USER_ROLE,
+  ADD_USER_TO_GROUP,
+  REMOVE_USER_FROM_GROUP
 } from '@/graphql/mutations/user.mutations';
 import { GET_USERS } from '@/graphql/queries/user.queries';
 import type { 
@@ -12,7 +14,9 @@ import type {
   UpdateUserMutationVariables,
   SetUserRoleMutation,
   SetUserRoleMutationVariables,
-  UserRole 
+  UserRole,
+  ProfileUpdateInput,
+  UserGroup
 } from '@/graphql/generated/graphql';
 
 export const useUserMutations = () => {
@@ -31,18 +35,36 @@ export const useUserMutations = () => {
     { refetchQueries: [{ query: GET_USERS }] }
   );
 
+  const [addUserToGroup] = useMutation(
+    ADD_USER_TO_GROUP,
+    { refetchQueries: [{ query: GET_USERS }] }
+  );
+
+  const [removeUserFromGroup] = useMutation(
+    REMOVE_USER_FROM_GROUP,
+    { refetchQueries: [{ query: GET_USERS }] }
+  );
+
   return {
     register: async (input: RegisterMutationVariables['input']) => {
       const { data } = await register({ variables: { input } });
       return data?.register;
     },
-    updateUser: async (id: string, input: Omit<UpdateUserMutationVariables['input'], 'id'>) => {
+    updateUser: async (id: string, input: ProfileUpdateInput) => {
       const { data } = await updateUser({ variables: { id, input } });
       return data?.updateProfile;
     },
     setUserRole: async (userId: string, role: UserRole) => {
       const { data } = await setUserRole({ variables: { userId, role } });
       return data?.setUserRole;
+    },
+    addUserToGroup: async (userId: string, group: UserGroup) => {
+      const { data } = await addUserToGroup({ variables: { userId, group } });
+      return data?.addUserToGroup;
+    },
+    removeUserFromGroup: async (userId: string, group: UserGroup) => {
+      const { data } = await removeUserFromGroup({ variables: { userId, group } });
+      return data?.removeUserFromGroup;
     }
   };
 }; 

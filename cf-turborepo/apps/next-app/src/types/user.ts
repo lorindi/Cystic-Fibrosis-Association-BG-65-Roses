@@ -5,6 +5,16 @@ export enum UserRole {
   DONOR = "donor",
 }
 
+export enum UserGroup {
+  CAMPAIGNS = "campaigns",
+  INITIATIVES = "initiatives",
+  CONFERENCES = "conferences",
+  EVENTS = "events",
+  NEWS = "news",
+  BLOG = "blog",
+  RECIPES = "recipes",
+}
+
 export interface User {
   _id: string;
   name: string;

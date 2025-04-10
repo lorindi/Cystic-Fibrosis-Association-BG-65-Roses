@@ -29,4 +29,22 @@ export const SET_USER_ROLE = gql`
     }
   }
   ${USER_FIELDS}
+`;
+
+export const ADD_USER_TO_GROUP = gql`
+  mutation AddUserToGroup($userId: ID!, $group: UserGroup!) {
+    addUserToGroup(userId: $userId, group: $group) {
+      ...UserFields
+    }
+  }
+  ${USER_FIELDS}
+`;
+
+export const REMOVE_USER_FROM_GROUP = gql`
+  mutation RemoveUserFromGroup($userId: ID!, $group: UserGroup!) {
+    removeUserFromGroup(userId: $userId, group: $group) {
+      ...UserFields
+    }
+  }
+  ${USER_FIELDS}
 `; 
