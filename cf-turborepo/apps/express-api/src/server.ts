@@ -13,6 +13,7 @@ import dotenv from 'dotenv';
 import { typeDefs } from './graphql/schema/index';
 import { resolvers } from './graphql/resolvers/index';
 import { testEmailConnection, testOAuth2Connection } from './services/emailService';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -92,13 +93,20 @@ async function startApolloServer() {
 
   await server.start();
 
-  app.use(cors());
+  // CORS настройки, които позволяват изпращане на cookies
+  const corsOptions = {
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    credentials: true, // Това е важно, за да може браузърът да изпраща cookies
+  };
+
+  app.use(cors(corsOptions));
   app.use(express.json());
+  app.use(cookieParser()); // Добавяме middleware за парсване на cookies
   
   app.use('/graphql', 
     // @ts-ignore 
     expressMiddleware(server, {
-      context: async ({ req }) => ({ req }),
+      context: async ({ req, res }) => ({ req, res }), // Добавяме res обекта за да можем да манипулираме cookies
     })
   );
 

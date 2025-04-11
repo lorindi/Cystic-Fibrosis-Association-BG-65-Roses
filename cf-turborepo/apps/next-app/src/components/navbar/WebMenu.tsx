@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Logo from '../logo/Logo'
 import Link from 'next/link'
 import Button from '../buttons/Button'
@@ -8,8 +8,13 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 
 function WebMenu() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const pathname = usePathname();
+
+  useEffect(() => {
+    console.log('WebMenu - Current user:', user);
+    console.log('WebMenu - Loading:', loading);
+  }, [user, loading]);
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -22,6 +27,10 @@ function WebMenu() {
       ? "text-teal-600 font-medium" 
       : "text-gray-700 hover:text-teal-600";
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className='flex items-center justify-between w-full px-10'>
@@ -50,7 +59,10 @@ function WebMenu() {
               )}
               <li>
                 <button 
-                  onClick={logout}
+                  onClick={() => {
+                    console.log('Logout clicked');
+                    logout();
+                  }}
                   className="text-teal-600 hover:text-teal-800"
                 >
                   Logout

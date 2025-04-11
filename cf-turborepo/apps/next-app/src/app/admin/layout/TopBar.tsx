@@ -13,6 +13,7 @@ import { Bell, Menu, User, LogOut, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -23,11 +24,21 @@ export function TopBar({ onMenuClick, isSidebarOpen }: TopBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const currentPage = mainNavItems.find(item => item.href === pathname)?.label || SITE_CONFIG.defaultPage;
   
-  const handleLogout = () => {
-    logout();
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      console.log('Admin panel - Starting logout...');
+      await logout();
+      console.log('Admin panel - Logout successful, redirecting...');
+      router.push("/");
+    } catch (error) {
+      console.error('Admin panel - Logout failed:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const notificationCount = 1; // В бъдеще това ще идва от API
@@ -89,9 +100,13 @@ export function TopBar({ onMenuClick, isSidebarOpen }: TopBarProps) {
               <span>Settings</span>
             </DropdownMenuItem>
             <Separator className="my-2" />
-            <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
+            <DropdownMenuItem 
+              className="text-red-600" 
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Logout</span>
+              <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

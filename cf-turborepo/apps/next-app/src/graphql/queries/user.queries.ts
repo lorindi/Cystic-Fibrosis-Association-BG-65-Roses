@@ -1,6 +1,15 @@
 import { gql } from '@apollo/client';
 import { USER_BASIC_FIELDS, USER_DETAILED_FIELDS } from '../fragments/user.fragments';
 
+export const GET_CURRENT_USER = gql`
+  query GetCurrentUser {
+    getCurrentUser {
+      ...UserDetailedFields
+    }
+  }
+  ${USER_DETAILED_FIELDS}
+`;
+
 export const GET_USERS = gql`
   query GetUsers {
     getUsers {

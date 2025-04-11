@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { USER_FIELDS } from '../fragments/user.fragments';
+import { USER_FIELDS, USER_DETAILED_FIELDS } from '../fragments/user.fragments';
 
 export const REGISTER = gql`
   mutation Register($input: RegisterInput!) {
@@ -11,6 +11,12 @@ export const REGISTER = gql`
     }
   }
   ${USER_FIELDS}
+`;
+
+export const LOGOUT = gql`
+  mutation Logout {
+    logout
+  }
 `;
 
 export const UPDATE_USER = gql`
@@ -47,4 +53,16 @@ export const REMOVE_USER_FROM_GROUP = gql`
     }
   }
   ${USER_FIELDS}
+`;
+
+export const LOGIN = gql`
+  mutation Login($input: LoginInput!) {
+    login(input: $input) {
+      token
+      user {
+        ...UserDetailedFields
+      }
+    }
+  }
+  ${USER_DETAILED_FIELDS}
 `; 

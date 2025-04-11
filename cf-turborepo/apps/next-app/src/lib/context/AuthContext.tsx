@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { GET_CURRENT_USER } from '../apollo/mutations';
+import { GET_CURRENT_USER } from '@/graphql/queries/user.queries';
+import { LOGOUT } from '@/graphql/mutations/user.mutations';
 import { User } from '../apollo/types';
 
 interface AuthContextType {
@@ -26,38 +27,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
+      console.log('Checking authentication...');
+      const { data, error } = await client.query({
+        query: GET_CURRENT_USER,
+        fetchPolicy: 'network-only'
+      });
+
+      if (error) {
+        console.error('GraphQL error:', error);
+        setUser(null);
         return;
       }
 
-      const { data } = await client.query({
-        query: GET_CURRENT_USER,
-      });
-
       if (data?.getCurrentUser) {
+        console.log('User authenticated:', data.getCurrentUser);
         setUser(data.getCurrentUser);
       } else {
-        localStorage.removeItem('token');
+        console.log('No user data received');
+        setUser(null);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = (token: string, user: User) => {
-    localStorage.setItem('token', token);
+  const login = async (token: string, userData: User) => {
+    console.log('Logging in user:', userData);
+    
+    // Убеждаваме се, че имаме всички нужни полета
+    const user = {
+      ...userData,
+      createdAt: userData.createdAt || new Date().toISOString()
+    };
+    
     setUser(user);
+    
+    // Обновяваме кеша с текущия потребител
+    client.writeQuery({
+      query: GET_CURRENT_USER,
+      data: {
+        getCurrentUser: user
+      }
+    });
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    client.resetStore();
+  const logout = async () => {
+    try {
+      console.log('Logging out...');
+      // Извикваме logout мутацията
+      await client.mutate({
+        mutation: LOGOUT
+      });
+      
+      setUser(null);
+      // Изчистваме кеша
+      await client.resetStore();
+      console.log('Logout successful');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (

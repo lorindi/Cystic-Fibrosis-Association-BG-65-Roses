@@ -6,6 +6,7 @@ export const mutationTypeDefs = gql`
     # Authentication
     register(input: RegisterInput!): AuthResponse!
     login(input: LoginInput!): AuthResponse!
+    logout: Boolean!
     updateProfile(input: ProfileUpdateInput!): User!
     setUserRole(userId: ID!, role: UserRole!): User!
     addUserToGroup(userId: ID!, group: UserGroup!): User!

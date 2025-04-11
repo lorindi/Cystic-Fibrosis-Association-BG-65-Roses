@@ -4,18 +4,15 @@ import { setContext } from '@apollo/client/link/context';
 // Create an HTTP link to your GraphQL API
 const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:5000/graphql',
+  credentials: 'include', // Важно за cookies
 });
 
 // Create an auth link to add authentication headers
 const authLink = setContext((_, { headers }) => {
-  // Get the authentication token from local storage if it exists
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  
   // Return the headers to the context so httpLink can read them
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : "",
     }
   }
 });
@@ -24,6 +21,7 @@ const authLink = setContext((_, { headers }) => {
 const cache = new InMemoryCache({
   typePolicies: {
     User: {
+      keyFields: ['_id'],
       fields: {
         profile: {
           // Функция за сливане на profile обектите
@@ -34,6 +32,11 @@ const cache = new InMemoryCache({
             // Обединяваме съществуващите и новите данни
             return mergeObjects(existing, incoming);
           }
+        },
+        createdAt: {
+          read(existing) {
+            return existing || new Date().toISOString();
+          }
         }
       }
     }
@@ -43,6 +46,14 @@ const cache = new InMemoryCache({
 // Create the Apollo Client instance
 export const client = new ApolloClient({
   link: authLink.concat(httpLink),
-  cache, // Използваме новоконфигурирания кеш
+  cache,
   ssrMode: typeof window === 'undefined',
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'network-only',
+    },
+    query: {
+      fetchPolicy: 'network-only',
+    },
+  },
 }); 

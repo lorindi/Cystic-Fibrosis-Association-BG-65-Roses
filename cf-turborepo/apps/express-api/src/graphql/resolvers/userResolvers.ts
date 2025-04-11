@@ -167,7 +167,8 @@ export const userResolvers = {
   Mutation: {
     register: async (
       _: unknown,
-      { input }: { input: { name: string; email: string; password: string } }
+      { input }: { input: { name: string; email: string; password: string } },
+      context: ContextType
     ) => {
       try {
         // Check if user already exists
@@ -195,8 +196,8 @@ export const userResolvers = {
         // Save user
         const savedUser = await newUser.save();
 
-        // Generate token for auth
-        const token = generateToken(savedUser);
+        // Generate token for auth and set cookie
+        const token = generateToken(savedUser, context.res);
 
         // Изпращане на имейл за потвърждение (асинхронно, не блокира регистрацията)
         try {
@@ -273,7 +274,7 @@ export const userResolvers = {
       }
     },
 
-    verifyEmail: async (_: unknown, { token }: { token: string }) => {
+    verifyEmail: async (_: unknown, { token }: { token: string }, context: ContextType) => {
       try {
         // Хеширане на токена за сравнение
         const hashedToken = crypto
@@ -302,8 +303,8 @@ export const userResolvers = {
 
         await user.save();
 
-        // Генериране на нов токен след успешна верификация
-        const authToken = generateToken(user);
+        // Генериране на нов токен след успешна верификация и задаване на бисквитка
+        const authToken = generateToken(user, context.res);
 
         return {
           success: true,
@@ -330,7 +331,8 @@ export const userResolvers = {
 
     login: async (
       _: unknown,
-      { input }: { input: { email: string; password: string } }
+      { input }: { input: { email: string; password: string } },
+      context: ContextType
     ) => {
       try {
         // Find user by email
@@ -347,8 +349,8 @@ export const userResolvers = {
           throw new UserInputError("Invalid email or password");
         }
 
-        // Generate token
-        const token = generateToken(user);
+        // Generate token and set cookie
+        const token = generateToken(user, context.res);
 
         return {
           token,
@@ -360,6 +362,19 @@ export const userResolvers = {
         }
         throw new Error("Unexpected error during login");
       }
+    },
+
+    logout: async (_: unknown, __: unknown, context: ContextType) => {
+      // Изтриваме cookie-то
+      context.res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+      });
+      
+      return true;
     },
 
     updateProfile: async (
@@ -486,7 +501,8 @@ export const userResolvers = {
 
     googleAuth: async (
       _: unknown,
-      { input }: { input: { idToken: string } }
+      { input }: { input: { idToken: string } },
+      context: ContextType
     ) => {
       try {
         // Verify Google token
@@ -524,8 +540,8 @@ export const userResolvers = {
           await user.save();
         }
 
-        // Generate JWT token
-        const token = generateToken(user);
+        // Generate JWT token and set cookie
+        const token = generateToken(user, context.res);
 
         return {
           token,
