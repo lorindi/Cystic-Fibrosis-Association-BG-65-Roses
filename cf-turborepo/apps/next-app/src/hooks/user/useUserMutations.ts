@@ -4,9 +4,9 @@ import {
   UPDATE_USER, 
   SET_USER_ROLE,
   ADD_USER_TO_GROUP,
-  REMOVE_USER_FROM_GROUP
-} from '@/graphql/mutations/user.mutations';
-import { GET_USERS } from '@/graphql/queries/user.queries';
+  REMOVE_USER_FROM_GROUP,
+  GET_USERS
+} from '@/graphql/operations';
 import type { 
   RegisterMutation, 
   RegisterMutationVariables,

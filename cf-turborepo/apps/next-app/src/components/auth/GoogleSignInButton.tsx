@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@apollo/client';
-import { GOOGLE_AUTH } from '@/lib/apollo/mutations';
+import { GOOGLE_AUTH } from '@/graphql/operations';
 import { useAuth } from '@/lib/context/AuthContext';
 
 declare global {

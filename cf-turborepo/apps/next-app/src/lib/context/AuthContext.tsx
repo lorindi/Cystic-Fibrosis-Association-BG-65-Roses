@@ -2,9 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { GET_CURRENT_USER } from '@/graphql/queries/user.queries';
-import { LOGOUT } from '@/graphql/mutations/user.mutations';
-import { User } from '../apollo/types';
+import { GET_CURRENT_USER, LOGOUT } from '@/graphql/operations';
+import { User } from '@/graphql/generated/graphql';
 
 interface AuthContextType {
   user: User | null;

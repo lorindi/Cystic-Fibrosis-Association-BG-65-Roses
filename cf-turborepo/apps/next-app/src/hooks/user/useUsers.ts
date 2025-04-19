@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import { GET_USERS, GET_USERS_BY_ROLE } from '@/graphql/queries/user.queries';
+import { GET_USERS, GET_USERS_BY_ROLE } from '@/graphql/operations';
 import type { 
   GetUsersQuery, 
   GetUsersByRoleQuery, 
