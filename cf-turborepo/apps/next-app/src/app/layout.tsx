@@ -54,3 +54,5 @@ export default function RootLayout({
     </html>
   );
 }
+// npm run codegen
+// npm run codegen:watch

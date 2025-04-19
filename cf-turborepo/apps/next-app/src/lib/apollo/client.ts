@@ -39,18 +39,53 @@ const AUTH_ERROR_MESSAGES = [
   'jwt'
 ];
 
+// Масив от публични пътища, които не трябва да водят до пренасочване към login
+const PUBLIC_PATHS = [
+  '/sign-in',
+  '/create-account',
+  '/verify-email',
+  '/forgotten-password',
+  '/',
+  '/about',
+  '/contact',
+  '/faq'
+];
+
 // Помощна функция за проверка дали съобщението е свързано с автентикация
 const isAuthError = (message: string): boolean => {
   message = message.toLowerCase();
   return AUTH_ERROR_MESSAGES.some(errMsg => message.includes(errMsg.toLowerCase()));
 };
 
+// Проверява дали текущият път е публичен (не изисква автентикация)
+const isPublicPath = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname;
+  return PUBLIC_PATHS.some(publicPath => path.startsWith(publicPath));
+};
+
+// Проверка дали вече сме направили опит за обновяване на токена
+// и е неуспешно, за да избегнем безкрайни опити
+let tokenRefreshFailed = false;
+
 // Error handling link за автоматично обновяване на токена
 const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+  // Ако вече знаем, че обновяването на токена е неуспешно и сме на публичен път,
+  // не се опитваме да обновяваме токена отново
+  if (tokenRefreshFailed && isPublicPath()) {
+    return forward(operation);
+  }
+
   if (graphQLErrors) {
     for (const err of graphQLErrors) {
       // Проверка дали грешката е свързана с автентикация
       if (isAuthError(err.message)) {
+        // Ако сме на публична страница (като sign-in, register), не се опитваме да обновяваме токена
+        if (isPublicPath() && !operation.operationName?.includes('RefreshToken')) {
+          console.log("Пропускаме обновяване на токена за публична страница:", window?.location?.pathname);
+          return forward(operation);
+        }
+
         // Предотвратяваме множество заявки за обновяване на токена едновременно
         if (!isRefreshing) {
           isRefreshing = true;
@@ -66,11 +101,13 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
                 const newToken = data?.refreshToken?.token;
                 if (!newToken) {
                   console.log('Неуспешно обновяване на токена, няма данни', data);
+                  tokenRefreshFailed = true;
                   throw new Error('Failed to refresh token');
                 }
                 
                 // Токенът е обновен успешно
                 console.log('Token refreshed successfully');
+                tokenRefreshFailed = false;
                 resolvePendingRequests();
                 return forward(operation);
               })
@@ -78,10 +115,11 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
                 // При неуспех изчистваме чакащите заявки
                 pendingRequests = [];
                 console.error('Error refreshing token:', error);
+                tokenRefreshFailed = true;
                 
                 // Ако сме получили грешка при обновяване на токена, 
                 // вероятно потребителят трябва да се логне отново
-                if (typeof window !== 'undefined') {
+                if (typeof window !== 'undefined' && !isPublicPath()) {
                   // Запазваме текущия URL за да може потребителят да се върне след логин
                   sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
                   

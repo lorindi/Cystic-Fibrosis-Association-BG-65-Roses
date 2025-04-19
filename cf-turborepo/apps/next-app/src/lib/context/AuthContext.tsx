@@ -55,6 +55,18 @@ const AUTH_PROTECTED_PATHS = [
   '/user'
 ];
 
+// Публични пътища, за които не е нужно пренасочване при липса на автентикация
+const PUBLIC_PATHS = [
+  '/sign-in',
+  '/create-account',
+  '/verify-email',
+  '/forgotten-password',
+  '/',
+  '/about',
+  '/contact',
+  '/faq'
+];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,9 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return AUTH_PROTECTED_PATHS.some(path => pathname.startsWith(path));
   };
 
+  // Проверка дали текущият път е публичен (не изисква автентикация)
+  const isPublicPath = () => {
+    if (!pathname) return false;
+    return PUBLIC_PATHS.some(path => pathname.startsWith(path));
+  };
+
   // Проверка за автентикация при инициализиране на приложението
   useEffect(() => {
     const initAuth = async () => {
+      // Ако сме на публична страница, не е нужно да проверяваме автентикацията
+      if (isPublicPath() && pathname !== '/') {
+        setLoading(false);
+        return;
+      }
+      
       const isAuth = await checkAuth();
       
       // Ако сме на защитена страница и не сме автентикирани, 
@@ -84,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Запазваме текущия URL за да можем да пренасочим потребителя след успешен вход
         sessionStorage.setItem('redirectAfterLogin', pathname);
         router.push('/sign-in');
+        return;
       }
       
       // Ако сме на страницата за вход и вече сме автентикирани,
@@ -100,6 +125,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Функция за проверка на автентикацията на потребителя
   const checkAuth = async (): Promise<boolean> => {
+    // Ако сме на публична страница, не е нужно да проверяваме автентикацията
+    if (isPublicPath() && pathname !== '/') {
+      setLoading(false);
+      return false;
+    }
+    
     try {
       console.log('Checking authentication...');
       setLoading(true);
@@ -112,24 +143,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('GraphQL error:', error);
         setUser(null);
+        setLoading(false);
         return false;
       }
 
       if (data?.getCurrentUser) {
         console.log('User authenticated:', data.getCurrentUser);
         setUser(data.getCurrentUser);
+        setLoading(false);
         return true;
       } else {
         console.log('No user data received');
         setUser(null);
+        setLoading(false);
         return false;
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       setUser(null);
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
 
@@ -176,17 +209,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Logout successful');
       
       // Пренасочваме към началната страница след изход
-      router.push('/');
+      router.push('/sign-in');
     } catch (error) {
       console.error('Logout failed:', error);
       // Дори при неуспешен изход на сървъра, изчистваме локалното състояние
       setUser(null);
       await client.resetStore();
+      
+      // В случай на грешка, все пак пренасочваме към страницата за вход
+      router.push('/sign-in');
     }
   };
   
   // Функция за ръчно обновяване на токена
   const refreshToken = async (): Promise<string | null> => {
+    // Ако сме на публична страница, не е нужно да обновяваме токена
+    if (isPublicPath() && pathname !== '/') {
+      return null;
+    }
+    
     try {
       const { data } = await refreshTokenMutation({
         fetchPolicy: 'no-cache'
@@ -252,6 +293,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Функция за получаване на активните сесии
   const getUserSessions = async (): Promise<UserSession[]> => {
+    if (!user) return [];
+    
     try {
       const { data } = await client.query({
         query: GET_USER_SESSIONS,
@@ -267,6 +310,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Функция за получаване на историята на логванията
   const getLoginHistory = async (limit = 10): Promise<LoginHistory[]> => {
+    if (!user) return [];
+    
     try {
       const { data } = await client.query({
         query: GET_LOGIN_HISTORY,
