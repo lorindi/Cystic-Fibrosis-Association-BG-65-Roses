@@ -63,5 +63,9 @@ export const queryTypeDefs = gql`
     
     # AI
     askAI(query: String!): AIResponse
+    
+    # Сесии и история на логванията
+    getUserSessions: [UserSession!]!
+    getLoginHistory(limit: Int): [LoginHistory!]!
   }
 `; 

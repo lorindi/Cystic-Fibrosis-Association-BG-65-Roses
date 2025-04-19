@@ -127,6 +127,29 @@ export const userTypeDefs = gql`
     user: User!
   }
 
+  # Alias за поддържане на refreshToken мутацията
+  type AuthPayload {
+    token: String!
+    user: User!
+  }
+
+  # User sessions
+  type UserSession {
+    id: ID!
+    ip: String!
+    userAgent: String!
+    createdAt: Date!
+    expiresAt: Date!
+  }
+  
+  type LoginHistory {
+    id: ID!
+    ip: String!
+    userAgent: String!
+    status: String!
+    loggedInAt: Date!
+  }
+
   extend type Mutation {
     googleAuth(input: GoogleAuthInput!): AuthResponse!
   }

@@ -92,5 +92,10 @@ export const mutationTypeDefs = gql`
     
     # Chat
     sendChatMessage(input: ChatMessageInput!): ChatMessage!
+    
+    # Рефреш токен мутации
+    refreshToken: AuthPayload
+    invalidateToken: Boolean
+    invalidateAllTokens: Boolean
   }
 `; 

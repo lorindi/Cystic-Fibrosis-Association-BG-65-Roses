@@ -65,6 +65,7 @@ export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
   generatePasswordResetToken(): string;
   generateEmailVerificationToken(): string;
+  generateRefreshToken(ip: string, userAgent: string): Promise<string>;
 }
 
 // Комбиниран интерфейс за модела

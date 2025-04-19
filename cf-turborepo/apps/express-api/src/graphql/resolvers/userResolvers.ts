@@ -7,10 +7,17 @@ import {
   checkAuth,
   checkPermissions,
   generateToken,
+  generateRefreshToken,
+  useRefreshToken,
+  invalidateRefreshToken,
+  invalidateAllRefreshTokens,
+  logLoginAttempt
 } from "../utils/auth";
 import { sendVerificationEmail } from "../../services/emailService";
 import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
+import LoginHistory from "../../models/loginHistory.model";
+import RefreshToken from "../../models/refreshToken.model";
 
 dotenv.config();
 
@@ -162,6 +169,52 @@ export const userResolvers = {
         throw new Error("Error fetching users");
       }
     },
+
+    getUserSessions: async (_: unknown, __: unknown, context: ContextType) => {
+      try {
+        const user = checkAuth(context);
+        
+        const sessions = await RefreshToken.find({ 
+          userId: user.id,
+          isValid: true,
+          expires: { $gt: new Date() }
+        }).sort({ createdAt: -1 });
+        
+        return sessions.map(session => ({
+          id: session._id,
+          ip: session.ip,
+          userAgent: session.userAgent,
+          createdAt: session.createdAt,
+          expiresAt: session.expires
+        }));
+      } catch (error) {
+        console.error("Get user sessions error:", error);
+        throw new Error("Failed to get user sessions");
+      }
+    },
+
+    getLoginHistory: async (_: unknown, { limit = 10 }: { limit: number }, context: ContextType) => {
+      try {
+        const user = checkAuth(context);
+        
+        const history = await LoginHistory.find({ 
+          userId: user.id
+        })
+        .sort({ loggedInAt: -1 })
+        .limit(limit);
+        
+        return history.map(entry => ({
+          id: entry._id,
+          ip: entry.ip,
+          userAgent: entry.userAgent,
+          status: entry.status,
+          loggedInAt: entry.loggedInAt
+        }));
+      } catch (error) {
+        console.error("Get login history error:", error);
+        throw new Error("Failed to get login history");
+      }
+    },
   },
 
   Mutation: {
@@ -198,6 +251,22 @@ export const userResolvers = {
 
         // Generate token for auth and set cookie
         const token = generateToken(savedUser, context.res);
+        
+        // Generate refresh token and set cookie
+        await generateRefreshToken(
+          savedUser._id.toString(),
+          context.req.ip || "unknown",
+          context.req.headers['user-agent'] || "unknown",
+          context.res
+        );
+        
+        // Запис на успешна регистрация
+        await logLoginAttempt(
+          savedUser._id.toString(), 
+          context.req.ip || "unknown", 
+          context.req.headers['user-agent'] || "unknown",
+          "success"
+        );
 
         // Изпращане на имейл за потвърждение (асинхронно, не блокира регистрацията)
         try {
@@ -305,6 +374,22 @@ export const userResolvers = {
 
         // Генериране на нов токен след успешна верификация и задаване на бисквитка
         const authToken = generateToken(user, context.res);
+        
+        // Generate refresh token and set cookie
+        await generateRefreshToken(
+          user._id.toString(),
+          context.req.ip || "unknown",
+          context.req.headers['user-agent'] || "unknown",
+          context.res
+        );
+        
+        // Запис на логин след верификация
+        await logLoginAttempt(
+          user._id.toString(), 
+          context.req.ip || "unknown", 
+          context.req.headers['user-agent'] || "unknown",
+          "success"
+        );
 
         return {
           success: true,
@@ -340,17 +425,47 @@ export const userResolvers = {
           "+password"
         );
         if (!user) {
+          // Запис на неуспешен опит
+          await logLoginAttempt(
+            "unknown", 
+            context.req.ip || "unknown", 
+            context.req.headers['user-agent'] || "unknown",
+            "failed"
+          );
           throw new UserInputError("Invalid email or password");
         }
 
         // Check password
         const isMatch = await user.comparePassword(input.password);
         if (!isMatch) {
+          // Запис на неуспешен опит
+          await logLoginAttempt(
+            user._id.toString(), 
+            context.req.ip || "unknown", 
+            context.req.headers['user-agent'] || "unknown",
+            "failed"
+          );
           throw new UserInputError("Invalid email or password");
         }
 
-        // Generate token and set cookie
+        // Generate JWT token and set cookie
         const token = generateToken(user, context.res);
+        
+        // Generate refresh token and set cookie
+        await generateRefreshToken(
+          user._id.toString(),
+          context.req.ip || "unknown",
+          context.req.headers['user-agent'] || "unknown",
+          context.res
+        );
+        
+        // Запис на успешен опит
+        await logLoginAttempt(
+          user._id.toString(), 
+          context.req.ip || "unknown", 
+          context.req.headers['user-agent'] || "unknown",
+          "success"
+        );
 
         return {
           token,
@@ -365,16 +480,36 @@ export const userResolvers = {
     },
 
     logout: async (_: unknown, __: unknown, context: ContextType) => {
-      // Изтриваме cookie-то
-      context.res.clearCookie('token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
-      });
-      
-      return true;
+      try {
+        // Изтриваме JWT cookie
+        context.res.clearCookie('token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+        });
+        
+        // Изтриваме и рефреш токена от cookies
+        context.res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+        });
+        
+        // Инвалидираме рефреш токена в базата, ако съществува
+        const refreshToken = context.req.cookies?.refreshToken;
+        if (refreshToken) {
+          await invalidateRefreshToken(refreshToken);
+        }
+        
+        return true;
+      } catch (error) {
+        console.error("Logout error:", error);
+        return false;
+      }
     },
 
     updateProfile: async (
@@ -542,6 +677,22 @@ export const userResolvers = {
 
         // Generate JWT token and set cookie
         const token = generateToken(user, context.res);
+        
+        // Generate refresh token and set cookie
+        await generateRefreshToken(
+          user._id.toString(),
+          context.req.ip || "unknown",
+          context.req.headers['user-agent'] || "unknown",
+          context.res
+        );
+        
+        // Запис на успешно логване
+        await logLoginAttempt(
+          user._id.toString(), 
+          context.req.ip || "unknown", 
+          context.req.headers['user-agent'] || "unknown",
+          "success"
+        );
 
         return {
           token,
@@ -552,6 +703,93 @@ export const userResolvers = {
           throw new Error(`Google authentication error: ${err.message}`);
         }
         throw new Error("Unexpected error during Google authentication");
+      }
+    },
+
+    refreshToken: async (_: unknown, __: unknown, context: ContextType) => {
+      try {
+        const refreshToken = context.req.cookies?.refreshToken;
+        if (!refreshToken) {
+          throw new Error("No refresh token provided");
+        }
+        
+        // Валидиране на рефреш токена и получаване на потребителски ID
+        const userId = await useRefreshToken(
+          refreshToken,
+          context.req.ip || "unknown",
+          context.req.headers['user-agent'] || "unknown"
+        );
+        
+        if (!userId) {
+          throw new Error("Invalid or expired refresh token");
+        }
+        
+        // Намиране на потребителя
+        const user = await User.findById(userId);
+        if (!user) {
+          throw new Error("User not found");
+        }
+        
+        // Генериране на нов JWT токен
+        const token = generateToken(user, context.res);
+        
+        return {
+          token,
+          user
+        };
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(`Refresh token error: ${error.message}`);
+        }
+        throw new Error("Unexpected error during refresh token operation");
+      }
+    },
+
+    invalidateToken: async (_: unknown, __: unknown, context: ContextType) => {
+      try {
+        const user = checkAuth(context);
+        const refreshToken = context.req.cookies?.refreshToken;
+        
+        if (!refreshToken) {
+          return false;
+        }
+        
+        const success = await invalidateRefreshToken(refreshToken);
+        
+        // Изтриваме и рефреш токена от cookies
+        context.res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+        });
+        
+        return success;
+      } catch (error) {
+        console.error("Invalidate token error:", error);
+        return false;
+      }
+    },
+
+    invalidateAllTokens: async (_: unknown, __: unknown, context: ContextType) => {
+      try {
+        const user = checkAuth(context);
+        const success = await invalidateAllRefreshTokens(user.id);
+        
+        // Изтриваме и текущия рефреш токен от cookies
+        context.res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+        });
+        
+        return success;
+      } catch (error) {
+        console.error("Invalidate all tokens error:", error);
+        return false;
       }
     },
   },

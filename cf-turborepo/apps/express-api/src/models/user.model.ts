@@ -141,6 +141,26 @@ UserSchema.methods.generateEmailVerificationToken = function(): string {
   return verificationToken;
 };
 
+// Method for generating refresh token for a user
+UserSchema.methods.generateRefreshToken = async function(ip: string, userAgent: string): Promise<string> {
+  const refreshToken = crypto.randomBytes(64).toString('hex');
+  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 дни
+  
+  // Тук използваме импортиран модел динамично, за да избегнем кръгови зависимости
+  const RefreshToken = mongoose.model('RefreshToken');
+  
+  await RefreshToken.create({
+    token: refreshToken,
+    userId: this._id,
+    ip,
+    userAgent,
+    isValid: true,
+    expires
+  });
+  
+  return refreshToken;
+};
+
 const User = mongoose.model<IUserDocument>('User', UserSchema);
 
 export default User;
