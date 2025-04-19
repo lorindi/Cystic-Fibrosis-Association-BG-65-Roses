@@ -64,4 +64,53 @@ export const UPDATE_PROFILE = gql`
     }
   }
   ${USER_DETAILED_FIELDS}
+`;
+
+// Рефреш токен и сесии
+export const REFRESH_TOKEN = gql`
+  mutation RefreshToken {
+    refreshToken {
+      token
+      user {
+        ...UserDetailedFields
+      }
+    }
+  }
+  ${USER_DETAILED_FIELDS}
+`;
+
+export const INVALIDATE_TOKEN = gql`
+  mutation InvalidateToken {
+    invalidateToken
+  }
+`;
+
+export const INVALIDATE_ALL_TOKENS = gql`
+  mutation InvalidateAllTokens {
+    invalidateAllTokens
+  }
+`;
+
+export const GET_USER_SESSIONS = gql`
+  query GetUserSessions {
+    getUserSessions {
+      id
+      ip
+      userAgent
+      createdAt
+      expiresAt
+    }
+  }
+`;
+
+export const GET_LOGIN_HISTORY = gql`
+  query GetLoginHistory($limit: Int) {
+    getLoginHistory(limit: $limit) {
+      id
+      ip
+      userAgent
+      status
+      loggedInAt
+    }
+  }
 `; 

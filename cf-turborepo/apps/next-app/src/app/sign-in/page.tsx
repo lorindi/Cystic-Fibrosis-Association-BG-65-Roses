@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@apollo/client'
@@ -14,19 +14,39 @@ import PasswordField from '@/components/auth/PasswordField'
 import BackButton from '@/components/auth/BackButton'
 import SubmitButton from '@/components/auth/SubmitButton'
 import AuthFormWrapper from '@/components/auth/AuthFormWrapper'
-import { log } from 'console';
 
 function SignInPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [redirectTo, setRedirectTo] = useState('/');
 
-  const [loginMutation] = useMutation(LOGIN);
+  // При зареждане проверяваме дали има запазен URL за пренасочване
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const redirect = sessionStorage.getItem('redirectAfterLogin');
+      if (redirect) {
+        setRedirectTo(redirect);
+      }
+    }
+
+    // Ако потребителят вече е автентикиран, пренасочваме го
+    if (isAuthenticated) {
+      const redirect = sessionStorage.getItem('redirectAfterLogin') || '/';
+      sessionStorage.removeItem('redirectAfterLogin');
+      router.push(redirect);
+    }
+  }, [isAuthenticated, router]);
+
+  const [loginMutation] = useMutation(LOGIN, {
+    // Игнорираме Apollo cache за да сме сигурни, че всичко е up-to-date
+    fetchPolicy: 'no-cache'
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -48,12 +68,29 @@ function SignInPage() {
       });
 
       if (data?.login) {
+        // Обърнете внимание, че JWT токенът сега има по-кратък живот (1 час),
+        // а рефреш токенът се управлява автоматично чрез HTTP-only cookies
         login(data.login.token, data.login.user);
-        console.log(data.login.token, data.login.user);
-        router.push('/');
+        console.log('Login successful');
+        
+        // Пренасочваме потребителя към запазения URL или към началната страница
+        const redirectUrl = redirectTo;
+        sessionStorage.removeItem('redirectAfterLogin');
+        router.push(redirectUrl);
       }
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message || 'An error occurred during sign in');
+      
+      // Ако грешката е свързана с мрежови проблеми, показваме по-ясно съобщение
+      if (err.networkError) {
+        setError('Network error: Please check your internet connection');
+      }
+      
+      // Ако грешката е GraphQL грешка, показваме по-ясно съобщение
+      if (err.graphQLErrors?.length) {
+        setError(err.graphQLErrors[0].message || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }

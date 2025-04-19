@@ -1,5 +1,17 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache, createHttpLink, fromPromise, ApolloLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { onError } from '@apollo/client/link/error';
+import { REFRESH_TOKEN } from '@/graphql/operations/auth';
+
+// Променлива за управление на текущото обновяване на токена
+let isRefreshing = false;
+let pendingRequests: Function[] = [];
+
+// Функция за изпълнение на заявките, които са чакали обновяване на токена
+const resolvePendingRequests = () => {
+  pendingRequests.forEach((callback) => callback());
+  pendingRequests = [];
+};
 
 // Create an HTTP link to your GraphQL API
 const httpLink = createHttpLink({
@@ -13,6 +25,98 @@ const authLink = setContext((_, { headers }) => {
   return {
     headers: {
       ...headers,
+    }
+  }
+});
+
+// Масив от съобщения за грешки, свързани с автентикация, които да прихващаме
+const AUTH_ERROR_MESSAGES = [
+  'token expired', 
+  'invalid token', 
+  'not authenticated',
+  'не сте влезли в системата',
+  'сесията е изтекла',
+  'jwt'
+];
+
+// Помощна функция за проверка дали съобщението е свързано с автентикация
+const isAuthError = (message: string): boolean => {
+  message = message.toLowerCase();
+  return AUTH_ERROR_MESSAGES.some(errMsg => message.includes(errMsg.toLowerCase()));
+};
+
+// Error handling link за автоматично обновяване на токена
+const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+  if (graphQLErrors) {
+    for (const err of graphQLErrors) {
+      // Проверка дали грешката е свързана с автентикация
+      if (isAuthError(err.message)) {
+        // Предотвратяваме множество заявки за обновяване на токена едновременно
+        if (!isRefreshing) {
+          isRefreshing = true;
+          console.log("Опит за обновяване на токена поради автентикационна грешка", err.message);
+          
+          // Връщаме Promise, който ще се резолвне когато токенът бъде обновен
+          return fromPromise(
+            client.mutate({
+              mutation: REFRESH_TOKEN,
+              fetchPolicy: 'no-cache'
+            })
+              .then(({ data }) => {
+                const newToken = data?.refreshToken?.token;
+                if (!newToken) {
+                  console.log('Неуспешно обновяване на токена, няма данни', data);
+                  throw new Error('Failed to refresh token');
+                }
+                
+                // Токенът е обновен успешно
+                console.log('Token refreshed successfully');
+                resolvePendingRequests();
+                return forward(operation);
+              })
+              .catch(error => {
+                // При неуспех изчистваме чакащите заявки
+                pendingRequests = [];
+                console.error('Error refreshing token:', error);
+                
+                // Ако сме получили грешка при обновяване на токена, 
+                // вероятно потребителят трябва да се логне отново
+                if (typeof window !== 'undefined') {
+                  // Запазваме текущия URL за да може потребителят да се върне след логин
+                  sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+                  
+                  // Ако не сме на страницата за логин, пренасочваме натам
+                  if (!window.location.pathname.includes('/sign-in')) {
+                    window.location.href = '/sign-in';
+                    return new Promise(() => {});
+                  }
+                }
+                
+                // Връщаме грешката за обработка от приложението
+                return forward(operation);
+              })
+              .finally(() => {
+                isRefreshing = false;
+              })
+          ).flatMap(() => forward(operation));
+        } else {
+          // Ако вече се обновява токенът, добавяме заявката към чакащите
+          return fromPromise(
+            new Promise(resolve => {
+              pendingRequests.push(() => resolve(null));
+            })
+          ).flatMap(() => forward(operation));
+        }
+      }
+    }
+  }
+  
+  if (networkError) {
+    console.error(`[Network error]:`, networkError);
+    // Проверка дали мрежовата грешка е свързана с автентикацията
+    if (networkError.message && isAuthError(networkError.message)) {
+      // Тук може да се добави логика за пренасочване при мрежови грешки с автентикация
+      console.log("Мрежова грешка с автентикация", networkError.message);
     }
   }
 });
@@ -43,9 +147,16 @@ const cache = new InMemoryCache({
   }
 });
 
+// Комбинираме линковете
+const link = ApolloLink.from([
+  errorLink,
+  authLink,
+  httpLink
+]);
+
 // Create the Apollo Client instance
 export const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link,
   cache,
   ssrMode: typeof window === 'undefined',
   defaultOptions: {

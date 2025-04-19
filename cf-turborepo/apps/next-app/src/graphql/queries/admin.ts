@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 // Admin dashboard queries
 export const GET_USERS = gql`
-  query GetUsers($noLimit: Boolean) {
+  query GetUsersForAdmin($noLimit: Boolean) {
     getUsers(noLimit: $noLimit) {
       _id
       name
@@ -52,7 +52,7 @@ export const GET_EVENTS = gql`
       location
       createdAt
       participants {
-        id
+        _id
         name
       }
     }
@@ -64,11 +64,15 @@ export const GET_DONATIONS = gql`
     getDonors(noLimit: $noLimit) {
       id
       name
-      amount
-      date
-      campaign {
+      totalDonations
+      donations {
         id
-        title
+        amount
+        date
+        campaign {
+          id
+          title
+        }
       }
     }
   }
