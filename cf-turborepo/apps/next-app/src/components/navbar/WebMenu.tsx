@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import Logo from '../logo/Logo'
 import Link from 'next/link'
 import Button from '../buttons/Button'
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
+import { isPublicPath } from '@/lib/constants';
+import LogoutButton from '../auth/LogoutButton';
 
 function WebMenu() {
-  const { user, logout, loading } = useAuth();
   const pathname = usePathname();
-
-  useEffect(() => {
-    console.log('WebMenu - Current user:', user);
-    console.log('WebMenu - Loading:', loading);
-  }, [user, loading]);
+  
+  // Use the auth hook
+  const { user, loading } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -28,7 +27,8 @@ function WebMenu() {
       : "text-gray-700 hover:text-teal-600";
   };
 
-  if (loading) {
+  // Prevent showing loading indicator on public pages
+  if (loading && !isPublicPath(pathname)) {
     return <div>Loading...</div>;
   }
 
@@ -57,17 +57,7 @@ function WebMenu() {
                   </Link>
                 </li>
               )}
-              <li>
-                <button 
-                  onClick={() => {
-                    console.log('Logout clicked');
-                    logout();
-                  }}
-                  className="text-teal-600 hover:text-teal-800"
-                >
-                  Logout
-                </button>
-              </li>
+              <li><LogoutButton /></li>
             </>
           ) : (
             <>

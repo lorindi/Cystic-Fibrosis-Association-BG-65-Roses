@@ -4,11 +4,14 @@ import Link from "next/link";
 import Logo from "../logo/Logo";
 import { useAuth } from '@/lib/context/AuthContext';
 import { usePathname } from 'next/navigation';
+import LogoutButton from '../auth/LogoutButton';
 
 function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
   const pathname = usePathname();
+  
+  // Use the auth hook
+  const { user } = useAuth();
   
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -71,14 +74,7 @@ function MobileMenu() {
                   </Link>
                 </li>
               )}
-              <li>
-                <button 
-                  onClick={logout}
-                  className="text-teal-600 hover:text-teal-800"
-                >
-                  Logout
-                </button>
-              </li>
+              <li><LogoutButton /></li>
             </>
           ) : (
             <>

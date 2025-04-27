@@ -13,6 +13,7 @@ import {
   GET_LOGIN_HISTORY 
 } from '@/graphql/operations';
 import { User } from '@/graphql/generated/graphql';
+import { isPublicPath, isProtectedPath, PUBLIC_PATHS, AUTH_PROTECTED_PATHS } from '@/lib/constants';
 
 // Интерфейси за сесиите и историята на логванията
 interface UserSession {
@@ -46,26 +47,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AUTH_PROTECTED_PATHS = [
-  '/profile',
-  '/admin',
-  '/dashboard',
-  '/settings',
-  '/user'
-];
-
-// Публични пътища, за които не е нужно пренасочване при липса на автентикация
-const PUBLIC_PATHS = [
-  '/sign-in',
-  '/create-account',
-  '/verify-email',
-  '/forgotten-password',
-  '/',
-  '/about',
-  '/contact',
-  '/faq'
-];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -106,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // пренасочваме към страницата за вход
       if (isProtectedPath() && !isAuth) {
         // Запазваме текущия URL за да можем да пренасочим потребителя след успешен вход
-        sessionStorage.setItem('redirectAfterLogin', pathname);
+        sessionStorage.setItem('redirectAfterLogin', pathname || '');
         router.push('/sign-in');
         return;
       }
@@ -123,43 +104,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, [pathname]);
 
-  // Функция за проверка на автентикацията на потребителя
+  // Function to check user authentication
   const checkAuth = async (): Promise<boolean> => {
-    // Ако сме на публична страница, не е нужно да проверяваме автентикацията
+    // If we're on a public page, no need to check authentication
+    // except for the home page (/)
     if (isPublicPath() && pathname !== '/') {
       setLoading(false);
       return false;
+    }
+    
+    // If we already have a user in the state and it's valid,
+    // we don't need to make a new request
+    if (user && user._id) {
+      setLoading(false);
+      return true;
     }
     
     try {
       console.log('Checking authentication...');
       setLoading(true);
       
+      // In a try-catch block we check if we have an active session
+      // with an option for silent error handling
       const { data, error } = await client.query({
         query: GET_CURRENT_USER,
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
+        errorPolicy: 'ignore'
+      }).catch((error) => {
+        // Silently handle errors - return an object with null data
+        console.error('Query error caught:', error);
+        return { data: null, error };
       });
 
       if (error) {
-        console.error('GraphQL error:', error);
+        console.log('Authentication error:', error.message);
         setUser(null);
         setLoading(false);
         return false;
       }
 
       if (data?.getCurrentUser) {
-        console.log('User authenticated:', data.getCurrentUser);
+        console.log('User authenticated:', data.getCurrentUser.name);
         setUser(data.getCurrentUser);
         setLoading(false);
         return true;
       } else {
-        console.log('No user data received');
+        console.log('No authenticated user found');
         setUser(null);
         setLoading(false);
         return false;
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('Unexpected auth check error:', error);
       setUser(null);
       setLoading(false);
       return false;
@@ -198,26 +194,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       console.log('Logging out...');
-      // Извикваме logout мутацията
+      // First update the local state
+      setUser(null);
+      
+      // Then clear the cache to stop at least local requests
+      await client.clearStore();
+      
+      // Finally call the logout mutation
       await client.mutate({
-        mutation: LOGOUT
+        mutation: LOGOUT,
+        // Work in a new context that doesn't have a token
+        context: {
+          headers: {
+            // Remove any credentials
+            credentials: 'omit'
+          },
+        },
+        // Ignore errors since we've already cleared the local state
+        errorPolicy: 'ignore'
       });
       
-      setUser(null);
-      // Изчистваме кеша
-      await client.resetStore();
       console.log('Logout successful');
       
-      // Пренасочваме към началната страница след изход
-      router.push('/sign-in');
+      // Add a small delay so requests can be terminated
+      // before redirection
+      setTimeout(() => {
+        router.push('/sign-in');
+      }, 100);
     } catch (error) {
       console.error('Logout failed:', error);
-      // Дори при неуспешен изход на сървъра, изчистваме локалното състояние
-      setUser(null);
-      await client.resetStore();
+      // Clear the cache and local state, even in case of an error
+      await client.clearStore();
       
-      // В случай на грешка, все пак пренасочваме към страницата за вход
-      router.push('/sign-in');
+      // Redirect after a moment
+      setTimeout(() => {
+        router.push('/sign-in');
+      }, 100);
     }
   };
   
