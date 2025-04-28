@@ -9,6 +9,7 @@ import { blogResolvers } from './blogResolvers';
 import { recipeResolvers } from './recipeResolvers';
 import { storyResolvers } from './storyResolvers';
 import { chatResolvers } from './chatResolvers';
+import { paymentResolvers } from './paymentResolvers';
 import { PubSub } from 'graphql-subscriptions';
 
 // Създаваме глобална PubSub инстанция
@@ -60,7 +61,8 @@ export const resolvers = {
     ...blogResolvers.Query,
     ...recipeResolvers.Query,
     ...storyResolvers.Query,
-    ...chatResolvers.Query
+    ...chatResolvers.Query,
+    ...paymentResolvers.Query
   },
   Mutation: {
     ...userResolvers.Mutation,
@@ -73,7 +75,8 @@ export const resolvers = {
     ...blogResolvers.Mutation,
     ...recipeResolvers.Mutation,
     ...storyResolvers.Mutation,
-    ...chatResolvers.Mutation
+    ...chatResolvers.Mutation,
+    ...paymentResolvers.Mutation
   },
   Subscription: {
     messageSent: {

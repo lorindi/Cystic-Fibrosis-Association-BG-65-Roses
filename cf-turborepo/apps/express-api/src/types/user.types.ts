@@ -33,6 +33,16 @@ export interface IContact {
   };
 }
 
+// Интерфейс за платежен метод
+export interface IPaymentMethod {
+  paymentMethodId: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+}
+
 // Базов интерфейс за данни на потребителя
 export interface IUser {
   name: string;
@@ -56,6 +66,8 @@ export interface IUser {
     childName?: string; // For parents
     companyName?: string; // For donors
   };
+  stripeCustomerId?: string;
+  paymentMethods?: IPaymentMethod[];
   createdAt: Date;
   updatedAt: Date;
 }

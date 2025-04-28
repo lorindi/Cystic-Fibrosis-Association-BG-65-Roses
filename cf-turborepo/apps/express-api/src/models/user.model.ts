@@ -74,7 +74,21 @@ const UserSchema = new Schema({
   profile: {
     type: ProfileSchema,
     default: {}
-  }
+  },
+  stripeCustomerId: {
+    type: String,
+    unique: true,
+    sparse: true // Позволява null/undefined стойности
+  },
+  // Запазени платежни методи - само последните 4 цифри и информация за визуализация
+  paymentMethods: [{
+    paymentMethodId: { type: String },
+    brand: { type: String },
+    last4: { type: String },
+    expMonth: { type: Number },
+    expYear: { type: Number },
+    isDefault: { type: Boolean, default: false }
+  }]
 }, { 
   timestamps: true,
   toJSON: { virtuals: true },

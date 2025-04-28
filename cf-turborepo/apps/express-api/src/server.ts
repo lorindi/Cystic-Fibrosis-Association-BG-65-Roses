@@ -14,6 +14,9 @@ import { typeDefs } from './graphql/schema/index';
 import { resolvers } from './graphql/resolvers/index';
 import { testEmailConnection, testOAuth2Connection } from './services/emailService';
 import cookieParser from 'cookie-parser';
+import { stripeService } from './services/stripeService';
+import { Payment } from './models/payment.model';
+import { PaymentStatus } from './types/payment.types';
 
 dotenv.config();
 
@@ -45,6 +48,74 @@ async function startApolloServer() {
   const app = express();
   const httpServer = http.createServer(app);
   const PORT = process.env.PORT || 5000;
+
+  // Конфигурация за Stripe webhook - трябва да бъде ПРЕДИ другите middleware
+  app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+    const signature = req.headers['stripe-signature'] as string;
+
+    if (!signature) {
+      res.status(400).send('Missing Stripe signature');
+      return;
+    }
+
+    try {
+      // Обработка на събитието от Stripe
+      const event = await stripeService.handleWebhookEvent(signature, req.body);
+
+      console.log(`Received Stripe event: ${event.type}`);
+
+      // Обработка на различните типове събития
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          // Плащането е успешно - запис в базата данни
+          const paymentIntent = event.data.object;
+          
+          // Проверяваме дали вече имаме това плащане записано
+          const existingPayment = await Payment.findOne({ 
+            stripePaymentIntentId: paymentIntent.id 
+          });
+          
+          if (!existingPayment) {
+            console.log(`New successful PaymentIntent: ${paymentIntent.id}`);
+            // Тук можем да изпълним допълнителна бизнес логика
+          }
+          break;
+          
+        case 'payment_intent.payment_failed':
+          // Плащането е неуспешно - актуализиране на статуса
+          const failedPaymentIntent = event.data.object;
+          
+          await Payment.findOneAndUpdate(
+            { stripePaymentIntentId: failedPaymentIntent.id },
+            { status: PaymentStatus.FAILED }
+          );
+          
+          console.log(`Unsuccessful PaymentIntent: ${failedPaymentIntent.id}`);
+          break;
+        
+        case 'payment_method.attached':
+          // Добавен е нов платежен метод
+          const paymentMethod = event.data.object;
+          console.log(`Added new payment method: ${paymentMethod.id}`);
+          break;
+        
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      // Връщаме успешен отговор към Stripe
+      res.status(200).send({ received: true });
+    } catch (error: unknown) {
+          console.error('Error processing Stripe webhook:', error);
+      
+      // Проверяваме дали error е инстанция на Error, за да достъпим свойството message
+      if (error instanceof Error) {
+        res.status(400).send(`Webhook Error: ${error.message}`);
+      } else {
+        res.status(400).send('Webhook Error: Unexpected error');
+      }
+    }
+  });
 
   // Schema за GraphQL
   const schema = makeExecutableSchema({ typeDefs, resolvers });
