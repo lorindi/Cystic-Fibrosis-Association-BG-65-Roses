@@ -34,9 +34,20 @@ async function findOrCreateStripeCustomer(userId: string): Promise<string> {
     throw new Error('Потребителят не е намерен');
   }
 
-  // Ако потребителят вече има Stripe клиент ID, връщаме го
+  // Ако потребителят вече има Stripe клиент ID, проверяваме дали съществува
   if (userData.stripeCustomerId) {
-    return userData.stripeCustomerId;
+    try {
+      // Опитваме се да вземем клиента от Stripe
+      const customer = await stripeService.getCustomer(userData.stripeCustomerId);
+      // Ако заявката е успешна и получим отговор, връщаме ID-то
+      if (customer && !customer.deleted) {
+        return userData.stripeCustomerId;
+      }
+      // Ако клиентът е изтрит или не е намерен, ще продължим със създаване на нов
+    } catch (error) {
+      // При грешка, ще създадем нов клиент
+      console.error('Грешка при проверка на съществуващ Stripe клиент:', error);
+    }
   }
 
   // Създаваме нов Stripe клиент

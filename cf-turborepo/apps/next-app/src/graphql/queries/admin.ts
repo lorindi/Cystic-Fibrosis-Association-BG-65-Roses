@@ -42,6 +42,29 @@ export const GET_CAMPAIGNS = gql`
   }
 `;
 
+export const GET_CAMPAIGN = gql`
+  query GetCampaign($id: ID!) {
+    getCampaign(id: $id) {
+      id
+      title
+      description
+      goal
+      currentAmount
+      startDate
+      endDate
+      events {
+        id
+        title
+        description
+        date
+        location
+      }
+      participantsCount
+      pendingParticipantsCount
+    }
+  }
+`;
+
 export const GET_EVENTS = gql`
   query GetEvents($noLimit: Boolean) {
     getEvents(noLimit: $noLimit) {

@@ -99,6 +99,13 @@ async function startApolloServer() {
           console.log(`Added new payment method: ${paymentMethod.id}`);
           break;
         
+        case 'payment_intent.created':
+          // Платежно намерение е създадено
+          const createdPaymentIntent = event.data.object;
+          console.log(`Payment intent created: ${createdPaymentIntent.id}`);
+          // Не е нужно да правим нищо специално при създаване на платежно намерение
+          break;
+        
         default:
           console.log(`Unhandled event type: ${event.type}`);
       }
@@ -194,3 +201,4 @@ async function startApolloServer() {
 connectDB().then(() => {
   startApolloServer();
 }); 
+  

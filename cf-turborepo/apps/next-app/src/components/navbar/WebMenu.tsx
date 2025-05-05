@@ -27,7 +27,8 @@ function WebMenu() {
       : "text-gray-700 hover:text-teal-600";
   };
 
-  // Prevent showing loading indicator on public pages
+  // Показваме loading индикатор само за непублични страници
+  // За публични показваме нормално менюто, но с индикация за loading
   if (loading && !isPublicPath(pathname)) {
     return <div>Loading...</div>;
   }
@@ -67,7 +68,9 @@ function WebMenu() {
           )}
         </ul>
         <div className='flex items-center justify-end w-full max-w-[240px]'>
-          <Button type='outlined' text='Make Donate'/>
+          <Link href="/donate">
+            <Button type='outlined' text='Make Donate'/>
+          </Link>
         </div>
       </div>
     </div>

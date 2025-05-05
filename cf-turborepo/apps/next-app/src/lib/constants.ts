@@ -11,7 +11,9 @@ export const PUBLIC_PATHS = [
   '/faq',
   '/news',
   '/events',
-  '/causes'
+  '/causes',
+  '/donate',
+  '/campaigns'
 ];
 
 export const AUTH_PROTECTED_PATHS = [

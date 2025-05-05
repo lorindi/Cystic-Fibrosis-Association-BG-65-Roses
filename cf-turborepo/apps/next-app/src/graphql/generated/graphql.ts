@@ -218,6 +218,22 @@ export type ContactInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CreatePaymentIntentInput = {
+  amount: Scalars['Float']['input'];
+  campaignId?: InputMaybe<Scalars['ID']['input']>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  initiativeId?: InputMaybe<Scalars['ID']['input']>;
+  items?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
+  savePaymentMethod?: InputMaybe<Scalars['Boolean']['input']>;
+  type: PaymentType;
+};
+
+export type CustomerPaymentMethodInput = {
+  isDefault?: InputMaybe<Scalars['Boolean']['input']>;
+  paymentMethodId: Scalars['String']['input'];
+};
+
 export type Donation = {
   __typename?: 'Donation';
   amount: Scalars['Float']['output'];
@@ -354,6 +370,7 @@ export type Mutation = {
   approveInitiativeParticipant: Scalars['Boolean']['output'];
   approveRecipe: Recipe;
   approveStory: Story;
+  confirmPayment: Payment;
   createBlogPost: BlogPost;
   createCampaign: Campaign;
   createConference: Conference;
@@ -361,7 +378,9 @@ export type Mutation = {
   createEvent: Event;
   createInitiative: Initiative;
   createNews: News;
+  createPaymentIntent: PaymentIntent;
   createRecipe: Recipe;
+  createSetupIntent: SetupIntent;
   createStoreItem: StoreItem;
   createStory: Story;
   deleteBlogPost: Scalars['Boolean']['output'];
@@ -391,12 +410,16 @@ export type Mutation = {
   login: AuthResponse;
   logout: Scalars['Boolean']['output'];
   refreshToken?: Maybe<AuthPayload>;
+  refundPayment: Payment;
   register: AuthResponse;
   rejectCampaignParticipant: Campaign;
   rejectInitiativeParticipant: Scalars['Boolean']['output'];
+  removePaymentMethod: Scalars['Boolean']['output'];
   removeUserFromGroup: User;
   resendVerificationEmail: Scalars['Boolean']['output'];
+  savePaymentMethod: Scalars['Boolean']['output'];
   sendChatMessage: ChatMessage;
+  setDefaultPaymentMethod: Scalars['Boolean']['output'];
   setUserRole: User;
   updateBlogPost: BlogPost;
   updateCampaign: Campaign;
@@ -471,6 +494,11 @@ export type MutationApproveStoryArgs = {
 };
 
 
+export type MutationConfirmPaymentArgs = {
+  paymentIntentId: Scalars['String']['input'];
+};
+
+
 export type MutationCreateBlogPostArgs = {
   input: BlogPostInput;
 };
@@ -503,6 +531,11 @@ export type MutationCreateInitiativeArgs = {
 
 export type MutationCreateNewsArgs = {
   input: NewsInput;
+};
+
+
+export type MutationCreatePaymentIntentArgs = {
+  input: CreatePaymentIntentInput;
 };
 
 
@@ -636,6 +669,11 @@ export type MutationLoginArgs = {
 };
 
 
+export type MutationRefundPaymentArgs = {
+  paymentIntentId: Scalars['String']['input'];
+};
+
+
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
@@ -653,14 +691,29 @@ export type MutationRejectInitiativeParticipantArgs = {
 };
 
 
+export type MutationRemovePaymentMethodArgs = {
+  paymentMethodId: Scalars['String']['input'];
+};
+
+
 export type MutationRemoveUserFromGroupArgs = {
   group: UserGroup;
   userId: Scalars['ID']['input'];
 };
 
 
+export type MutationSavePaymentMethodArgs = {
+  paymentMethodId: Scalars['String']['input'];
+};
+
+
 export type MutationSendChatMessageArgs = {
   input: ChatMessageInput;
+};
+
+
+export type MutationSetDefaultPaymentMethodArgs = {
+  paymentMethodId: Scalars['String']['input'];
 };
 
 
@@ -787,11 +840,72 @@ export type NutritionalInfoInput = {
   vitamins?: InputMaybe<Array<VitaminInput>>;
 };
 
+export type PaginatedPayments = {
+  __typename?: 'PaginatedPayments';
+  hasMore: Scalars['Boolean']['output'];
+  payments: Array<Payment>;
+  totalCount: Scalars['Int']['output'];
+};
+
 export type PaginatedUsers = {
   __typename?: 'PaginatedUsers';
   hasMore: Scalars['Boolean']['output'];
   totalCount: Scalars['Int']['output'];
   users: Array<User>;
+};
+
+export type Payment = {
+  __typename?: 'Payment';
+  _id: Scalars['ID']['output'];
+  amount: Scalars['Float']['output'];
+  campaign?: Maybe<Campaign>;
+  createdAt: Scalars['Date']['output'];
+  currency: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  donor?: Maybe<Donor>;
+  initiative?: Maybe<Initiative>;
+  items?: Maybe<Array<Maybe<StoreItem>>>;
+  status: PaymentStatus;
+  stripePaymentIntentId: Scalars['String']['output'];
+  type: PaymentType;
+  updatedAt: Scalars['Date']['output'];
+  user?: Maybe<User>;
+};
+
+export type PaymentIntent = {
+  __typename?: 'PaymentIntent';
+  amount: Scalars['Float']['output'];
+  clientSecret: Scalars['String']['output'];
+  currency: Scalars['String']['output'];
+  paymentIntentId: Scalars['String']['output'];
+};
+
+export type PaymentMethod = {
+  __typename?: 'PaymentMethod';
+  brand: Scalars['String']['output'];
+  expMonth: Scalars['Int']['output'];
+  expYear: Scalars['Int']['output'];
+  id: Scalars['String']['output'];
+  isDefault: Scalars['Boolean']['output'];
+  last4: Scalars['String']['output'];
+};
+
+export type PaymentStatus =
+  | 'canceled'
+  | 'failed'
+  | 'pending'
+  | 'refunded'
+  | 'succeeded';
+
+export type PaymentType =
+  | 'campaign_donation'
+  | 'initiative_donation'
+  | 'other_donation'
+  | 'store_purchase';
+
+export type ProcessPaymentInput = {
+  paymentIntentId: Scalars['String']['input'];
+  paymentMethodId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ProfileUpdateInput = {
@@ -829,6 +943,9 @@ export type Query = {
   getNews?: Maybe<Array<News>>;
   getNewsItem?: Maybe<News>;
   getPaginatedUsers: PaginatedUsers;
+  getPayment?: Maybe<Payment>;
+  getPaymentMethods: Array<PaymentMethod>;
+  getPayments: PaginatedPayments;
   getPendingCampaignRequests?: Maybe<Array<Campaign>>;
   getPendingInitiativeRequests: Array<User>;
   getRecipe?: Maybe<Recipe>;
@@ -841,6 +958,7 @@ export type Query = {
   getUserCampaignStatus?: Maybe<Array<UserCampaignStatus>>;
   getUserCampaigns?: Maybe<Array<Campaign>>;
   getUserInitiatives: Array<Initiative>;
+  getUserPayments: PaginatedPayments;
   getUserSessions: Array<UserSession>;
   getUsers?: Maybe<Array<User>>;
   getUsersByGroup?: Maybe<Array<User>>;
@@ -960,6 +1078,17 @@ export type QueryGetPaginatedUsersArgs = {
 };
 
 
+export type QueryGetPaymentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetPaymentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryGetPendingCampaignRequestsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1027,6 +1156,13 @@ export type QueryGetUserInitiativesArgs = {
 };
 
 
+export type QueryGetUserPaymentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  userId: Scalars['ID']['input'];
+};
+
+
 export type QueryGetUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1083,6 +1219,12 @@ export type RegisterInput = {
   email: Scalars['String']['input'];
   name: Scalars['String']['input'];
   password: Scalars['String']['input'];
+};
+
+export type SetupIntent = {
+  __typename?: 'SetupIntent';
+  clientSecret: Scalars['String']['output'];
+  setupIntentId: Scalars['String']['output'];
 };
 
 export type StoreItem = {
@@ -1380,6 +1522,13 @@ export type GetCampaignsQueryVariables = Exact<{
 
 export type GetCampaignsQuery = { __typename?: 'Query', getCampaigns?: Array<{ __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> }> | null };
 
+export type GetCampaignQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetCampaignQuery = { __typename?: 'Query', getCampaign?: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> } | null };
+
 export type GetEventsQueryVariables = Exact<{
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
@@ -1393,6 +1542,39 @@ export type GetDonationsQueryVariables = Exact<{
 
 
 export type GetDonationsQuery = { __typename?: 'Query', getDonors?: Array<{ __typename?: 'Donor', id: string, name: string, totalDonations: number, donations: Array<{ __typename?: 'Donation', id: string, amount: number, date: string, campaign?: { __typename?: 'Campaign', id: string, title: string } | null }> }> | null };
+
+export type CreatePaymentIntentMutationVariables = Exact<{
+  input: CreatePaymentIntentInput;
+}>;
+
+
+export type CreatePaymentIntentMutation = { __typename?: 'Mutation', createPaymentIntent: { __typename?: 'PaymentIntent', clientSecret: string, paymentIntentId: string, amount: number, currency: string } };
+
+export type GetPaymentMethodsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPaymentMethodsQuery = { __typename?: 'Query', getPaymentMethods: Array<{ __typename?: 'PaymentMethod', id: string, brand: string, last4: string, expMonth: number, expYear: number, isDefault: boolean }> };
+
+export type SavePaymentMethodMutationVariables = Exact<{
+  paymentMethodId: Scalars['String']['input'];
+}>;
+
+
+export type SavePaymentMethodMutation = { __typename?: 'Mutation', savePaymentMethod: boolean };
+
+export type RemovePaymentMethodMutationVariables = Exact<{
+  paymentMethodId: Scalars['String']['input'];
+}>;
+
+
+export type RemovePaymentMethodMutation = { __typename?: 'Mutation', removePaymentMethod: boolean };
+
+export type SetDefaultPaymentMethodMutationVariables = Exact<{
+  paymentMethodId: Scalars['String']['input'];
+}>;
+
+
+export type SetDefaultPaymentMethodMutation = { __typename?: 'Mutation', setDefaultPaymentMethod: boolean };
 
 export type GetUsersListQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2387,6 +2569,61 @@ export type GetCampaignsQueryHookResult = ReturnType<typeof useGetCampaignsQuery
 export type GetCampaignsLazyQueryHookResult = ReturnType<typeof useGetCampaignsLazyQuery>;
 export type GetCampaignsSuspenseQueryHookResult = ReturnType<typeof useGetCampaignsSuspenseQuery>;
 export type GetCampaignsQueryResult = Apollo.QueryResult<GetCampaignsQuery, GetCampaignsQueryVariables>;
+export const GetCampaignDocument = gql`
+    query GetCampaign($id: ID!) {
+  getCampaign(id: $id) {
+    id
+    title
+    description
+    goal
+    currentAmount
+    startDate
+    endDate
+    events {
+      id
+      title
+      description
+      date
+      location
+    }
+    participantsCount
+    pendingParticipantsCount
+  }
+}
+    `;
+
+/**
+ * __useGetCampaignQuery__
+ *
+ * To run a query within a React component, call `useGetCampaignQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCampaignQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCampaignQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetCampaignQuery(baseOptions: Apollo.QueryHookOptions<GetCampaignQuery, GetCampaignQueryVariables> & ({ variables: GetCampaignQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCampaignQuery, GetCampaignQueryVariables>(GetCampaignDocument, options);
+      }
+export function useGetCampaignLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCampaignQuery, GetCampaignQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCampaignQuery, GetCampaignQueryVariables>(GetCampaignDocument, options);
+        }
+export function useGetCampaignSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCampaignQuery, GetCampaignQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetCampaignQuery, GetCampaignQueryVariables>(GetCampaignDocument, options);
+        }
+export type GetCampaignQueryHookResult = ReturnType<typeof useGetCampaignQuery>;
+export type GetCampaignLazyQueryHookResult = ReturnType<typeof useGetCampaignLazyQuery>;
+export type GetCampaignSuspenseQueryHookResult = ReturnType<typeof useGetCampaignSuspenseQuery>;
+export type GetCampaignQueryResult = Apollo.QueryResult<GetCampaignQuery, GetCampaignQueryVariables>;
 export const GetEventsDocument = gql`
     query GetEvents($noLimit: Boolean) {
   getEvents(noLimit: $noLimit) {
@@ -2487,6 +2724,179 @@ export type GetDonationsQueryHookResult = ReturnType<typeof useGetDonationsQuery
 export type GetDonationsLazyQueryHookResult = ReturnType<typeof useGetDonationsLazyQuery>;
 export type GetDonationsSuspenseQueryHookResult = ReturnType<typeof useGetDonationsSuspenseQuery>;
 export type GetDonationsQueryResult = Apollo.QueryResult<GetDonationsQuery, GetDonationsQueryVariables>;
+export const CreatePaymentIntentDocument = gql`
+    mutation CreatePaymentIntent($input: CreatePaymentIntentInput!) {
+  createPaymentIntent(input: $input) {
+    clientSecret
+    paymentIntentId
+    amount
+    currency
+  }
+}
+    `;
+export type CreatePaymentIntentMutationFn = Apollo.MutationFunction<CreatePaymentIntentMutation, CreatePaymentIntentMutationVariables>;
+
+/**
+ * __useCreatePaymentIntentMutation__
+ *
+ * To run a mutation, you first call `useCreatePaymentIntentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreatePaymentIntentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createPaymentIntentMutation, { data, loading, error }] = useCreatePaymentIntentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreatePaymentIntentMutation(baseOptions?: Apollo.MutationHookOptions<CreatePaymentIntentMutation, CreatePaymentIntentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreatePaymentIntentMutation, CreatePaymentIntentMutationVariables>(CreatePaymentIntentDocument, options);
+      }
+export type CreatePaymentIntentMutationHookResult = ReturnType<typeof useCreatePaymentIntentMutation>;
+export type CreatePaymentIntentMutationResult = Apollo.MutationResult<CreatePaymentIntentMutation>;
+export type CreatePaymentIntentMutationOptions = Apollo.BaseMutationOptions<CreatePaymentIntentMutation, CreatePaymentIntentMutationVariables>;
+export const GetPaymentMethodsDocument = gql`
+    query GetPaymentMethods {
+  getPaymentMethods {
+    id
+    brand
+    last4
+    expMonth
+    expYear
+    isDefault
+  }
+}
+    `;
+
+/**
+ * __useGetPaymentMethodsQuery__
+ *
+ * To run a query within a React component, call `useGetPaymentMethodsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPaymentMethodsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPaymentMethodsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPaymentMethodsQuery(baseOptions?: Apollo.QueryHookOptions<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>(GetPaymentMethodsDocument, options);
+      }
+export function useGetPaymentMethodsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>(GetPaymentMethodsDocument, options);
+        }
+export function useGetPaymentMethodsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>(GetPaymentMethodsDocument, options);
+        }
+export type GetPaymentMethodsQueryHookResult = ReturnType<typeof useGetPaymentMethodsQuery>;
+export type GetPaymentMethodsLazyQueryHookResult = ReturnType<typeof useGetPaymentMethodsLazyQuery>;
+export type GetPaymentMethodsSuspenseQueryHookResult = ReturnType<typeof useGetPaymentMethodsSuspenseQuery>;
+export type GetPaymentMethodsQueryResult = Apollo.QueryResult<GetPaymentMethodsQuery, GetPaymentMethodsQueryVariables>;
+export const SavePaymentMethodDocument = gql`
+    mutation SavePaymentMethod($paymentMethodId: String!) {
+  savePaymentMethod(paymentMethodId: $paymentMethodId)
+}
+    `;
+export type SavePaymentMethodMutationFn = Apollo.MutationFunction<SavePaymentMethodMutation, SavePaymentMethodMutationVariables>;
+
+/**
+ * __useSavePaymentMethodMutation__
+ *
+ * To run a mutation, you first call `useSavePaymentMethodMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSavePaymentMethodMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [savePaymentMethodMutation, { data, loading, error }] = useSavePaymentMethodMutation({
+ *   variables: {
+ *      paymentMethodId: // value for 'paymentMethodId'
+ *   },
+ * });
+ */
+export function useSavePaymentMethodMutation(baseOptions?: Apollo.MutationHookOptions<SavePaymentMethodMutation, SavePaymentMethodMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SavePaymentMethodMutation, SavePaymentMethodMutationVariables>(SavePaymentMethodDocument, options);
+      }
+export type SavePaymentMethodMutationHookResult = ReturnType<typeof useSavePaymentMethodMutation>;
+export type SavePaymentMethodMutationResult = Apollo.MutationResult<SavePaymentMethodMutation>;
+export type SavePaymentMethodMutationOptions = Apollo.BaseMutationOptions<SavePaymentMethodMutation, SavePaymentMethodMutationVariables>;
+export const RemovePaymentMethodDocument = gql`
+    mutation RemovePaymentMethod($paymentMethodId: String!) {
+  removePaymentMethod(paymentMethodId: $paymentMethodId)
+}
+    `;
+export type RemovePaymentMethodMutationFn = Apollo.MutationFunction<RemovePaymentMethodMutation, RemovePaymentMethodMutationVariables>;
+
+/**
+ * __useRemovePaymentMethodMutation__
+ *
+ * To run a mutation, you first call `useRemovePaymentMethodMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemovePaymentMethodMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removePaymentMethodMutation, { data, loading, error }] = useRemovePaymentMethodMutation({
+ *   variables: {
+ *      paymentMethodId: // value for 'paymentMethodId'
+ *   },
+ * });
+ */
+export function useRemovePaymentMethodMutation(baseOptions?: Apollo.MutationHookOptions<RemovePaymentMethodMutation, RemovePaymentMethodMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemovePaymentMethodMutation, RemovePaymentMethodMutationVariables>(RemovePaymentMethodDocument, options);
+      }
+export type RemovePaymentMethodMutationHookResult = ReturnType<typeof useRemovePaymentMethodMutation>;
+export type RemovePaymentMethodMutationResult = Apollo.MutationResult<RemovePaymentMethodMutation>;
+export type RemovePaymentMethodMutationOptions = Apollo.BaseMutationOptions<RemovePaymentMethodMutation, RemovePaymentMethodMutationVariables>;
+export const SetDefaultPaymentMethodDocument = gql`
+    mutation SetDefaultPaymentMethod($paymentMethodId: String!) {
+  setDefaultPaymentMethod(paymentMethodId: $paymentMethodId)
+}
+    `;
+export type SetDefaultPaymentMethodMutationFn = Apollo.MutationFunction<SetDefaultPaymentMethodMutation, SetDefaultPaymentMethodMutationVariables>;
+
+/**
+ * __useSetDefaultPaymentMethodMutation__
+ *
+ * To run a mutation, you first call `useSetDefaultPaymentMethodMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetDefaultPaymentMethodMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setDefaultPaymentMethodMutation, { data, loading, error }] = useSetDefaultPaymentMethodMutation({
+ *   variables: {
+ *      paymentMethodId: // value for 'paymentMethodId'
+ *   },
+ * });
+ */
+export function useSetDefaultPaymentMethodMutation(baseOptions?: Apollo.MutationHookOptions<SetDefaultPaymentMethodMutation, SetDefaultPaymentMethodMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetDefaultPaymentMethodMutation, SetDefaultPaymentMethodMutationVariables>(SetDefaultPaymentMethodDocument, options);
+      }
+export type SetDefaultPaymentMethodMutationHookResult = ReturnType<typeof useSetDefaultPaymentMethodMutation>;
+export type SetDefaultPaymentMethodMutationResult = Apollo.MutationResult<SetDefaultPaymentMethodMutation>;
+export type SetDefaultPaymentMethodMutationOptions = Apollo.BaseMutationOptions<SetDefaultPaymentMethodMutation, SetDefaultPaymentMethodMutationVariables>;
 export const GetUsersListDocument = gql`
     query GetUsersList {
   getUsers {

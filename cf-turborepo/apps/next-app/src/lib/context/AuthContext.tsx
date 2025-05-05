@@ -75,15 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Проверка за автентикация при инициализиране на приложението
   useEffect(() => {
     const initAuth = async () => {
-      // Ако сме на публична страница, не е нужно да проверяваме автентикацията
-      if (isPublicPath() && pathname !== '/') {
-        setLoading(false);
-        return;
-      }
-      
+      // Винаги проверяваме автентикацията, независимо от пътя
+      // Това ще помогне да имаме консистентно състояние на целия UI
       const isAuth = await checkAuth();
       
-      // Ако сме на защитена страница и не сме автентикирани, 
+      // Само ако сме на защитена страница и не сме автентикирани, 
       // пренасочваме към страницата за вход
       if (isProtectedPath() && !isAuth) {
         // Запазваме текущия URL за да можем да пренасочим потребителя след успешен вход
@@ -106,15 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Function to check user authentication
   const checkAuth = async (): Promise<boolean> => {
-    // If we're on a public page, no need to check authentication
-    // except for the home page (/)
-    if (isPublicPath() && pathname !== '/') {
-      setLoading(false);
-      return false;
-    }
-    
-    // If we already have a user in the state and it's valid,
-    // we don't need to make a new request
+    // Ако вече имаме потребител в състоянието и той е валиден,
+    // не е нужно да правим нова заявка
     if (user && user._id) {
       setLoading(false);
       return true;
@@ -235,11 +224,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Функция за ръчно обновяване на токена
   const refreshToken = async (): Promise<string | null> => {
-    // Ако сме на публична страница, не е нужно да обновяваме токена
-    if (isPublicPath() && pathname !== '/') {
-      return null;
-    }
-    
     try {
       const { data } = await refreshTokenMutation({
         fetchPolicy: 'no-cache'
