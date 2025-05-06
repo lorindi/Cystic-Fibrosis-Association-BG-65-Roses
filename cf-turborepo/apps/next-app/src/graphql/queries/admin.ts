@@ -10,6 +10,8 @@ export const GET_USERS = gql`
       role
       groups
       isEmailVerified
+      isActive
+      deactivatedAt
       createdAt
       updatedAt
       profile {

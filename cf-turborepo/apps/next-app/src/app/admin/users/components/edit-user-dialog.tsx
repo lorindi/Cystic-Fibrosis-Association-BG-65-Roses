@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, X, UserCircle, MapPin, Users } from "lucide-react";
+import { PlusCircle, X, UserCircle, MapPin, Users, ShieldAlert } from "lucide-react";
 import { useMutation } from "@apollo/client";
 import { 
   UPDATE_USER, 
@@ -13,6 +13,7 @@ import {
   ADD_USER_TO_GROUP, 
   REMOVE_USER_FROM_GROUP 
 } from "@/graphql/mutations/user.mutations";
+import { DEACTIVATE_ACCOUNT, REACTIVATE_ACCOUNT } from "@/graphql/operations/auth";
 import { 
   UpdateUserMutation, 
   UpdateUserMutationVariables, 
@@ -25,6 +26,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -45,7 +47,9 @@ const formSchema = z.object({
     city: z.string().optional(),
     postalCode: z.string().optional()
   }).optional(),
-  bio: z.string().optional()
+  bio: z.string().optional(),
+  deactivationReason: z.string().optional(),
+  deactivationFeedback: z.string().optional()
 });
 
 // Extract type from the schema
@@ -67,7 +71,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
         city: "",
         postalCode: ""
       },
-      bio: ""
+      bio: "",
+      deactivationReason: "",
+      deactivationFeedback: ""
     }
   });
   
@@ -77,8 +83,11 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
   );
   const [addUserToGroup, { loading: addToGroupLoading }] = useMutation(ADD_USER_TO_GROUP);
   const [removeUserFromGroup, { loading: removeFromGroupLoading }] = useMutation(REMOVE_USER_FROM_GROUP);
+  const [deactivateAccount, { loading: deactivateLoading }] = useMutation(DEACTIVATE_ACCOUNT);
+  const [reactivateAccount, { loading: reactivateLoading }] = useMutation(REACTIVATE_ACCOUNT);
   
   const groupsLoading = addToGroupLoading || removeFromGroupLoading;
+  const accountActionsLoading = deactivateLoading || reactivateLoading;
 
   // Reset form when user changes
   useEffect(() => {
@@ -94,7 +103,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
           city: (user as any).address?.city || "",
           postalCode: (user as any).address?.postalCode || ""
         },
-        bio: (user as any).bio || ""
+        bio: (user as any).bio || "",
+        deactivationReason: "",
+        deactivationFeedback: ""
       };
 
       form.reset(userData);
@@ -111,8 +122,16 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
   }, [user, form]);
 
   const handleRoleChange = (role: UserRole | string) => {
-    // Admin can't be changed to other roles
-    if (user?.role === "admin") return;
+    // Администраторските акаунти не могат да променят своята роля
+    if (user?.role === "admin") {
+      toast({
+        title: "Role Change Not Allowed",
+        description: "Administrator accounts cannot be changed to other roles.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSelectedRole(role);
   };
 
@@ -155,6 +174,70 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
       });
     }
   };
+  
+  const handleDeactivateAccount = () => {
+    if (!user?._id) return;
+    
+    // Проверка дали потребителят е администратор
+    if (user.role === "admin") {
+      toast({
+        title: "Cannot Deactivate Admin",
+        description: "Administrator accounts cannot be deactivated. Change the user role first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const reason = form.getValues("deactivationReason");
+    const feedback = form.getValues("deactivationFeedback");
+    
+    deactivateAccount({
+      variables: {
+        input: {
+          reason: reason || undefined,
+          feedback: feedback || undefined
+        }
+      }
+    }).then(() => {
+      toast({
+        title: "Account Deactivated",
+        description: `The account for ${user.name} has been deactivated successfully.`
+      });
+      if (onSuccess) onSuccess();
+      onOpenChange(false);
+    }).catch(error => {
+      console.error("Error deactivating account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to deactivate account. Please try again.",
+        variant: "destructive"
+      });
+    });
+  };
+  
+  const handleReactivateAccount = () => {
+    if (!user?._id) return;
+    
+    reactivateAccount({
+      variables: {
+        userId: user._id
+      }
+    }).then(() => {
+      toast({
+        title: "Account Reactivated",
+        description: `The account for ${user.name} has been reactivated successfully.`
+      });
+      if (onSuccess) onSuccess();
+      onOpenChange(false);
+    }).catch(error => {
+      console.error("Error reactivating account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reactivate account. Please try again.",
+        variant: "destructive"
+      });
+    });
+  };
 
   const onSubmit: SubmitHandler<UserFormValues> = async (data) => {
     if (!user?._id) return;
@@ -180,13 +263,12 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
       // Update profile with the fields that are part of ProfileUpdateInput
       await updateUser({
         variables: {
-          id: user._id,
           input: profileInput
         }
       });
       
-      // Update role if it changed
-      if (selectedRole !== user.role) {
+      // Update role if it changed and user is not admin
+      if (selectedRole !== user.role && user.role !== "admin") {
         await setUserRole({
           variables: {
             userId: user._id,
@@ -228,7 +310,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-4 justify-evenly">
+              <TabsList className="grid grid-cols-4 mb-4 justify-evenly">
                 <TabsTrigger value="profile" className="flex items-center gap-1">
                   <UserCircle className="w-4 h-4" />
                   <span>Profile</span>
@@ -239,7 +321,11 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                 </TabsTrigger>
                 <TabsTrigger value="roles" className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>Roles & Groups</span>
+                  <span>Roles</span>
+                </TabsTrigger>
+                <TabsTrigger value="account" className="flex items-center gap-1">
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Account</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -358,13 +444,20 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                     {user && (
                       <div className="space-y-4">
                         <FormLabel>Roles</FormLabel>
+                        {user.role === "admin" && (
+                          <div className="rounded-md border border-blue-300 bg-blue-50 p-4 mb-4">
+                            <p className="text-sm text-blue-800 font-medium">
+                              Administrator accounts cannot be changed to other roles. This is a security measure to prevent accidental role changes.
+                            </p>
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-2 justify-evenly">
                           <Button 
                             type="button"
                             variant={selectedRole === "admin" ? "default" : "outline"} 
                             className="rounded-full" 
                             size="sm"
-                            disabled={user.role !== "admin"}
+                            disabled={true}
                             onClick={() => handleRoleChange("admin")}
                           >
                             Administrator
@@ -444,14 +537,111 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                     </div>
                   </div>
                 </TabsContent>
+                
+                <TabsContent value="account" className="mt-0 h-full">
+                  <div className="grid gap-6">
+                    {/* Account Status Section */}
+                    {user && (
+                      <Alert variant={user.isActive ? "default" : "destructive"}>
+                        <ShieldAlert className="h-4 w-4" />
+                        <AlertTitle>Account Status</AlertTitle>
+                        <AlertDescription>
+                          This account is currently {user.isActive ? "active" : "deactivated"}.
+                          {!user.isActive && user.deactivatedAt && ` Deactivated on ${new Date(user.deactivatedAt).toLocaleDateString()}.`}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {/* Deactivation Form */}
+                    {user && user.isActive && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Deactivate Account</h3>
+                        
+                        {user.role === "admin" ? (
+                          <div className="rounded-md border border-destructive p-4 mt-2">
+                            <p className="text-sm text-destructive font-medium">
+                              Administrator accounts cannot be deactivated. Please change the user role first if you need to deactivate this account.
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm text-muted-foreground">
+                              Deactivating this account will prevent the user from logging in. This action can be reversed later.
+                            </p>
+                            
+                            <FormField
+                              control={form.control}
+                              name="deactivationReason"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Reason for Deactivation</FormLabel>
+                                  <FormControl>
+                                    <Textarea placeholder="Optional reason for deactivation" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="deactivationFeedback"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Additional Feedback</FormLabel>
+                                  <FormControl>
+                                    <Textarea placeholder="Optional additional feedback" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <Button 
+                              type="button" 
+                              variant="destructive"
+                              className="w-full"
+                              disabled={accountActionsLoading}
+                              onClick={handleDeactivateAccount}
+                            >
+                              {deactivateLoading ? "Deactivating..." : "Deactivate Account"}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Reactivation Button */}
+                    {user && !user.isActive && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Reactivate Account</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Reactivating this account will allow the user to log in again and access the platform.
+                        </p>
+                        
+                        <Button 
+                          type="button" 
+                          variant="default"
+                          className="w-full"
+                          disabled={accountActionsLoading}
+                          onClick={handleReactivateAccount}
+                        >
+                          {reactivateLoading ? "Reactivating..." : "Reactivate Account"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
               </div>
             </Tabs>
             
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button type="submit" disabled={updateLoading || roleLoading || groupsLoading}>
-                {updateLoading || roleLoading || groupsLoading ? "Saving..." : "Save Changes"}
-              </Button>
+              {activeTab !== "account" && (
+                <Button type="submit" disabled={updateLoading || roleLoading || groupsLoading}>
+                  {updateLoading || roleLoading || groupsLoading ? "Saving..." : "Save Changes"}
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>

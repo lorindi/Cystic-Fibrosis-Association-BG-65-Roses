@@ -51,6 +51,9 @@ export interface IUser {
   role: UserRole;
   groups: UserGroup[];
   isEmailVerified: boolean;
+  isActive: boolean;
+  deactivatedAt?: Date;
+  deactivationReason?: string;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   passwordResetToken?: string;

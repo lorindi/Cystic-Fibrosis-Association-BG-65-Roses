@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 import { USER_FIELDS, USER_DETAILED_FIELDS } from '../fragments/user.fragments';
 
 export const REGISTER = gql`
-  mutation Register($input: RegisterInput!) {
+  mutation RegisterMutation($input: RegisterInput!) {
     register(input: $input) {
       token
       user {
@@ -14,13 +14,13 @@ export const REGISTER = gql`
 `;
 
 export const LOGOUT = gql`
-  mutation Logout {
+  mutation LogoutMutation {
     logout
   }
 `;
 
 export const UPDATE_USER = gql`
-  mutation UpdateUser($input: ProfileUpdateInput!) {
+  mutation UpdateUserMutation($input: ProfileUpdateInput!) {
     updateProfile(input: $input) {
       ...UserFields
     }
@@ -29,7 +29,7 @@ export const UPDATE_USER = gql`
 `;
 
 export const SET_USER_ROLE = gql`
-  mutation SetUserRole($userId: ID!, $role: UserRole!) {
+  mutation SetUserRoleMutation($userId: ID!, $role: UserRole!) {
     setUserRole(userId: $userId, role: $role) {
       ...UserFields
     }
@@ -38,7 +38,7 @@ export const SET_USER_ROLE = gql`
 `;
 
 export const ADD_USER_TO_GROUP = gql`
-  mutation AddUserToGroup($userId: ID!, $group: UserGroup!) {
+  mutation AddUserToGroupMutation($userId: ID!, $group: UserGroup!) {
     addUserToGroup(userId: $userId, group: $group) {
       ...UserFields
     }
@@ -47,7 +47,7 @@ export const ADD_USER_TO_GROUP = gql`
 `;
 
 export const REMOVE_USER_FROM_GROUP = gql`
-  mutation RemoveUserFromGroup($userId: ID!, $group: UserGroup!) {
+  mutation RemoveUserFromGroupMutation($userId: ID!, $group: UserGroup!) {
     removeUserFromGroup(userId: $userId, group: $group) {
       ...UserFields
     }
@@ -56,7 +56,7 @@ export const REMOVE_USER_FROM_GROUP = gql`
 `;
 
 export const LOGIN = gql`
-  mutation Login($input: LoginInput!) {
+  mutation LoginMutation($input: LoginInput!) {
     login(input: $input) {
       token
       user {

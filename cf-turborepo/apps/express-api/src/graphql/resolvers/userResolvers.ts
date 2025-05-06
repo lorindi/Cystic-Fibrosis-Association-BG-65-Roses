@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { UserInputError } from "../utils/errors";
+import { UserInputError, AuthenticationError } from "../utils/errors";
 import { UserRole, UserGroup } from "../../types/user.types";
 import User from "../../models/user.model";
 import {
@@ -18,10 +18,51 @@ import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
 import LoginHistory from "../../models/loginHistory.model";
 import RefreshToken from "../../models/refreshToken.model";
+import { SignOptions } from 'jsonwebtoken';
 
 dotenv.config();
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_SIGNIN_CLIENT_ID);
+
+// Помощна функция за валидация на refresh токен
+const validateRefreshToken = async (token: string) => {
+  try {
+    // Намираме токена в базата данни
+    const refreshToken = await RefreshToken.findOne({ token, isValid: true }).populate('userId');
+    
+    if (!refreshToken) {
+      throw new AuthenticationError('Invalid refresh token');
+    }
+    
+    // Проверяваме дали токенът не е изтекъл
+    if (refreshToken.expires < new Date()) {
+      // Невалидираме токена в базата данни
+      await RefreshToken.findOneAndUpdate(
+        { token },
+        { $set: { isValid: false } }
+      );
+      throw new AuthenticationError('Refresh token expired');
+    }
+    
+    return refreshToken;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Функция за невалидиране на refresh токен
+async function invalidateTokenFunc(token: string) {
+  try {
+    await RefreshToken.findOneAndUpdate(
+      { token },
+      { $set: { isValid: false } }
+    );
+    return true;
+  } catch (error) {
+    console.error('Error invalidating refresh token:', error);
+    return false;
+  }
+}
 
 export const userResolvers = {
   Query: {
@@ -420,35 +461,35 @@ export const userResolvers = {
       context: ContextType
     ) => {
       try {
-        // Find user by email
-        const user = await User.findOne({ email: input.email }).select(
-          "+password"
-        );
+        // Намираме потребителя по имейл
+        const user = await User.findOne({ email: input.email }).select('+password');
+        
+        // Проверяваме дали потребителят съществува
         if (!user) {
-          // Запис на неуспешен опит
-          await logLoginAttempt(
-            "unknown", 
-            context.req.ip || "unknown", 
-            context.req.headers['user-agent'] || "unknown",
-            "failed"
-          );
-          throw new UserInputError("Invalid email or password");
+          throw new AuthenticationError('Невалиден имейл или парола');
         }
-
-        // Check password
+        
+        // Проверяваме дали акаунтът е активен
+        if (!user.isActive) {
+          throw new AuthenticationError('Профилът е деактивиран. Моля, свържете се с администратор за повторно активиране.');
+        }
+        
+        // Проверяваме дали паролата е правилна
         const isMatch = await user.comparePassword(input.password);
         if (!isMatch) {
-          // Запис на неуспешен опит
-          await logLoginAttempt(
-            user._id.toString(), 
-            context.req.ip || "unknown", 
-            context.req.headers['user-agent'] || "unknown",
-            "failed"
-          );
-          throw new UserInputError("Invalid email or password");
+          // Запис на неуспешен опит за вход
+          await LoginHistory.create({
+            userId: user._id,
+            ip: context.req.ip,
+            userAgent: context.req.headers['user-agent'],
+            status: 'failed',
+            loggedInAt: new Date()
+          });
+          
+          throw new AuthenticationError('Невалиден имейл или парола');
         }
-
-        // Generate JWT token and set cookie
+        
+        // Генерираме JWT токен
         const token = generateToken(user, context.res);
         
         // Generate refresh token and set cookie
@@ -459,23 +500,27 @@ export const userResolvers = {
           context.res
         );
         
-        // Запис на успешен опит
-        await logLoginAttempt(
-          user._id.toString(), 
-          context.req.ip || "unknown", 
-          context.req.headers['user-agent'] || "unknown",
-          "success"
-        );
-
+        // Запис на успешно логване
+        await LoginHistory.create({
+          userId: user._id,
+          ip: context.req.ip || "unknown",
+          userAgent: context.req.headers['user-agent'] || "unknown",
+          status: 'success',
+          loggedInAt: new Date()
+        });
+        
+        // Правим безопасно копие на данните без паролата
+        const { password, ...userWithoutPassword } = user.toObject();
+        
         return {
           token,
-          user,
+          user: userWithoutPassword,
         };
       } catch (err: unknown) {
         if (err instanceof Error) {
           throw new Error(`Login error: ${err.message}`);
         }
-        throw new Error("Unexpected error during login");
+        throw new Error('Unexpected error during login');
       }
     },
 
@@ -502,7 +547,7 @@ export const userResolvers = {
         // Инвалидираме рефреш токена в базата, ако съществува
         const refreshToken = context.req.cookies?.refreshToken;
         if (refreshToken) {
-          await invalidateRefreshToken(refreshToken);
+          await invalidateTokenFunc(refreshToken);
         }
         
         return true;
@@ -549,6 +594,19 @@ export const userResolvers = {
       checkPermissions(currentUser, UserRole.ADMIN);
 
       try {
+        // Първо намираме потребителя, за да проверим текущата му роля
+        const existingUser = await User.findById(userId);
+        
+        if (!existingUser) {
+          throw new Error("User not found");
+        }
+        
+        // Проверка дали потребителят вече е администратор
+        if (existingUser.role === UserRole.ADMIN) {
+          throw new Error("Administrator roles cannot be changed. This is a security measure.");
+        }
+        
+        // Актуализираме ролята на потребителя
         const user = await User.findByIdAndUpdate(
           userId,
           { role },
@@ -754,7 +812,7 @@ export const userResolvers = {
           return false;
         }
         
-        const success = await invalidateRefreshToken(refreshToken);
+        const success = await invalidateTokenFunc(refreshToken);
         
         // Изтриваме и рефреш токена от cookies
         context.res.clearCookie('refreshToken', {
@@ -792,5 +850,104 @@ export const userResolvers = {
         return false;
       }
     },
+
+    deactivateAccount: async (
+      _: unknown,
+      { input }: { input?: { reason?: string; feedback?: string } },
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      try {
+        // Намираме потребителя в базата
+        const userData = await User.findById(user.id);
+        
+        if (!userData) {
+          throw new Error('Потребителят не е намерен');
+        }
+        
+        // Проверка дали потребителят е администратор
+        if (userData.role === UserRole.ADMIN) {
+          throw new Error('Администраторски акаунт не може да бъде деактивиран. Моля, първо понижете ролята на потребителя.');
+        }
+        
+        // Деактивираме профила
+        userData.isActive = false;
+        userData.deactivatedAt = new Date();
+        
+        if (input?.reason) {
+          userData.deactivationReason = input.reason;
+        }
+        
+        // Съхраняваме обратна връзка, ако е предоставена (може да се запише в отделен модел)
+        if (input?.feedback) {
+          console.log('Обратна връзка при деактивиране на профил:', input.feedback);
+          // Тук може да добавите логика за записване на обратната връзка
+        }
+        
+        // Инвалидираме всички сесии и рефреш токени
+        await RefreshToken.updateMany(
+          { userId: user.id },
+          { $set: { isValid: false } }
+        );
+        
+        // Запазваме промените
+        await userData.save();
+        
+        // Изчистваме cookie-та
+        context.res.clearCookie('token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+        });
+        
+        context.res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+        });
+        
+        return true;
+      } catch (error) {
+        console.error('Грешка при деактивиране на профил:', error);
+        throw new Error(`Не успяхме да деактивираме профила: ${error instanceof Error ? error.message : 'Неизвестна грешка'}`);
+      }
+    },
+    
+    reactivateAccount: async (
+      _: unknown,
+      { userId }: { userId: string },
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      // Само администратори могат да реактивират профили
+      checkPermissions(user, UserRole.ADMIN);
+      
+      try {
+        // Намираме потребителя за реактивиране
+        const userToReactivate = await User.findById(userId);
+        
+        if (!userToReactivate) {
+          throw new Error('Потребителят не е намерен');
+        }
+        
+        // Активираме профила отново
+        userToReactivate.isActive = true;
+        userToReactivate.deactivatedAt = undefined;
+        userToReactivate.deactivationReason = undefined;
+        
+        // Запазваме промените
+        await userToReactivate.save();
+        
+        return true;
+      } catch (error) {
+        console.error('Грешка при реактивиране на профил:', error);
+        throw new Error(`Не успяхме да реактивираме профила: ${error instanceof Error ? error.message : 'Неизвестна грешка'}`);
+      }
+    }
   },
 };

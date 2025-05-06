@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { USER_FIELDS, USER_DETAILED_FIELDS } from './user';
+import { USER_OPERATIONS_FIELDS, USER_OPERATIONS_DETAILED_FIELDS } from './user';
 
 // Автентикационни мутации
 export const VERIFY_EMAIL = gql`
@@ -8,12 +8,12 @@ export const VERIFY_EMAIL = gql`
       success
       message
       user {
-        ...UserDetailedFields
+        ...UserOperationsDetailedFields
       }
       token
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 export const RESEND_VERIFICATION_EMAIL = gql`
@@ -27,17 +27,17 @@ export const GOOGLE_AUTH = gql`
     googleAuth(input: $input) {
       token
       user {
-        ...UserDetailedFields
+        ...UserOperationsDetailedFields
       }
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 export const UPDATE_PROFILE = gql`
   mutation UpdateProfile($input: ProfileUpdateInput!) {
     updateProfile(input: $input) {
-      ...UserDetailedFields
+      ...UserOperationsDetailedFields
       profile {
         avatar
         bio
@@ -63,7 +63,7 @@ export const UPDATE_PROFILE = gql`
       }
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 // Рефреш токен и сесии
@@ -72,11 +72,11 @@ export const REFRESH_TOKEN = gql`
     refreshToken {
       token
       user {
-        ...UserDetailedFields
+        ...UserOperationsDetailedFields
       }
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 export const INVALIDATE_TOKEN = gql`
@@ -112,5 +112,18 @@ export const GET_LOGIN_HISTORY = gql`
       status
       loggedInAt
     }
+  }
+`;
+
+// Деактивиране и реактивиране на акаунт
+export const DEACTIVATE_ACCOUNT = gql`
+  mutation DeactivateAccount($input: DeactivateAccountInput) {
+    deactivateAccount(input: $input)
+  }
+`;
+
+export const REACTIVATE_ACCOUNT = gql`
+  mutation ReactivateAccount($userId: ID!) {
+    reactivateAccount(userId: $userId)
   }
 `; 

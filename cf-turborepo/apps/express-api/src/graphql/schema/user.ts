@@ -9,6 +9,8 @@ export const userTypeDefs = gql`
     role: UserRole!
     groups: [UserGroup!]
     isEmailVerified: Boolean!
+    isActive: Boolean!
+    deactivatedAt: Date
     profile: UserProfile
     createdAt: Date!
     updatedAt: Date!
@@ -121,6 +123,11 @@ export const userTypeDefs = gql`
     relation: String!
   }
   
+  input DeactivateAccountInput {
+    reason: String
+    feedback: String
+  }
+  
   # User responses
   type AuthResponse {
     token: String!
@@ -152,5 +159,7 @@ export const userTypeDefs = gql`
 
   extend type Mutation {
     googleAuth(input: GoogleAuthInput!): AuthResponse!
+    deactivateAccount(input: DeactivateAccountInput): Boolean!
+    reactivateAccount(userId: ID!): Boolean!
   }
 `; 

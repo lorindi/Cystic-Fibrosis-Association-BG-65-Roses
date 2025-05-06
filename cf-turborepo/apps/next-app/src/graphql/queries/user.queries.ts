@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 import { USER_BASIC_FIELDS, USER_DETAILED_FIELDS } from '../fragments/user.fragments';
 
 export const GET_CURRENT_USER = gql`
-  query GetCurrentUser {
+  query GetCurrentUserQuery {
     getCurrentUser {
       ...UserDetailedFields
     }
@@ -11,7 +11,7 @@ export const GET_CURRENT_USER = gql`
 `;
 
 export const GET_USERS = gql`
-  query GetUsersList {
+  query GetUsersListQuery {
     getUsers {
       ...UserDetailedFields
     }
@@ -20,7 +20,7 @@ export const GET_USERS = gql`
 `;
 
 export const GET_USER = gql`
-  query GetUser($id: ID!) {
+  query GetUserByIdQuery($id: ID!) {
     getUser(id: $id) {
       ...UserDetailedFields
     }
@@ -29,7 +29,7 @@ export const GET_USER = gql`
 `;
 
 export const GET_USERS_BY_ROLE = gql`
-  query GetUsersByRole($role: UserRole!) {
+  query GetUsersByRoleQuery($role: UserRole!) {
     getUsersByRole(role: $role) {
       ...UserDetailedFields
     }

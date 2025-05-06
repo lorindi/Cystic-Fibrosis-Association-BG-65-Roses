@@ -41,6 +41,19 @@ export const columns: DataTableColumn<User>[] = [
     },
   },
   {
+    accessorKey: "isActive",
+    header: "Status",
+    cell: ({ row }) => {
+      const isActive = row.original.isActive
+
+      return (
+        <Badge variant={isActive ? "success" : "destructive"}>
+          {isActive ? "Active" : "Deactivated"}
+        </Badge>
+      )
+    },
+  },
+  {
     accessorKey: "createdAt",
     header: "Created",
     cell: ({ row }) => format(new Date(row.original.createdAt), "PPP"),

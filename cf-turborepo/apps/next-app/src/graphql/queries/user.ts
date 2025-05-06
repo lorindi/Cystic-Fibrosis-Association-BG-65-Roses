@@ -9,6 +9,8 @@ export const USERS_QUERY = gql`
       role
       groups
       isEmailVerified
+      isActive
+      deactivatedAt
       createdAt
       updatedAt
     }

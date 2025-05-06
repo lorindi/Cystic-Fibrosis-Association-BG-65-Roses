@@ -1,19 +1,20 @@
 import { gql } from '@apollo/client';
 
 // Fragments
-export const USER_FIELDS = gql`
-  fragment UserFields on User {
+export const USER_OPERATIONS_FIELDS = gql`
+  fragment UserOperationsFields on User {
     _id
     name
     email
     role
     isEmailVerified
+    isActive
     createdAt
   }
 `;
 
-export const USER_BASIC_FIELDS = gql`
-  fragment UserBasicFields on User {
+export const USER_OPERATIONS_BASIC_FIELDS = gql`
+  fragment UserOperationsBasicFields on User {
     _id
     name
     email
@@ -21,8 +22,8 @@ export const USER_BASIC_FIELDS = gql`
   }
 `;
 
-export const USER_PROFILE_FIELDS = gql`
-  fragment UserProfileFields on UserProfile {
+export const USER_OPERATIONS_PROFILE_FIELDS = gql`
+  fragment UserOperationsProfileFields on UserProfile {
     avatar
     bio
     birthDate
@@ -47,50 +48,52 @@ export const USER_PROFILE_FIELDS = gql`
   }
 `;
 
-export const USER_DETAILED_FIELDS = gql`
-  fragment UserDetailedFields on User {
-    ...UserBasicFields
+export const USER_OPERATIONS_DETAILED_FIELDS = gql`
+  fragment UserOperationsDetailedFields on User {
+    ...UserOperationsBasicFields
     role
+    isActive
+    deactivatedAt
     createdAt
   }
-  ${USER_BASIC_FIELDS}
+  ${USER_OPERATIONS_BASIC_FIELDS}
 `;
 
 // Queries
 export const GET_CURRENT_USER = gql`
   query GetCurrentUser {
     getCurrentUser {
-      ...UserDetailedFields
+      ...UserOperationsDetailedFields
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 export const GET_USERS = gql`
   query GetAllUsers {
     getUsers {
-      ...UserDetailedFields
+      ...UserOperationsDetailedFields
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 export const GET_USER = gql`
   query GetUser($id: ID!) {
     getUser(id: $id) {
-      ...UserDetailedFields
+      ...UserOperationsDetailedFields
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 export const GET_USERS_BY_ROLE = gql`
   query GetUsersByRole($role: UserRole!) {
     getUsersByRole(role: $role) {
-      ...UserDetailedFields
+      ...UserOperationsDetailedFields
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `;
 
 // Mutations
@@ -99,11 +102,11 @@ export const REGISTER = gql`
     register(input: $input) {
       token
       user {
-        ...UserFields
+        ...UserOperationsFields
       }
     }
   }
-  ${USER_FIELDS}
+  ${USER_OPERATIONS_FIELDS}
 `;
 
 export const LOGOUT = gql`
@@ -115,37 +118,37 @@ export const LOGOUT = gql`
 export const UPDATE_USER = gql`
   mutation UpdateUser($input: ProfileUpdateInput!) {
     updateProfile(input: $input) {
-      ...UserFields
+      ...UserOperationsFields
     }
   }
-  ${USER_FIELDS}
+  ${USER_OPERATIONS_FIELDS}
 `;
 
 export const SET_USER_ROLE = gql`
   mutation SetUserRole($userId: ID!, $role: UserRole!) {
     setUserRole(userId: $userId, role: $role) {
-      ...UserFields
+      ...UserOperationsFields
     }
   }
-  ${USER_FIELDS}
+  ${USER_OPERATIONS_FIELDS}
 `;
 
 export const ADD_USER_TO_GROUP = gql`
   mutation AddUserToGroup($userId: ID!, $group: UserGroup!) {
     addUserToGroup(userId: $userId, group: $group) {
-      ...UserFields
+      ...UserOperationsFields
     }
   }
-  ${USER_FIELDS}
+  ${USER_OPERATIONS_FIELDS}
 `;
 
 export const REMOVE_USER_FROM_GROUP = gql`
   mutation RemoveUserFromGroup($userId: ID!, $group: UserGroup!) {
     removeUserFromGroup(userId: $userId, group: $group) {
-      ...UserFields
+      ...UserOperationsFields
     }
   }
-  ${USER_FIELDS}
+  ${USER_OPERATIONS_FIELDS}
 `;
 
 export const LOGIN = gql`
@@ -153,9 +156,9 @@ export const LOGIN = gql`
     login(input: $input) {
       token
       user {
-        ...UserDetailedFields
+        ...UserOperationsDetailedFields
       }
     }
   }
-  ${USER_DETAILED_FIELDS}
+  ${USER_OPERATIONS_DETAILED_FIELDS}
 `; 

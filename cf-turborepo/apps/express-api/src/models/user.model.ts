@@ -67,6 +67,12 @@ const UserSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  deactivatedAt: Date,
+  deactivationReason: String,
   emailVerificationToken: String,
   emailVerificationExpires: Date,
   passwordResetToken: String,

@@ -173,7 +173,7 @@ async function startApolloServer() {
 
   // CORS настройки, които позволяват изпращане на cookies
   const corsOptions = {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true, // Това е важно, за да може браузърът да изпраща cookies
   };
 

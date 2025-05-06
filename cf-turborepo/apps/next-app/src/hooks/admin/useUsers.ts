@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import { GetUsersQuery, GetUsersQueryVariables } from '@/gql/graphql';
+import { GetUsersWithParamsQuery, GetUsersWithParamsQueryVariables } from '@/graphql/generated/graphql';
 import { USERS_QUERY } from '@/graphql/queries/user';
 
 interface UseUsersOptions {
@@ -9,7 +9,7 @@ interface UseUsersOptions {
 }
 
 export const useUsers = (options: UseUsersOptions = { limit: 10, offset: 0 }) => {
-  const { data, loading, error, refetch } = useQuery<GetUsersQuery, GetUsersQueryVariables>(
+  const { data, loading, error, refetch } = useQuery<GetUsersWithParamsQuery, GetUsersWithParamsQueryVariables>(
     USERS_QUERY,
     {
       variables: {

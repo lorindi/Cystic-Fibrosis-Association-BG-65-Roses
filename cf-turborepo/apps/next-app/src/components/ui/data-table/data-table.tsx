@@ -58,7 +58,9 @@ interface DataTableProps<TData, TValue> {
     key: string
     label: string
     options: { label: string; value: string }[]
+    filterFn?: (row: TData, filterValue: string) => boolean
   }[]
+  customFilter?: React.ReactNode
   actions?: DataTableAction<TData>[]
   pagination?: {
     page: number
@@ -73,6 +75,7 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   filters,
+  customFilter,
   actions,
   pagination,
 }: DataTableProps<TData, TValue>) {
@@ -123,6 +126,30 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  // Регистрираме custom филтри, ако са предоставени
+  React.useEffect(() => {
+    if (filters) {
+      filters.forEach(filter => {
+        if (filter.filterFn) {
+          // Създаваме custom филтър
+          table.getColumn(filter.key)?.setFilterValue("") // Изчистваме преди да регистрираме
+          
+          // Задаваме филтъра да работи с нашата функция
+          const customFilter = (row: any, columnId: string, filterValue: string) => {
+            if (!filterValue || filterValue === "all") return true
+            return filter.filterFn!(row.original, filterValue)
+          }
+          
+          // Добавяме филтъра
+          if (table.getColumn(filter.key)) {
+            // @ts-ignore - регистрираме функцията за филтриране
+            table.getColumn(filter.key).columnDef.filterFn = customFilter
+          }
+        }
+      })
+    }
+  }, [filters, table])
+
   return (
     <div>
       <div className="flex items-center justify-between py-4">
@@ -137,6 +164,7 @@ export function DataTable<TData, TValue>({
               className="max-w-sm"
             />
           )}
+          {customFilter}
           {filters?.map((filter) => (
             <DropdownMenu key={filter.key}>
               <DropdownMenuTrigger asChild>
