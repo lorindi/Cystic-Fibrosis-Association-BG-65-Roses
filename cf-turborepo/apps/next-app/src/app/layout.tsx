@@ -7,6 +7,7 @@ import { Montserrat } from "next/font/google";
 import { ClientApolloProvider } from "@/lib/apollo/ClientApolloProvider";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster"
+import { ErrorInterceptor } from "@/components/ErrorInterceptor";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#fafafa] font-['Montserrat']`}
       >
+        <ErrorInterceptor />
         <ClientApolloProvider>
           <AuthProvider>
             <div className="flex flex-col items-center justify-center w-full h-full">

@@ -6,6 +6,7 @@ export const USER_FIELDS = gql`
     name
     email
     role
+    groups
     isEmailVerified
     createdAt
   }
@@ -50,6 +51,9 @@ export const USER_DETAILED_FIELDS = gql`
   fragment UserDetailedFields on User {
     ...UserBasicFields
     role
+    groups
+    isActive
+    deactivatedAt
     createdAt
   }
   ${USER_BASIC_FIELDS}

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@apollo/client'
-import { LOGIN } from '@/graphql/operations'
+import { LOGIN } from '@/graphql/operations/user'
 import { useAuth } from '@/lib/context/AuthContext'
 import DnaBackground from '@/components/auth/DnaBackground'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
@@ -14,6 +14,7 @@ import PasswordField from '@/components/auth/PasswordField'
 import BackButton from '@/components/auth/BackButton'
 import SubmitButton from '@/components/auth/SubmitButton'
 import AuthFormWrapper from '@/components/auth/AuthFormWrapper'
+import { LoginMutation, LoginMutationVariables } from '@/graphql/generated/graphql'
 
 function SignInPage() {
   const router = useRouter();
@@ -43,7 +44,7 @@ function SignInPage() {
     }
   }, [isAuthenticated, router]);
 
-  const [loginMutation] = useMutation(LOGIN, {
+  const [loginMutation] = useMutation<LoginMutation, LoginMutationVariables>(LOGIN, {
     // Игнорираме Apollo cache за да сме сигурни, че всичко е up-to-date
     fetchPolicy: 'no-cache'
   });
@@ -60,36 +61,63 @@ function SignInPage() {
     setError('');
     setLoading(true);
 
+    // Проверка за празни полета
+    if (!formData.email || !formData.password) {
+      setError('Email and password are required');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Премахваме детайлния лог при опит за логин
+      
       const { data } = await loginMutation({
         variables: {
-          input: formData
+          input: {
+            email: formData.email.trim(),
+            password: formData.password
+          }
+        },
+        // Предотвратяваме Apollo да логва грешките в конзолата
+        onError: (error) => {
+          // Управляваме грешките локално, вместо да оставим Apollo да ги покаже в конзолата
+          return;
         }
       });
 
+      // Премахваме допълнителния лог за отговора
+      
       if (data?.login) {
         // Обърнете внимание, че JWT токенът сега има по-кратък живот (1 час),
         // а рефреш токенът се управлява автоматично чрез HTTP-only cookies
         login(data.login.token, data.login.user);
-        console.log('Login successful');
         
         // Пренасочваме потребителя към запазения URL или към началната страница
         const redirectUrl = redirectTo;
         sessionStorage.removeItem('redirectAfterLogin');
         router.push(redirectUrl);
+      } else {
+        // Намаляваме нивото на съобщението до уведомяване на потребителя
+        setError('Authentication failed. Please check your credentials.');
       }
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.message || 'An error occurred during sign in');
+      // Премахваме детайлния лог на грешката
       
-      // Ако грешката е свързана с мрежови проблеми, показваме по-ясно съобщение
+      // Log more detailed information
       if (err.networkError) {
-        setError('Network error: Please check your internet connection');
-      }
-      
-      // Ако грешката е GraphQL грешка, показваме по-ясно съобщение
-      if (err.graphQLErrors?.length) {
-        setError(err.graphQLErrors[0].message || 'Authentication failed');
+        setError(`Network error: ${err.networkError.message || 'Please check your internet connection'}`);
+      } else if (err.graphQLErrors?.length) {
+        const errorMessage = err.graphQLErrors[0].message;
+        
+        // Проверка за конкретно съобщение за деактивиран акаунт
+        if (errorMessage.includes('деактивиран') || errorMessage.includes('deactivated')) {
+          setError('This account has been deactivated. Please contact an administrator for assistance.');
+        } else {
+          // При грешна парола, показваме просто съобщение, без да го логваме
+          setError(`${errorMessage}`);
+        }
+      } else {
+        setError(`Login failed: ${err.message || 'Unknown error'}`);
       }
     } finally {
       setLoading(false);
@@ -111,7 +139,19 @@ function SignInPage() {
           <form onSubmit={handleSubmit}>
             {error && (
               <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-                {error}
+                {error === 'Невалиден имейл или парола' ? (
+                  <div className="flex flex-col">
+                    <span className="font-medium">Incorrect login details</span>
+                    <span className="text-xs mt-1">The email and password combination you entered is not valid.</span>
+                  </div>
+                ) : error.includes('деактивиран') || error.includes('deactivated') ? (
+                  <div className="flex flex-col">
+                    <span className="font-medium">Account deactivated</span>
+                    <span className="text-xs mt-1">This account has been deactivated. Please contact an administrator for assistance.</span>
+                  </div>
+                ) : (
+                  error
+                )}
               </div>
             )}
             

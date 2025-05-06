@@ -4,6 +4,20 @@ import { X } from "lucide-react";
 import { SITE_CONFIG, mainNavItems, footerNavItems } from "./constants";
 import { NavLink } from "./NavLink";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/lib/context/AuthContext";
+import { UserGroup } from "@/graphql/generated/graphql";
+import { getRequiredGroupsForPath } from "@/lib/utils/access-control";
+
+// Мапиране на URL пътища към необходими групи за достъп
+const pathToGroupsMap: Record<string, UserGroup[]> = {
+  "/admin/campaigns": ["campaigns"],
+  "/admin/initiatives": ["initiatives"],
+  "/admin/conferences": ["conferences"],
+  "/admin/events": ["events"],
+  "/admin/news": ["news"],
+  "/admin/blog": ["blog"],
+  "/admin/recipes": ["recipes"],
+};
 
 interface SidebarProps {
   isOpen: boolean;
@@ -11,6 +25,28 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { user } = useAuth();
+  
+  // Функция, която проверява дали потребителят има достъп до дадена страница
+  const hasAccessToPath = (path: string): boolean => {
+    // Админите имат достъп до всички страници
+    if (user?.role === 'admin') return true;
+    
+    // Ако пътят не изисква специфични права, позволяваме достъп
+    const requiredGroups = getRequiredGroupsForPath(path);
+    if (requiredGroups.length === 0) return true;
+    
+    // Проверяваме дали потребителят има поне една от необходимите групи
+    return user?.groups?.some((group: string) => 
+      requiredGroups.includes(group as UserGroup)
+    ) || false;
+  };
+  
+  // Филтрираме навигационните елементи според групите на потребителя
+  const filteredMainNavItems = mainNavItems.filter(item => {
+    return hasAccessToPath(item.href);
+  });
+
   return (
     <div
       className={cn(
@@ -39,7 +75,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       <div className="flex-1 overflow-auto py-2">
         <nav className="space-y-1 px-2">
-          {mainNavItems.map((item) => (
+          {filteredMainNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </nav>

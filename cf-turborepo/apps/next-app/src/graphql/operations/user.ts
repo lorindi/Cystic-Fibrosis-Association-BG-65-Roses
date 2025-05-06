@@ -7,6 +7,7 @@ export const USER_OPERATIONS_FIELDS = gql`
     name
     email
     role
+    groups
     isEmailVerified
     isActive
     createdAt
@@ -52,6 +53,7 @@ export const USER_OPERATIONS_DETAILED_FIELDS = gql`
   fragment UserOperationsDetailedFields on User {
     ...UserOperationsBasicFields
     role
+    groups
     isActive
     deactivatedAt
     createdAt

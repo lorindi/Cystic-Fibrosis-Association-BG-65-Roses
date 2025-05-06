@@ -36,7 +36,9 @@ const AUTH_ERROR_MESSAGES = [
   'not authenticated',
   'не сте влезли в системата',
   'сесията е изтекла',
-  'jwt'
+  'jwt',
+  'невалиден имейл или парола',
+  'invalid email or password'
 ];
 
 // Масив от публични пътища, които не трябва да водят до пренасочване към login
@@ -77,7 +79,21 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
   }
 
   if (graphQLErrors) {
+    // Филтрираме известните грешки от формуляра за вход, за да не се логват в конзолата
+    const shouldIgnoreErrors = isPublicPath() && 
+      (operation.operationName === 'Login' || operation.operationName === 'LoginMutation');
+    
     for (const err of graphQLErrors) {
+      // Филтрираме известни грешки от вход, които не трябва да се логват
+      const isLoginError = err.message.toLowerCase().includes('невалиден имейл или парола') || 
+        err.message.toLowerCase().includes('invalid email or password');
+      
+      // Ако сме на страницата за вход и е грешка за невалиден вход, пропускаме логването
+      if (shouldIgnoreErrors && isLoginError) {
+        // Пропускаме логването на грешката за невалиден вход, тя ще се покаже в UI
+        continue;
+      }
+      
       // Проверка дали грешката е свързана с автентикация
       if (isAuthError(err.message)) {
         // Ако сме на публична страница (като sign-in, register), не се опитваме да обновяваме токена
@@ -150,11 +166,19 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
   }
   
   if (networkError) {
-    console.error(`[Network error]:`, networkError);
-    // Проверка дали мрежовата грешка е свързана с автентикацията
-    if (networkError.message && isAuthError(networkError.message)) {
-      // Тук може да се добави логика за пренасочване при мрежови грешки с автентикация
-      console.log("Мрежова грешка с автентикация", networkError.message);
+    // Проверка дали сме на страницата за вход и грешката е свързана с автентикация
+    const shouldIgnoreNetworkError = isPublicPath() && 
+      networkError.message && 
+      (networkError.message.toLowerCase().includes('невалиден имейл или парола') || 
+       networkError.message.toLowerCase().includes('invalid email or password'));
+    
+    // Не логваме мрежови грешки свързани с обикновен неуспешен опит за вход
+    if (!shouldIgnoreNetworkError) {
+      console.error(`[Network error]:`, networkError);
+      // Проверка дали мрежовата грешка е свързана с автентикацията
+      if (networkError.message && isAuthError(networkError.message)) {
+        // Тук може да се добави логика за пренасочване при мрежови грешки с автентикация
+      }
     }
   }
 });

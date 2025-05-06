@@ -9,6 +9,20 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { isPublicPath } from '@/lib/constants';
 import LogoutButton from '../auth/LogoutButton';
 
+// Функция за проверка дали потребителят има достъп до админ панела
+const hasAdminAccess = (user: any) => {
+  // Ако потребителят е админ
+  if (user?.role === 'admin') return true;
+  
+  // Ако потребителят има групи и поне една от тях е специфична група
+  if (user?.groups && user.groups.length > 0) {
+    const adminAccessGroups = ['campaigns', 'initiatives', 'conferences', 'events', 'news', 'blog', 'recipes'];
+    return user.groups.some((group: string) => adminAccessGroups.includes(group));
+  }
+  
+  return false;
+};
+
 function WebMenu() {
   const pathname = usePathname();
   
@@ -46,7 +60,7 @@ function WebMenu() {
           {user ? (
             <>
               <li><Link href='/profile' className={getLinkClassName('/profile')}>Profile</Link></li>
-              {user.role === 'admin' && (
+              {hasAdminAccess(user) && (
                 <li>
                   <Link 
                     href='/admin' 

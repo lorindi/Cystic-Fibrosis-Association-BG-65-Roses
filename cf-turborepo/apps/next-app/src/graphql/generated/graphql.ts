@@ -1375,20 +1375,20 @@ export type VitaminInput = {
   unit: Scalars['String']['input'];
 };
 
-export type UserFieldsFragment = { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, createdAt: string };
+export type UserFieldsFragment = { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, createdAt: string };
 
 export type UserBasicFieldsFragment = { __typename?: 'User', _id: string, name: string, email: string, isEmailVerified: boolean };
 
 export type UserProfileFieldsFragment = { __typename?: 'UserProfile', avatar?: string | null, bio?: string | null, birthDate?: string | null, diagnosed?: boolean | null, diagnosisYear?: number | null, childName?: string | null, companyName?: string | null, address?: { __typename?: 'Address', city: string, postalCode?: string | null, street?: string | null } | null, contact?: { __typename?: 'Contact', phone?: string | null, alternativeEmail?: string | null, emergencyContact?: { __typename?: 'EmergencyContact', name: string, phone: string, relation: string } | null } | null };
 
-export type UserDetailedFieldsFragment = { __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean };
+export type UserDetailedFieldsFragment = { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean };
 
 export type RegisterMutationMutationVariables = Exact<{
   input: RegisterInput;
 }>;
 
 
-export type RegisterMutationMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, createdAt: string } } };
+export type RegisterMutationMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, createdAt: string } } };
 
 export type LogoutMutationMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -1400,7 +1400,7 @@ export type UpdateUserMutationMutationVariables = Exact<{
 }>;
 
 
-export type UpdateUserMutationMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, createdAt: string } };
+export type UpdateUserMutationMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, createdAt: string } };
 
 export type SetUserRoleMutationMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1408,7 +1408,7 @@ export type SetUserRoleMutationMutationVariables = Exact<{
 }>;
 
 
-export type SetUserRoleMutationMutation = { __typename?: 'Mutation', setUserRole: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, createdAt: string } };
+export type SetUserRoleMutationMutation = { __typename?: 'Mutation', setUserRole: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, createdAt: string } };
 
 export type AddUserToGroupMutationMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1416,7 +1416,7 @@ export type AddUserToGroupMutationMutationVariables = Exact<{
 }>;
 
 
-export type AddUserToGroupMutationMutation = { __typename?: 'Mutation', addUserToGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, createdAt: string } };
+export type AddUserToGroupMutationMutation = { __typename?: 'Mutation', addUserToGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, createdAt: string } };
 
 export type RemoveUserFromGroupMutationMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1424,21 +1424,21 @@ export type RemoveUserFromGroupMutationMutationVariables = Exact<{
 }>;
 
 
-export type RemoveUserFromGroupMutationMutation = { __typename?: 'Mutation', removeUserFromGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, createdAt: string } };
+export type RemoveUserFromGroupMutationMutation = { __typename?: 'Mutation', removeUserFromGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, createdAt: string } };
 
 export type LoginMutationMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
 
-export type LoginMutationMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } };
+export type LoginMutationMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } };
 
 export type VerifyEmailMutationVariables = Exact<{
   token: Scalars['String']['input'];
 }>;
 
 
-export type VerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerificationResponse', success: boolean, message: string, token?: string | null, user?: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null } };
+export type VerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerificationResponse', success: boolean, message: string, token?: string | null, user?: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null } };
 
 export type ResendVerificationEmailMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -1450,19 +1450,19 @@ export type GoogleAuthMutationVariables = Exact<{
 }>;
 
 
-export type GoogleAuthMutation = { __typename?: 'Mutation', googleAuth: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } };
+export type GoogleAuthMutation = { __typename?: 'Mutation', googleAuth: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } };
 
 export type UpdateProfileMutationVariables = Exact<{
   input: ProfileUpdateInput;
 }>;
 
 
-export type UpdateProfileMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean, profile?: { __typename?: 'UserProfile', avatar?: string | null, bio?: string | null, birthDate?: string | null, diagnosed?: boolean | null, diagnosisYear?: number | null, childName?: string | null, companyName?: string | null, address?: { __typename?: 'Address', city: string, postalCode?: string | null, street?: string | null } | null, contact?: { __typename?: 'Contact', phone?: string | null, alternativeEmail?: string | null, emergencyContact?: { __typename?: 'EmergencyContact', name: string, phone: string, relation: string } | null } | null } | null } };
+export type UpdateProfileMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean, profile?: { __typename?: 'UserProfile', avatar?: string | null, bio?: string | null, birthDate?: string | null, diagnosed?: boolean | null, diagnosisYear?: number | null, childName?: string | null, companyName?: string | null, address?: { __typename?: 'Address', city: string, postalCode?: string | null, street?: string | null } | null, contact?: { __typename?: 'Contact', phone?: string | null, alternativeEmail?: string | null, emergencyContact?: { __typename?: 'EmergencyContact', name: string, phone: string, relation: string } | null } | null } | null } };
 
 export type RefreshTokenMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type RefreshTokenMutation = { __typename?: 'Mutation', refreshToken?: { __typename?: 'AuthPayload', token: string, user: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } | null };
+export type RefreshTokenMutation = { __typename?: 'Mutation', refreshToken?: { __typename?: 'AuthPayload', token: string, user: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } | null };
 
 export type InvalidateTokenMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -1500,44 +1500,44 @@ export type ReactivateAccountMutationVariables = Exact<{
 
 export type ReactivateAccountMutation = { __typename?: 'Mutation', reactivateAccount: boolean };
 
-export type UserOperationsFieldsFragment = { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, isActive: boolean, createdAt: string };
+export type UserOperationsFieldsFragment = { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, isActive: boolean, createdAt: string };
 
 export type UserOperationsBasicFieldsFragment = { __typename?: 'User', _id: string, name: string, email: string, isEmailVerified: boolean };
 
 export type UserOperationsProfileFieldsFragment = { __typename?: 'UserProfile', avatar?: string | null, bio?: string | null, birthDate?: string | null, diagnosed?: boolean | null, diagnosisYear?: number | null, childName?: string | null, companyName?: string | null, address?: { __typename?: 'Address', city: string, postalCode?: string | null, street?: string | null } | null, contact?: { __typename?: 'Contact', phone?: string | null, alternativeEmail?: string | null, emergencyContact?: { __typename?: 'EmergencyContact', name: string, phone: string, relation: string } | null } | null };
 
-export type UserOperationsDetailedFieldsFragment = { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean };
+export type UserOperationsDetailedFieldsFragment = { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean };
 
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser?: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
+export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser?: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
 
 export type GetAllUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllUsersQuery = { __typename?: 'Query', getUsers?: Array<{ __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
+export type GetAllUsersQuery = { __typename?: 'Query', getUsers?: Array<{ __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
+export type GetUserQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
 
 export type GetUsersByRoleQueryVariables = Exact<{
   role: UserRole;
 }>;
 
 
-export type GetUsersByRoleQuery = { __typename?: 'Query', getUsersByRole?: Array<{ __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
+export type GetUsersByRoleQuery = { __typename?: 'Query', getUsersByRole?: Array<{ __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
 
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
 
 
-export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, isActive: boolean, createdAt: string } } };
+export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, isActive: boolean, createdAt: string } } };
 
 export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -1549,7 +1549,7 @@ export type UpdateUserMutationVariables = Exact<{
 }>;
 
 
-export type UpdateUserMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
+export type UpdateUserMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
 
 export type SetUserRoleMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1557,7 +1557,7 @@ export type SetUserRoleMutationVariables = Exact<{
 }>;
 
 
-export type SetUserRoleMutation = { __typename?: 'Mutation', setUserRole: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
+export type SetUserRoleMutation = { __typename?: 'Mutation', setUserRole: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
 
 export type AddUserToGroupMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1565,7 +1565,7 @@ export type AddUserToGroupMutationVariables = Exact<{
 }>;
 
 
-export type AddUserToGroupMutation = { __typename?: 'Mutation', addUserToGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
+export type AddUserToGroupMutation = { __typename?: 'Mutation', addUserToGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
 
 export type RemoveUserFromGroupMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1573,14 +1573,14 @@ export type RemoveUserFromGroupMutationVariables = Exact<{
 }>;
 
 
-export type RemoveUserFromGroupMutation = { __typename?: 'Mutation', removeUserFromGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
+export type RemoveUserFromGroupMutation = { __typename?: 'Mutation', removeUserFromGroup: { __typename?: 'User', _id: string, name: string, email: string, role: UserRole, groups?: Array<UserGroup> | null, isEmailVerified: boolean, isActive: boolean, createdAt: string } };
 
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
 
-export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', role: UserRole, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } };
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthResponse', token: string, user: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } } };
 
 export type GetPaginatedUsersQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1588,7 +1588,7 @@ export type GetPaginatedUsersQueryVariables = Exact<{
 }>;
 
 
-export type GetPaginatedUsersQuery = { __typename?: 'Query', getPaginatedUsers: { __typename?: 'PaginatedUsers', totalCount: number, hasMore: boolean, users: Array<{ __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> } };
+export type GetPaginatedUsersQuery = { __typename?: 'Query', getPaginatedUsers: { __typename?: 'PaginatedUsers', totalCount: number, hasMore: boolean, users: Array<{ __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> } };
 
 export type GetUsersByGroupQueryVariables = Exact<{
   group: UserGroup;
@@ -1597,7 +1597,7 @@ export type GetUsersByGroupQueryVariables = Exact<{
 }>;
 
 
-export type GetUsersByGroupQuery = { __typename?: 'Query', getUsersByGroup?: Array<{ __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
+export type GetUsersByGroupQuery = { __typename?: 'Query', getUsersByGroup?: Array<{ __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
 
 export type GetUsersForAdminQueryVariables = Exact<{
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1670,26 +1670,26 @@ export type SetDefaultPaymentMethodMutation = { __typename?: 'Mutation', setDefa
 export type GetCurrentUserQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQueryQuery = { __typename?: 'Query', getCurrentUser?: { __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
+export type GetCurrentUserQueryQuery = { __typename?: 'Query', getCurrentUser?: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
 
 export type GetUsersListQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUsersListQueryQuery = { __typename?: 'Query', getUsers?: Array<{ __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
+export type GetUsersListQueryQuery = { __typename?: 'Query', getUsers?: Array<{ __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
 
 export type GetUserByIdQueryQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetUserByIdQueryQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
+export type GetUserByIdQueryQuery = { __typename?: 'Query', getUser?: { __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean } | null };
 
 export type GetUsersByRoleQueryQueryVariables = Exact<{
   role: UserRole;
 }>;
 
 
-export type GetUsersByRoleQueryQuery = { __typename?: 'Query', getUsersByRole?: Array<{ __typename?: 'User', role: UserRole, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
+export type GetUsersByRoleQueryQuery = { __typename?: 'Query', getUsersByRole?: Array<{ __typename?: 'User', role: UserRole, groups?: Array<UserGroup> | null, isActive: boolean, deactivatedAt?: string | null, createdAt: string, _id: string, name: string, email: string, isEmailVerified: boolean }> | null };
 
 export type GetUsersWithParamsQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1706,6 +1706,7 @@ export const UserFieldsFragmentDoc = gql`
   name
   email
   role
+  groups
   isEmailVerified
   createdAt
 }
@@ -1747,6 +1748,9 @@ export const UserDetailedFieldsFragmentDoc = gql`
     fragment UserDetailedFields on User {
   ...UserBasicFields
   role
+  groups
+  isActive
+  deactivatedAt
   createdAt
 }
     ${UserBasicFieldsFragmentDoc}`;
@@ -1756,6 +1760,7 @@ export const UserOperationsFieldsFragmentDoc = gql`
   name
   email
   role
+  groups
   isEmailVerified
   isActive
   createdAt
@@ -1798,6 +1803,7 @@ export const UserOperationsDetailedFieldsFragmentDoc = gql`
     fragment UserOperationsDetailedFields on User {
   ...UserOperationsBasicFields
   role
+  groups
   isActive
   deactivatedAt
   createdAt
@@ -2843,13 +2849,13 @@ export const GetPaginatedUsersDocument = gql`
     query GetPaginatedUsers($limit: Int, $offset: Int) {
   getPaginatedUsers(limit: $limit, offset: $offset) {
     users {
-      ...UserDetailedFields
+      ...UserOperationsDetailedFields
     }
     totalCount
     hasMore
   }
 }
-    ${UserDetailedFieldsFragmentDoc}`;
+    ${UserOperationsDetailedFieldsFragmentDoc}`;
 
 /**
  * __useGetPaginatedUsersQuery__
@@ -2887,10 +2893,10 @@ export type GetPaginatedUsersQueryResult = Apollo.QueryResult<GetPaginatedUsersQ
 export const GetUsersByGroupDocument = gql`
     query GetUsersByGroup($group: UserGroup!, $limit: Int, $offset: Int) {
   getUsersByGroup(group: $group, limit: $limit, offset: $offset) {
-    ...UserDetailedFields
+    ...UserOperationsDetailedFields
   }
 }
-    ${UserDetailedFieldsFragmentDoc}`;
+    ${UserOperationsDetailedFieldsFragmentDoc}`;
 
 /**
  * __useGetUsersByGroupQuery__
