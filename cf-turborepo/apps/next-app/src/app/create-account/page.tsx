@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@apollo/client'
-import { REGISTER } from '@/lib/apollo/mutations'
+import { REGISTER } from '@/graphql/operations'
 import { useAuth } from '@/lib/context/AuthContext'
 import DnaBackground from '@/components/auth/DnaBackground'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
@@ -27,7 +27,9 @@ function CreateAccountPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [registerMutation] = useMutation(REGISTER);
+  const [registerMutation] = useMutation(REGISTER, {
+    fetchPolicy: 'no-cache'
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -60,9 +62,11 @@ function CreateAccountPage() {
 
       if (data?.register) {
         login(data.register.token, data.register.user);
+        console.log('Registration successful');
         router.push('/verify-email');
       }
     } catch (err: any) {
+      console.error('Registration error:', err);
       setError(err.message || 'An error occurred during registration');
     } finally {
       setLoading(false);
@@ -130,7 +134,7 @@ function CreateAccountPage() {
             
             {/* Login redirect text */}
             <div className="text-center mt-6 text-sm text-gray-600">
-              Already have an account?
+              Already have an account?{" "}
               <Link href="/sign-in" className="text-teal-600 hover:text-teal-800 font-medium">
                 Sign in
               </Link>

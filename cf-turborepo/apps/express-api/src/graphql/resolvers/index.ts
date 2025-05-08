@@ -4,13 +4,24 @@ import { initiativeResolvers } from './initiativeResolvers';
 import { conferenceResolvers } from './conferenceResolvers';
 import { eventResolvers } from './eventResolvers';
 import { storeResolvers } from './storeResolvers';
-import { chatResolvers } from './chatResolvers';
-import { blogResolvers } from './blogResolvers';
 import { newsResolvers } from './newsResolvers';
+import { blogResolvers } from './blogResolvers';
 import { recipeResolvers } from './recipeResolvers';
 import { storyResolvers } from './storyResolvers';
+import { chatResolvers } from './chatResolvers';
+import { paymentResolvers } from './paymentResolvers';
+import { PubSub } from 'graphql-subscriptions';
 
-// Date scalar type
+// Създаваме глобална PubSub инстанция
+export const pubsub = new PubSub();
+
+// Събития, които могат да бъдат публикувани
+export const EVENTS = {
+  CHAT_MESSAGE_SENT: 'CHAT_MESSAGE_SENT',
+  CAMPAIGN_PARTICIPANT_PENDING: 'CAMPAIGN_PARTICIPANT_PENDING'
+};
+
+// Date скалар тип
 const dateScalar = {
   Date: {
     __parseValue(value: unknown) {
@@ -22,22 +33,23 @@ const dateScalar = {
   },
 };
 
-// Subscription resolver
-const subscriptionResolvers = {
-  Subscription: {
-    messageSent: {
-      subscribe: (_: unknown, { roomId, userId }: { roomId?: string, userId?: string }) => {
-        // Тук ще се имплементира логиката за абонирането за съобщения
-        // Ще използваме PubSub механизма на Apollo Server
-      }
-    }
+// Интерфейси за типизация
+interface MessageSentPayload {
+  messageSent: {
+    roomId: string;
+    senderId: string;
+    receiverId: string;
   }
-};
+}
 
-// Обединяваме всички resolvers
+interface MessageSentVariables {
+  roomId?: string;
+  userId?: string;
+}
+
+// Обединяване на всички резолвери
 export const resolvers = {
   ...dateScalar,
-  
   Query: {
     ...userResolvers.Query,
     ...campaignResolvers.Query,
@@ -45,13 +57,13 @@ export const resolvers = {
     ...conferenceResolvers.Query,
     ...eventResolvers.Query,
     ...storeResolvers.Query,
-    ...chatResolvers.Query,
-    ...blogResolvers.Query,
     ...newsResolvers.Query,
+    ...blogResolvers.Query,
     ...recipeResolvers.Query,
     ...storyResolvers.Query,
+    ...chatResolvers.Query,
+    ...paymentResolvers.Query
   },
-  
   Mutation: {
     ...userResolvers.Mutation,
     ...campaignResolvers.Mutation,
@@ -59,16 +71,32 @@ export const resolvers = {
     ...conferenceResolvers.Mutation,
     ...eventResolvers.Mutation,
     ...storeResolvers.Mutation,
-    ...chatResolvers.Mutation,
-    ...blogResolvers.Mutation,
     ...newsResolvers.Mutation,
+    ...blogResolvers.Mutation,
     ...recipeResolvers.Mutation,
     ...storyResolvers.Mutation,
+    ...chatResolvers.Mutation,
+    ...paymentResolvers.Mutation
   },
-  
-  // Специфични resolver-и за типове
-  Donor: storeResolvers.Donor,
-  
-  // Добавяме subscription-и
-  ...subscriptionResolvers,
+  Subscription: {
+    messageSent: {
+      subscribe: (_: unknown, { roomId, userId }: MessageSentVariables) => {
+        const filter = (payload: MessageSentPayload, variables: MessageSentVariables) => {
+          if (variables.roomId && payload.messageSent.roomId !== variables.roomId) {
+            return false;
+          }
+          if (variables.userId && payload.messageSent.senderId !== variables.userId && 
+              payload.messageSent.receiverId !== variables.userId) {
+            return false;
+          }
+          return true;
+        };
+
+        return (pubsub as any).asyncIterator([EVENTS.CHAT_MESSAGE_SENT], { filter });
+      }
+    },
+    campaignParticipantPending: {
+      subscribe: () => (pubsub as any).asyncIterator([EVENTS.CAMPAIGN_PARTICIPANT_PENDING])
+    }
+  }
 };

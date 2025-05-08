@@ -67,6 +67,12 @@ const UserSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  deactivatedAt: Date,
+  deactivationReason: String,
   emailVerificationToken: String,
   emailVerificationExpires: Date,
   passwordResetToken: String,
@@ -74,7 +80,21 @@ const UserSchema = new Schema({
   profile: {
     type: ProfileSchema,
     default: {}
-  }
+  },
+  stripeCustomerId: {
+    type: String,
+    unique: true,
+    sparse: true // Позволява null/undefined стойности
+  },
+  // Запазени платежни методи - само последните 4 цифри и информация за визуализация
+  paymentMethods: [{
+    paymentMethodId: { type: String },
+    brand: { type: String },
+    last4: { type: String },
+    expMonth: { type: Number },
+    expYear: { type: Number },
+    isDefault: { type: Boolean, default: false }
+  }]
 }, { 
   timestamps: true,
   toJSON: { virtuals: true },
@@ -139,6 +159,26 @@ UserSchema.methods.generateEmailVerificationToken = function(): string {
   this.emailVerificationExpires = Date.now() + 86400000;
   
   return verificationToken;
+};
+
+// Method for generating refresh token for a user
+UserSchema.methods.generateRefreshToken = async function(ip: string, userAgent: string): Promise<string> {
+  const refreshToken = crypto.randomBytes(64).toString('hex');
+  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 дни
+  
+  // Тук използваме импортиран модел динамично, за да избегнем кръгови зависимости
+  const RefreshToken = mongoose.model('RefreshToken');
+  
+  await RefreshToken.create({
+    token: refreshToken,
+    userId: this._id,
+    ip,
+    userAgent,
+    isValid: true,
+    expires
+  });
+  
+  return refreshToken;
 };
 
 const User = mongoose.model<IUserDocument>('User', UserSchema);

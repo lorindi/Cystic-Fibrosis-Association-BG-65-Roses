@@ -6,10 +6,28 @@ import Link from 'next/link'
 import Button from '../buttons/Button'
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
+import { isPublicPath } from '@/lib/constants';
+import LogoutButton from '../auth/LogoutButton';
+
+// Функция за проверка дали потребителят има достъп до админ панела
+const hasAdminAccess = (user: any) => {
+  // Ако потребителят е админ
+  if (user?.role === 'admin') return true;
+  
+  // Ако потребителят има групи и поне една от тях е специфична група
+  if (user?.groups && user.groups.length > 0) {
+    const adminAccessGroups = ['campaigns', 'initiatives', 'conferences', 'events', 'news', 'blog', 'recipes'];
+    return user.groups.some((group: string) => adminAccessGroups.includes(group));
+  }
+  
+  return false;
+};
 
 function WebMenu() {
-  const { user, logout } = useAuth();
   const pathname = usePathname();
+  
+  // Use the auth hook
+  const { user, loading } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -22,6 +40,12 @@ function WebMenu() {
       ? "text-teal-600 font-medium" 
       : "text-gray-700 hover:text-teal-600";
   };
+
+  // Показваме loading индикатор само за непублични страници
+  // За публични показваме нормално менюто, но с индикация за loading
+  if (loading && !isPublicPath(pathname)) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className='flex items-center justify-between w-full px-10'>
@@ -36,7 +60,7 @@ function WebMenu() {
           {user ? (
             <>
               <li><Link href='/profile' className={getLinkClassName('/profile')}>Profile</Link></li>
-              {user.role === 'admin' && (
+              {hasAdminAccess(user) && (
                 <li>
                   <Link 
                     href='/admin' 
@@ -48,14 +72,7 @@ function WebMenu() {
                   </Link>
                 </li>
               )}
-              <li>
-                <button 
-                  onClick={logout}
-                  className="text-teal-600 hover:text-teal-800"
-                >
-                  Logout
-                </button>
-              </li>
+              <li><LogoutButton /></li>
             </>
           ) : (
             <>
@@ -65,7 +82,9 @@ function WebMenu() {
           )}
         </ul>
         <div className='flex items-center justify-end w-full max-w-[240px]'>
-          <Button type='outlined' text='Make Donate'/>
+          <Link href="/donate">
+            <Button type='outlined' text='Make Donate'/>
+          </Link>
         </div>
       </div>
     </div>

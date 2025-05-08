@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from '@apollo/client';
-import { VERIFY_EMAIL, RESEND_VERIFICATION_EMAIL } from '@/lib/apollo/mutations';
+import { VERIFY_EMAIL, RESEND_VERIFICATION_EMAIL } from '@/graphql/operations';
 import { useAuth } from '@/lib/context/AuthContext';
 import DnaBackground from '@/components/auth/DnaBackground';
 import AuthFormWrapper from '@/components/auth/AuthFormWrapper';

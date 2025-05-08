@@ -9,9 +9,18 @@ export const userTypeDefs = gql`
     role: UserRole!
     groups: [UserGroup!]
     isEmailVerified: Boolean!
+    isActive: Boolean!
+    deactivatedAt: Date
     profile: UserProfile
     createdAt: Date!
     updatedAt: Date!
+  }
+
+  # Pagination types
+  type PaginatedUsers {
+    users: [User!]!
+    totalCount: Int!
+    hasMore: Boolean!
   }
 
   type VerificationResponse {
@@ -114,13 +123,43 @@ export const userTypeDefs = gql`
     relation: String!
   }
   
+  input DeactivateAccountInput {
+    reason: String
+    feedback: String
+  }
+  
   # User responses
   type AuthResponse {
     token: String!
     user: User!
   }
 
+  # Alias за поддържане на refreshToken мутацията
+  type AuthPayload {
+    token: String!
+    user: User!
+  }
+
+  # User sessions
+  type UserSession {
+    id: ID!
+    ip: String!
+    userAgent: String!
+    createdAt: Date!
+    expiresAt: Date!
+  }
+  
+  type LoginHistory {
+    id: ID!
+    ip: String!
+    userAgent: String!
+    status: String!
+    loggedInAt: Date!
+  }
+
   extend type Mutation {
     googleAuth(input: GoogleAuthInput!): AuthResponse!
+    deactivateAccount(input: DeactivateAccountInput): Boolean!
+    reactivateAccount(userId: ID!): Boolean!
   }
 `; 

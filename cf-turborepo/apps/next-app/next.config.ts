@@ -3,6 +3,7 @@ import { NextConfig } from 'next';
 const config: NextConfig = {
   reactStrictMode: true,
   experimental: {
+    optimizeCss: true,
     appDir: true,
   },
   async redirects() {

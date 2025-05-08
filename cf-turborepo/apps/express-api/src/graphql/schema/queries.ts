@@ -6,51 +6,58 @@ export const queryTypeDefs = gql`
     # Users
     getUser(id: ID!): User
     getCurrentUser: User
-    getUsers: [User!]
-    getUsersByRole(role: UserRole!): [User!]
-    getUsersByGroup(group: UserGroup!): [User!]
+    getUsers(limit: Int, offset: Int, noLimit: Boolean): [User!]
+    getPaginatedUsers(limit: Int, offset: Int, noLimit: Boolean): PaginatedUsers!
+    getUsersByRole(role: UserRole!, limit: Int, offset: Int, noLimit: Boolean): [User!]
+    getUsersByGroup(group: UserGroup!, limit: Int, offset: Int, noLimit: Boolean): [User!]
     
     # Campaigns
     getCampaign(id: ID!): Campaign
-    getCampaigns: [Campaign!]
+    getCampaigns(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
+    getFilteredCampaigns(filter: CampaignFilterInput, limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
     getCampaignEvents(campaignId: ID!): [CampaignEvent!]
-    getUserCampaigns: [Campaign!]
+    getCampaignDonations(campaignId: ID!): [CampaignDonation!]
+    getUserCampaigns(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
+    getPendingCampaignRequests(limit: Int, offset: Int, noLimit: Boolean): [Campaign!]
+    getCampaignNotifications: [CampaignNotification!]
+    getUserCampaignStatus: [UserCampaignStatus!]
     
     # Initiatives
-    getInitiative(id: ID!): Initiative
-    getInitiatives: [Initiative!]
-    getUserInitiatives: [Initiative!]
+    getInitiative(id: ID!): Initiative!
+    getInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]!
+    getUserInitiatives(limit: Int, offset: Int, noLimit: Boolean): [Initiative!]!
+    getPendingInitiativeRequests(initiativeId: ID!): [User!]!
     
     # Conferences
     getConference(id: ID!): Conference
-    getConferences: [Conference!]
+    getConferences(limit: Int, offset: Int, noLimit: Boolean): [Conference!]
     
     # Events
     getEvent(id: ID!): Event
-    getEvents: [Event!]
+    getEvents(limit: Int, offset: Int, noLimit: Boolean): [Event!]
     
     # Donors
-    getDonors: [Donor!]
+    getDonors(limit: Int, offset: Int, noLimit: Boolean): [Donor!]
     getDonor(id: ID!): Donor
     
     # Charity shop
-    getStoreItems: [StoreItem!]
+    getStoreItems(limit: Int, offset: Int, noLimit: Boolean): [StoreItem!]
     getStoreItem(id: ID!): StoreItem
     
     # News
-    getNews: [News!]
+    getNews(limit: Int, offset: Int, noLimit: Boolean): [News!]
     getNewsItem(id: ID!): News
     
     # Blog
-    getBlogPosts: [BlogPost!]
+    getBlogPosts(limit: Int, offset: Int, noLimit: Boolean): [BlogPost!]
     getBlogPost(id: ID!): BlogPost
     
     # Recipes
-    getRecipes: [Recipe!]
+    getRecipes(limit: Int, offset: Int, noLimit: Boolean): [Recipe!]
     getRecipe(id: ID!): Recipe
     
     # Stories
-    getStories: [Story!]
+    getStories(limit: Int, offset: Int, noLimit: Boolean): [Story!]
     getStory(id: ID!): Story
     
     # Chat
@@ -58,5 +65,9 @@ export const queryTypeDefs = gql`
     
     # AI
     askAI(query: String!): AIResponse
+    
+    # Сесии и история на логванията
+    getUserSessions: [UserSession!]!
+    getLoginHistory(limit: Int): [LoginHistory!]!
   }
 `; 

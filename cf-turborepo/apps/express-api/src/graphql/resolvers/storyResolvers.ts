@@ -5,11 +5,27 @@ import { ContextType, checkAuth } from '../utils/auth';
 
 export const storyResolvers = {
   Query: {
-    getStories: async () => {
+    getStories: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await Story.find()
+        let query = Story.find()
           .populate('author')
           .sort({ createdAt: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching stories');
       }

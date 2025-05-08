@@ -37,6 +37,10 @@ const InitiativeSchema = new Schema<IInitiativeDocument>({
     type: Schema.Types.ObjectId, 
     ref: 'User'
   }],
+  pendingParticipants: [{ 
+    type: Schema.Types.ObjectId, 
+    ref: 'User'
+  }],
   createdBy: { 
     type: Schema.Types.ObjectId, 
     ref: 'User',
@@ -54,10 +58,16 @@ InitiativeSchema.index({ startDate: 1 });
 InitiativeSchema.index({ endDate: 1 });
 InitiativeSchema.index({ createdBy: 1 });
 InitiativeSchema.index({ participants: 1 });
+InitiativeSchema.index({ pendingParticipants: 1 });
 
 // Виртуално поле, което показва колко души участват
 InitiativeSchema.virtual('participantsCount').get(function() {
   return this.participants.length;
+});
+
+// Виртуално поле, което показва колко души чакат одобрение
+InitiativeSchema.virtual('pendingParticipantsCount').get(function() {
+  return this.pendingParticipants.length;
 });
 
 // Виртуално поле, което проверява дали инициативата е активна

@@ -6,10 +6,13 @@ export const mutationTypeDefs = gql`
     # Authentication
     register(input: RegisterInput!): AuthResponse!
     login(input: LoginInput!): AuthResponse!
+    logout: Boolean!
     updateProfile(input: ProfileUpdateInput!): User!
     setUserRole(userId: ID!, role: UserRole!): User!
     addUserToGroup(userId: ID!, group: UserGroup!): User!
     removeUserFromGroup(userId: ID!, group: UserGroup!): User!
+    deactivateAccount(input: DeactivateAccountInput): Boolean!
+    reactivateAccount(userId: ID!): Boolean!
 
     # Email verification
     resendVerificationEmail: Boolean!
@@ -24,13 +27,21 @@ export const mutationTypeDefs = gql`
     deleteCampaignEvent(eventId: ID!): Boolean!
     joinCampaign(id: ID!): Campaign!
     leaveCampaign(id: ID!): Campaign!
+    approveCampaignParticipant(campaignId: ID!, userId: ID!): Campaign!
+    rejectCampaignParticipant(campaignId: ID!, userId: ID!): Campaign!
+    addCampaignComment(campaignId: ID!, comment: String, rating: Int): Campaign!
+    updateCampaignComment(campaignId: ID!, commentId: ID!, comment: String, rating: Int): Campaign!
+    deleteCampaignComment(campaignId: ID!, commentId: ID!): Campaign!
+    updateCampaignImages(id: ID!, images: [String!]!, imagesCaptions: [String!]): Campaign!
     
     # Initiatives
     createInitiative(input: InitiativeInput!): Initiative!
     updateInitiative(id: ID!, input: InitiativeInput!): Initiative!
     deleteInitiative(id: ID!): Boolean!
-    joinInitiative(id: ID!): Initiative!
-    leaveInitiative(id: ID!): Initiative!
+    joinInitiative(initiativeId: ID!): Boolean!
+    leaveInitiative(initiativeId: ID!): Boolean!
+    approveInitiativeParticipant(initiativeId: ID!, userId: ID!): Boolean!
+    rejectInitiativeParticipant(initiativeId: ID!, userId: ID!): Boolean!
     addInitiativeItem(initiativeId: ID!, input: InitiativeItemInput!): InitiativeItem!
     updateInitiativeItem(itemId: ID!, input: InitiativeItemInput!): InitiativeItem!
     deleteInitiativeItem(itemId: ID!): Boolean!
@@ -87,5 +98,10 @@ export const mutationTypeDefs = gql`
     
     # Chat
     sendChatMessage(input: ChatMessageInput!): ChatMessage!
+    
+    # Рефреш токен мутации
+    refreshToken: AuthPayload
+    invalidateToken: Boolean
+    invalidateAllTokens: Boolean
   }
 `; 

@@ -33,6 +33,16 @@ export interface IContact {
   };
 }
 
+// Интерфейс за платежен метод
+export interface IPaymentMethod {
+  paymentMethodId: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+}
+
 // Базов интерфейс за данни на потребителя
 export interface IUser {
   name: string;
@@ -41,6 +51,9 @@ export interface IUser {
   role: UserRole;
   groups: UserGroup[];
   isEmailVerified: boolean;
+  isActive: boolean;
+  deactivatedAt?: Date;
+  deactivationReason?: string;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   passwordResetToken?: string;
@@ -56,6 +69,8 @@ export interface IUser {
     childName?: string; // For parents
     companyName?: string; // For donors
   };
+  stripeCustomerId?: string;
+  paymentMethods?: IPaymentMethod[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +80,7 @@ export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
   generatePasswordResetToken(): string;
   generateEmailVerificationToken(): string;
+  generateRefreshToken(ip: string, userAgent: string): Promise<string>;
 }
 
 // Комбиниран интерфейс за модела

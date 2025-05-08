@@ -1,6 +1,7 @@
 import { AuthenticationError } from '../utils/errors';
 import { UserRole, UserGroup } from '../../types/user.types';
 import Initiative from '../../models/initiative.model';
+import User from '../../models/user.model';
 import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
 
 export const initiativeResolvers = {
@@ -9,7 +10,8 @@ export const initiativeResolvers = {
       try {
         const initiative = await Initiative.findById(id)
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate('pendingParticipants');
           
         if (!initiative) {
           throw new Error('Initiative not found');
@@ -21,30 +23,87 @@ export const initiativeResolvers = {
       }
     },
     
-    getInitiatives: async () => {
+    getInitiatives: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await Initiative.find()
+        let query = Initiative.find()
           .populate('createdBy')
           .populate('participants')
+          .populate('pendingParticipants')
           .sort({ createdAt: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching initiatives');
       }
     },
     
-    getUserInitiatives: async (_: unknown, __: unknown, context: ContextType) => {
+    getUserInitiatives: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean },
+      context: ContextType
+    ) => {
       const user = checkAuth(context);
       
       try {
         // Търсим всички инициативи, в които потребителят е записан като участник
-        const initiatives = await Initiative.find({ participants: user.id })
+        let query = Initiative.find({ participants: user.id })
           .populate('createdBy')
           .populate('participants')
+          .populate('pendingParticipants')
           .sort({ startDate: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
           
-        return initiatives;
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+          
+        return await query;
       } catch (err) {
-            throw new Error('Error fetching user initiatives');
+        throw new Error('Error fetching user initiatives');
+      }
+    },
+    
+    getPendingInitiativeRequests: async (
+      _: unknown, 
+      { initiativeId }: { initiativeId: string }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Проверка дали потребителят е админ или е в група "инициативи"
+      if (user.role !== UserRole.ADMIN && (!user.groups || !user.groups.includes(UserGroup.INITIATIVES))) {
+        throw new AuthenticationError('You do not have permission to view pending participants');
+      }
+      
+      try {
+        const initiative = await Initiative.findById(initiativeId).populate('pendingParticipants');
+        if (!initiative) {
+          throw new Error('Initiative not found');
+        }
+        
+        return initiative.pendingParticipants;
+      } catch (err) {
+        throw new Error('Error fetching pending initiative requests');
       }
     },
   },
@@ -65,12 +124,15 @@ export const initiativeResolvers = {
         const newInitiative = new Initiative({
           ...input,
           createdBy: user.id,
+          participants: [],
+          pendingParticipants: []
         });
         
         const savedInitiative = await newInitiative.save();
         return await Initiative.findById(savedInitiative._id)
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate('pendingParticipants');
       } catch (err: unknown) {
         if (err instanceof Error) {
           throw new Error(`Error creating initiative: ${err.message}`);
@@ -107,7 +169,8 @@ export const initiativeResolvers = {
           { new: true, runValidators: true }
         )
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate('pendingParticipants');
           
         return updatedInitiative;
       } catch (err: unknown) {
@@ -146,68 +209,158 @@ export const initiativeResolvers = {
       }
     },
     
-    joinInitiative: async (_: unknown, { id }: { id: string }, context: ContextType) => {
+    joinInitiative: async (_: unknown, { initiativeId }: { initiativeId: string }, context: ContextType) => {
       const user = checkAuth(context);
       
-      // Само пациенти могат да се записват за инициативи според изискванията
-      if (user.role !== UserRole.PATIENT) {
-        throw new AuthenticationError('Only patients can register for initiatives');
-      }
-      
       try {
-        const initiative = await Initiative.findById(id);
+        const initiative = await Initiative.findById(initiativeId);
         if (!initiative) {
           throw new Error('Initiative not found');
         }
         
-        // Проверка дали потребителят вече е записан
+        // Проверка дали потребителят вече е записан или чака одобрение
         if (initiative.participants.some(p => p.toString() === user.id)) {
           throw new Error('You are already registered for this initiative');
         }
         
-        // Записване за инициативата
-        initiative.participants.push(user.id);
+        if (initiative.pendingParticipants.some(p => p.toString() === user.id)) {
+          throw new Error('Your request to join this initiative is already pending approval');
+        }
+        
+        // Добавяне на потребителя в списъка с чакащи одобрение
+        initiative.pendingParticipants.push(user.id);
         await initiative.save();
         
-        return await Initiative.findById(id)
-          .populate('createdBy')
-          .populate('participants');
+        return true;
       } catch (err: unknown) {
         if (err instanceof Error) {
-          throw new Error(`Error registering for initiative: ${err.message}`);
+          throw new Error(`Error joining initiative: ${err.message}`);
         }
-        throw new Error('Unexpected error during initiative registration');
+        throw new Error('Unexpected error during initiative join request');
       }
     },
     
-    leaveInitiative: async (_: unknown, { id }: { id: string }, context: ContextType) => {
+    leaveInitiative: async (_: unknown, { initiativeId }: { initiativeId: string }, context: ContextType) => {
       const user = checkAuth(context);
       
       try {
-        const initiative = await Initiative.findById(id);
+        const initiative = await Initiative.findById(initiativeId);
         if (!initiative) {
           throw new Error('Initiative not found');
         }
         
-        // Проверка дали потребителят е записан
-        if (!initiative.participants.some(p => p.toString() === user.id)) {
+        // Проверка дали потребителят е записан или чака одобрение
+        const isParticipant = initiative.participants.some(p => p.toString() === user.id);
+        const isPending = initiative.pendingParticipants.some(p => p.toString() === user.id);
+        
+        if (!isParticipant && !isPending) {
           throw new Error('You are not registered for this initiative');
         }
         
-        // Отписване от инициативата
-        initiative.participants = initiative.participants.filter(
-          p => p.toString() !== user.id
+        // Премахване от съответния списък
+        if (isParticipant) {
+          initiative.participants = initiative.participants.filter(
+            p => p.toString() !== user.id
+          );
+        }
+        
+        if (isPending) {
+          initiative.pendingParticipants = initiative.pendingParticipants.filter(
+            p => p.toString() !== user.id
+          );
+        }
+        
+        await initiative.save();
+        
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error leaving initiative: ${err.message}`);
+        }
+        throw new Error('Unexpected error during initiative leave');
+      }
+    },
+    
+    approveInitiativeParticipant: async (
+      _: unknown, 
+      { initiativeId, userId }: { initiativeId: string, userId: string }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Проверка дали потребителят е админ или е в група "инициативи"
+      if (user.role !== UserRole.ADMIN && (!user.groups || !user.groups.includes(UserGroup.INITIATIVES))) {
+        throw new AuthenticationError('You do not have permission to approve participants');
+      }
+      
+      try {
+        const initiative = await Initiative.findById(initiativeId);
+        if (!initiative) {
+          throw new Error('Initiative not found');
+        }
+        
+        // Проверка дали потребителят е в списъка с чакащи
+        if (!initiative.pendingParticipants.some(p => p.toString() === userId)) {
+          throw new Error('User is not in the pending list for this initiative');
+        }
+        
+        // Проверка дали потребителят съществува
+        const userExists = await User.exists({ _id: userId });
+        if (!userExists) {
+          throw new Error('User not found');
+        }
+        
+        // Премахване от чакащите и добавяне към одобрените участници
+        initiative.pendingParticipants = initiative.pendingParticipants.filter(
+          p => p.toString() !== userId
+        );
+        initiative.participants.push(userId);
+        await initiative.save();
+        
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error approving participant: ${err.message}`);
+        }
+        throw new Error('Unexpected error during participant approval');
+      }
+    },
+    
+    rejectInitiativeParticipant: async (
+      _: unknown, 
+      { initiativeId, userId }: { initiativeId: string, userId: string }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Проверка дали потребителят е админ или е в група "инициативи"
+      if (user.role !== UserRole.ADMIN && (!user.groups || !user.groups.includes(UserGroup.INITIATIVES))) {
+        throw new AuthenticationError('You do not have permission to reject participants');
+      }
+      
+      try {
+        const initiative = await Initiative.findById(initiativeId);
+        if (!initiative) {
+          throw new Error('Initiative not found');
+        }
+        
+        // Проверка дали потребителят е в списъка с чакащи
+        if (!initiative.pendingParticipants.some(p => p.toString() === userId)) {
+          throw new Error('User is not in the pending list for this initiative');
+        }
+        
+        // Премахване от чакащите
+        initiative.pendingParticipants = initiative.pendingParticipants.filter(
+          p => p.toString() !== userId
         );
         await initiative.save();
         
-        return await Initiative.findById(id)
-          .populate('createdBy')
-          .populate('participants');
+        return true;
       } catch (err: unknown) {
         if (err instanceof Error) {
-          throw new Error(`Error unregistering from initiative: ${err.message}`);
+          throw new Error(`Error rejecting participant: ${err.message}`);
         }
-        throw new Error('Unexpected error during initiative unregistration');
+        throw new Error('Unexpected error during participant rejection');
       }
     },
     
@@ -243,48 +396,6 @@ export const initiativeResolvers = {
           throw new Error(`Error adding item to initiative: ${err.message}`);
         }
         throw new Error('Unexpected error during initiative item addition');
-      }
-    },
-    
-    updateInitiativeItem: async (
-      _: unknown, 
-      { itemId, input }: { itemId: string; input: any }, 
-      context: ContextType
-    ) => {
-      const user = checkAuth(context);
-      // Проверка дали потребителят е админ или е в група "инициативи"
-      if (user.role !== UserRole.ADMIN && (!user.groups || !user.groups.includes(UserGroup.INITIATIVES))) {
-        throw new AuthenticationError('You do not have permission to edit items in initiatives');
-      }
-      
-      try {
-        // Намираме инициативата, съдържаща този артикул
-        const initiative = await Initiative.findOne({ 'items._id': itemId });
-        if (!initiative) {
-          throw new Error('Initiative or item not found');
-        }
-        
-        // Ако не е админ, проверяваме дали е създател на инициативата
-        if (user.role !== UserRole.ADMIN && initiative.createdBy.toString() !== user.id) {
-          throw new AuthenticationError('You can only edit items in initiatives you have created');
-        }
-        
-        // Намираме индекса на артикула
-        const itemIndex = initiative.items.findIndex(i => i._id?.toString() === itemId);
-        if (itemIndex === -1) {
-          throw new Error('Item not found');
-        }
-        
-        // Актуализираме артикула
-        initiative.items[itemIndex] = { ...initiative.items[itemIndex], ...input };
-        await initiative.save();
-        
-        return initiative.items[itemIndex];
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          throw new Error(`Error updating initiative item: ${err.message}`);
-        }
-        throw new Error('Unexpected error during initiative item update');
       }
     },
     

@@ -21,12 +21,28 @@ export const conferenceResolvers = {
       }
     },
     
-    getConferences: async () => {
+    getConferences: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await Conference.find()
+        let query = Conference.find()
           .populate('createdBy')
           .populate('participants')
           .sort({ startDate: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching conferences');
       }

@@ -4,5 +4,6 @@ export const subscriptionTypeDefs = gql`
   # Subscription
   type Subscription {
     messageSent(roomId: String, userId: ID): ChatMessage!
+    campaignParticipantPending: CampaignNotification!
   }
 `; 

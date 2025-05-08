@@ -1,15 +1,37 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from 'react';
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Logo from "../logo/Logo";
 import { useAuth } from '@/lib/context/AuthContext';
 import { usePathname } from 'next/navigation';
+import LogoutButton from '../auth/LogoutButton';
+
+// Функция за проверка дали потребителят има достъп до админ панела
+const hasAdminAccess = (user: any) => {
+  // Ако потребителят е админ
+  if (user?.role === 'admin') return true;
+  
+  // Ако потребителят има групи и поне една от тях е специфична група
+  if (user?.groups && user.groups.length > 0) {
+    const adminAccessGroups = ['campaigns', 'initiatives', 'conferences', 'events', 'news', 'blog', 'recipes'];
+    return user.groups.some((group: string) => adminAccessGroups.includes(group));
+  }
+  
+  return false;
+};
 
 function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
   const pathname = usePathname();
   
+  // Use the auth hook
+  const { user } = useAuth();
+  
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
     if (path !== '/' && pathname.startsWith(path)) return true;
@@ -23,31 +45,18 @@ function MobileMenu() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <Logo type="navigation" />
-
-        <div
-          className="flex flex-col gap-[4.5px] cursor-pointer z-20"
-          onClick={() => setIsOpen((prev) => !prev)}
-        >
-          <div
-            className={`w-6 h-1 bg-[#0EB9D9] rounded-sm ${
-              isOpen ? "rotate-45" : ""
-            } origin-left ease-in-out duration-500`}
-          />
-          <div
-            className={`w-6 h-1 bg-[#0EB9D9] rounded-sm ${
-              isOpen ? "opacity-0" : ""
-            } ease-in-out duration-500`}
-          />
-          <div
-            className={`w-6 h-1 bg-[#0EB9D9] rounded-sm ${
-              isOpen ? "-rotate-45" : ""
-            } origin-left ease-in-out duration-500`}
-          />
-        </div>
-      </div>
+    <div className="relative flex justify-center items-center h-full">
+      <button
+        onClick={toggleMenu}
+        className="text-gray-700 hover:text-teal-600 focus:outline-none focus:text-teal-600"
+        aria-label="Toggle menu"
+      >
+        {isOpen ? (
+          <X className="h-6 w-6" />
+        ) : (
+          <Menu className="h-6 w-6" />
+        )}
+      </button>
 
       {isOpen && (
         <ul className="absolute left-0 top-[60px] sm:top-[87px] w-full h-[calc(100vh-70px)] sm:h-[calc(100vh-87px)] bg-white flex flex-col items-center justify-center gap-8 font-medium text-xl z-10">
@@ -59,7 +68,7 @@ function MobileMenu() {
           {user ? (
             <>
               <li><Link href='/profile' className={getLinkClassName('/profile')}>Profile</Link></li>
-              {user.role === 'admin' && (
+              {hasAdminAccess(user) && (
                 <li>
                   <Link 
                     href='/admin' 
@@ -71,14 +80,7 @@ function MobileMenu() {
                   </Link>
                 </li>
               )}
-              <li>
-                <button 
-                  onClick={logout}
-                  className="text-teal-600 hover:text-teal-800"
-                >
-                  Logout
-                </button>
-              </li>
+              <li><LogoutButton /></li>
             </>
           ) : (
             <>

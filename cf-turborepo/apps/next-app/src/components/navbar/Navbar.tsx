@@ -3,15 +3,12 @@ import React from "react";
 import WebMenu from "./WebMenu";
 import MobileMenu from "./MobileMenu";
 import { usePathname } from "next/navigation";
+import { shouldHideNavbar } from "@/lib/constants";
 
 function Navbar() {
   const pathname = usePathname();
-  const hideNavbar = pathname.startsWith("/sign-in") || 
-                    pathname.startsWith("/create-account") ||
-                    pathname.startsWith("/verify-email") ||
-                    pathname.startsWith("/admin");
-
-  if (hideNavbar) {
+  
+  if (shouldHideNavbar(pathname)) {
     return null;
   }
 

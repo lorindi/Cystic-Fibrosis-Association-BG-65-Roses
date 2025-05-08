@@ -4,6 +4,7 @@ import { userTypeDefs } from './user';
 import { campaignTypeDefs } from './campaign';
 import { initiativeTypeDefs } from './initiative';
 import { conferenceTypeDefs } from './conference';
+import { paymentTypeDefs } from './payment';
 import { queryTypeDefs } from './queries';
 import { mutationTypeDefs } from './mutations';
 import { subscriptionTypeDefs } from './subscriptions';
@@ -248,6 +249,7 @@ export const typeDefs = [
   campaignTypeDefs,
   initiativeTypeDefs,
   conferenceTypeDefs,
+  paymentTypeDefs,
   additionalTypeDefs,
   queryTypeDefs,
   mutationTypeDefs,

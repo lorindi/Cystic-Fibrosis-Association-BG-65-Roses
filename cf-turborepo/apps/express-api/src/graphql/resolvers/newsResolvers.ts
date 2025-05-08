@@ -5,11 +5,27 @@ import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
 
 export const newsResolvers = {
   Query: {
-    getNews: async () => {
+    getNews: async (
+      _: unknown,
+      { limit, offset, noLimit }: { limit?: number; offset?: number; noLimit?: boolean }
+    ) => {
       try {
-        return await News.find()
+        let query = News.find()
           .populate('author')
           .sort({ createdAt: -1 });
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        return await query;
       } catch (err) {
         throw new Error('Error fetching news');
       }
