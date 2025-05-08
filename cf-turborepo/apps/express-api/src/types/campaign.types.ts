@@ -9,6 +9,15 @@ export interface ICampaignEvent {
   location: string;
 }
 
+export interface ICampaignDonation {
+  _id?: Types.ObjectId;
+  user: Types.ObjectId | IUserDocument;
+  amount: number;
+  comment?: string;
+  rating?: number; // рейтинг от 1 до 5
+  date: Date;
+}
+
 export interface ICampaignDocument extends Document {
   title: string;
   description: string;
@@ -22,4 +31,19 @@ export interface ICampaignDocument extends Document {
   createdBy: IUserDocument['_id'];
   createdAt: Date;
   updatedAt: Date;
+  images: string[]; // масив с URL адреси на изображения (максимум 10)
+  imagesCaptions?: string[]; // опционални заглавия за изображенията
+  donations: ICampaignDonation[]; // масив от донации с коментари и рейтинги
+  totalRating?: number; // средна оценка на кампанията
+}
+
+// Филтриране на кампании
+export enum CampaignSortOption {
+  HIGHEST_GOAL = 'highest_goal',
+  LOWEST_GOAL = 'lowest_goal',
+  MOST_FUNDED = 'most_funded',
+  LEAST_FUNDED = 'least_funded',
+  NEWEST = 'newest',
+  OLDEST = 'oldest',
+  HIGHEST_RATED = 'highest_rated'
 } 

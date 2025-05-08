@@ -4,6 +4,10 @@ import Campaign from '../../models/campaign.model';
 import { ContextType, checkAuth, checkPermissions } from '../utils/auth';
 import { UserGroup } from '../../types/user.types';
 import { pubsub, EVENTS } from './index';
+import { CampaignSortOption } from '../../types/campaign.types';
+import { Payment } from '../../models/payment.model';
+import { PaymentType, PaymentStatus } from '../../types/payment.types';
+import mongoose from 'mongoose';
 
 export const campaignResolvers = {
   Query: {
@@ -11,7 +15,11 @@ export const campaignResolvers = {
       try {
         const campaign = await Campaign.findById(id)
           .populate('createdBy')
-          .populate('participants');
+          .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          });
           
         if (!campaign) {
           throw new Error('Campaign not found');
@@ -31,6 +39,10 @@ export const campaignResolvers = {
         let query = Campaign.find()
           .populate('createdBy')
           .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          })
           .sort({ createdAt: -1 });
         
         // Прилагаме пагинация, само ако noLimit не е true
@@ -47,6 +59,151 @@ export const campaignResolvers = {
         return await query;
       } catch (err) {
         throw new Error('Error fetching campaigns');
+      }
+    },
+    
+    getFilteredCampaigns: async (
+      _: unknown,
+      { 
+        filter, 
+        limit, 
+        offset, 
+        noLimit 
+      }: { 
+        filter: { 
+          sortBy?: string;
+          isActive?: boolean;
+          minGoal?: number;
+          maxGoal?: number;
+          minRating?: number;
+          hasEvents?: boolean;
+        }; 
+        limit?: number; 
+        offset?: number; 
+        noLimit?: boolean 
+      }
+    ) => {
+      try {
+        // Създаваме обект за условията на филтриране
+        let filterCriteria: any = {};
+        
+        // Филтриране по активност
+        if (filter.isActive !== undefined) {
+          const now = new Date();
+          if (filter.isActive) {
+            // Активна кампания: startDate <= now и (endDate не съществува или endDate >= now)
+            filterCriteria.startDate = { $lte: now };
+            filterCriteria.$or = [
+              { endDate: { $exists: false } },
+              { endDate: { $gte: now } }
+            ];
+          } else {
+            // Неактивна кампания: startDate > now или endDate < now
+            filterCriteria.$or = [
+              { startDate: { $gt: now } },
+              { endDate: { $lt: now, $exists: true } }
+            ];
+          }
+        }
+        
+        // Филтриране по цел
+        if (filter.minGoal !== undefined) {
+          filterCriteria.goal = { $gte: filter.minGoal };
+        }
+        
+        if (filter.maxGoal !== undefined) {
+          if (filterCriteria.goal) {
+            filterCriteria.goal.$lte = filter.maxGoal;
+          } else {
+            filterCriteria.goal = { $lte: filter.maxGoal };
+          }
+        }
+        
+        // Филтриране по събития
+        if (filter.hasEvents) {
+          filterCriteria.events = { $exists: true, $not: { $size: 0 } };
+        }
+        
+        // Създаваме заявката
+        let query = Campaign.find(filterCriteria)
+          .populate('createdBy')
+          .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          });
+        
+        // Сортиране според избрания критерий
+        if (filter.sortBy) {
+          switch (filter.sortBy) {
+            case CampaignSortOption.HIGHEST_GOAL:
+              query = query.sort({ goal: -1 });
+              break;
+            case CampaignSortOption.LOWEST_GOAL:
+              query = query.sort({ goal: 1 });
+              break;
+            case CampaignSortOption.MOST_FUNDED:
+              query = query.sort({ currentAmount: -1 });
+              break;
+            case CampaignSortOption.LEAST_FUNDED:
+              query = query.sort({ currentAmount: 1 });
+              break;
+            case CampaignSortOption.NEWEST:
+              query = query.sort({ createdAt: -1 });
+              break;
+            case CampaignSortOption.OLDEST:
+              query = query.sort({ createdAt: 1 });
+              break;
+            default:
+              query = query.sort({ createdAt: -1 });
+          }
+        } else {
+          // По подразбиране сортираме по най-новите
+          query = query.sort({ createdAt: -1 });
+        }
+        
+        // Прилагаме пагинация, само ако noLimit не е true
+        if (!noLimit) {
+          if (offset !== undefined) {
+            query = query.skip(offset);
+          }
+          
+          if (limit !== undefined) {
+            query = query.limit(limit);
+          }
+        }
+        
+        // Изпълняваме заявката
+        const campaigns = await query;
+        
+        // Филтриране по рейтинг (не можем директно да филтрираме по виртуални полета в MongoDB)
+        if (filter.minRating !== undefined) {
+          return campaigns.filter(campaign => {
+            return (campaign as any).totalRating >= filter.minRating!;
+          });
+        }
+        
+        return campaigns;
+      } catch (err) {
+        console.error('Error filtering campaigns:', err);
+        throw new Error('Error filtering campaigns');
+      }
+    },
+
+    getCampaignDonations: async (_: unknown, { campaignId }: { campaignId: string }) => {
+      try {
+        const campaign = await Campaign.findById(campaignId).populate({
+          path: 'donations.user',
+          model: 'User'
+        });
+        
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        
+        return campaign.donations || [];
+      } catch (err) {
+        throw new Error('Error fetching campaign donations');
       }
     },
     
@@ -521,6 +678,262 @@ export const campaignResolvers = {
           throw new Error(`Error rejecting participant: ${err.message}`);
         }
         throw new Error('Unexpected error during participant rejection');
+      }
+    },
+    
+    // Добавяме нова мутация за коментиране и оценяване на кампания след дарение
+    addCampaignComment: async (
+      _: unknown, 
+      { 
+        campaignId, 
+        comment, 
+        rating 
+      }: { 
+        campaignId: string; 
+        comment?: string; 
+        rating?: number 
+      }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      try {
+        // Проверка дали кампанията съществува
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        
+        // Проверка дали потребителят е направил плащане за тази кампания
+        const payment = await Payment.findOne({ 
+          user: user.id, 
+          campaign: campaignId,
+          type: PaymentType.CAMPAIGN_DONATION,
+          status: PaymentStatus.SUCCEEDED
+        });
+        
+        if (!payment) {
+          throw new Error('You can only add comments if you have made a donation to this campaign');
+        }
+        
+        // Проверка дали потребителят вече е добавил коментар
+        const existingDonation = campaign.donations.find(
+          d => d.user.toString() === user.id
+        );
+        
+        if (existingDonation) {
+          // Актуализиране на съществуващ коментар
+          if (comment !== undefined) {
+            existingDonation.comment = comment;
+          }
+          
+          if (rating !== undefined && rating >= 1 && rating <= 5) {
+            existingDonation.rating = rating;
+          }
+        } else {
+          // Добавяне на нов коментар
+          campaign.donations.push({
+            user: new mongoose.Types.ObjectId(user.id),
+            amount: payment.amount,
+            comment,
+            rating,
+            date: new Date()
+          });
+        }
+        
+        await campaign.save();
+        
+        return await Campaign.findById(campaignId)
+          .populate('createdBy')
+          .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          });
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error adding comment: ${err.message}`);
+        }
+        throw new Error('Unexpected error when adding comment');
+      }
+    },
+    
+    // Добавяме мутация за редактиране на коментар към кампания
+    updateCampaignComment: async (
+      _: unknown, 
+      { 
+        campaignId, 
+        commentId,
+        comment, 
+        rating 
+      }: { 
+        campaignId: string;
+        commentId: string;
+        comment?: string; 
+        rating?: number 
+      }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      try {
+        // Проверка дали кампанията съществува
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        
+        // Намиране на коментара
+        const donationIndex = campaign.donations.findIndex(d => d._id?.toString() === commentId);
+        if (donationIndex === -1) {
+          throw new Error('Comment not found');
+        }
+        
+        const donation = campaign.donations[donationIndex];
+        
+        // Проверка дали потребителят е собственик на коментара
+        if (donation.user.toString() !== user.id) {
+          throw new Error('You can only edit your own comments');
+        }
+        
+        // Актуализиране на коментара
+        if (comment !== undefined) {
+          campaign.donations[donationIndex].comment = comment;
+        }
+        
+        if (rating !== undefined && rating >= 1 && rating <= 5) {
+          campaign.donations[donationIndex].rating = rating;
+        }
+        
+        await campaign.save();
+        
+        return await Campaign.findById(campaignId)
+          .populate('createdBy')
+          .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          });
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error updating comment: ${err.message}`);
+        }
+        throw new Error('Unexpected error when updating comment');
+      }
+    },
+    
+    // Добавяме мутация за изтриване на коментар към кампания
+    deleteCampaignComment: async (
+      _: unknown, 
+      { 
+        campaignId, 
+        commentId
+      }: { 
+        campaignId: string;
+        commentId: string;
+      }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      try {
+        // Проверка дали кампанията съществува
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        
+        // Намиране на коментара
+        const donation = campaign.donations.find(d => d._id?.toString() === commentId);
+        if (!donation) {
+          throw new Error('Comment not found');
+        }
+        
+        // Проверка дали потребителят е собственик на коментара или е администратор
+        if (donation.user.toString() !== user.id && user.role !== UserRole.ADMIN) {
+          throw new Error('You can only delete your own comments');
+        }
+        
+        // Изтриване на коментара
+        campaign.donations = campaign.donations.filter(d => d._id?.toString() !== commentId);
+        
+        await campaign.save();
+        
+        return await Campaign.findById(campaignId)
+          .populate('createdBy')
+          .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          });
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Error deleting comment: ${err.message}`);
+        }
+        throw new Error('Unexpected error when deleting comment');
+      }
+    },
+    
+    // Добавяме мутация за актуализиране на изображенията на кампанията
+    updateCampaignImages: async (
+      _: unknown, 
+      { 
+        id, 
+        images, 
+        imagesCaptions 
+      }: { 
+        id: string; 
+        images: string[]; 
+        imagesCaptions?: string[] 
+      }, 
+      context: ContextType
+    ) => {
+      const user = checkAuth(context);
+      
+      // Администратори или потребители с група CAMPAIGNS могат да редактират кампании
+      if (user.role !== UserRole.ADMIN && !user.groups?.includes(UserGroup.CAMPAIGNS)) {
+        throw new AuthenticationError('You do not have permission to update campaigns');
+      }
+      
+      try {
+        // Проверка за максималния брой изображения
+        if (images.length > 10) {
+          throw new Error('Кампаниите не могат да имат повече от 10 изображения');
+        }
+        
+        // Проверка дали броят на заглавията съответства на броя на изображенията
+        if (imagesCaptions && imagesCaptions.length > 0 && imagesCaptions.length !== images.length) {
+          throw new Error('Броят на заглавията трябва да съвпада с броя на изображенията');
+        }
+        
+        const campaign = await Campaign.findById(id);
+        if (!campaign) {
+          throw new Error('Кампанията не е намерена');
+        }
+        
+        // Актуализиране на изображенията и заглавията
+        campaign.images = images;
+        if (imagesCaptions) {
+          campaign.imagesCaptions = imagesCaptions;
+        } else {
+          // Ако не се подават заглавия, нулираме ги
+          campaign.imagesCaptions = [];
+        }
+        
+        await campaign.save();
+        
+        return await Campaign.findById(id)
+          .populate('createdBy')
+          .populate('participants')
+          .populate({
+            path: 'donations.user',
+            model: 'User'
+          });
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          throw new Error(`Грешка при актуализиране на изображенията: ${err.message}`);
+        }
+        throw new Error('Неочаквана грешка при актуализиране на изображенията');
       }
     },
   },

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { AuthenticationError } from 'apollo-server-errors';
+import { AuthenticationError } from './errors';
 import { Request, Response } from 'express';
 import { UserRole, UserGroup, IUserDocument } from '../../types/user.types';
 import RefreshToken from '../../models/refreshToken.model';
