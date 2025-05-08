@@ -4,7 +4,7 @@ import { Campaign } from "@/types/campaign"
 import { DataTableColumn, createColumns } from "@/components/ui/data-table/columns"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export const columns: DataTableColumn<Campaign>[] = [
   {
@@ -12,13 +12,14 @@ export const columns: DataTableColumn<Campaign>[] = [
     header: "Title",
     cell: ({ row }) => {
       const campaign = row.original;
+      const router = useRouter();
       return (
-        <Link 
-          href={`/admin/campaigns/${campaign.id}`} 
-          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+        <button 
+          onClick={() => router.push(`/admin/campaigns/${campaign.id}`)}
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-left"
         >
           {campaign.title}
-        </Link>
+        </button>
       );
     },
   },

@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CampaignDialog } from './components/create-campaign-dialog';
 import { DeleteCampaignDialog } from './components/delete-campaign-dialog';
+import { CampaignParticipants } from '@/components/admin/campaigns/CampaignParticipants';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CampaignsList } from './components/campaigns-list';
+import { CampaignParticipantsList } from '@/components/admin/campaigns/CampaignParticipantsList';
 
 export default function CampaignsPage() {
   // Pagination state
@@ -26,6 +30,8 @@ export default function CampaignsPage() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
   // Handle edit and delete actions
   const handleEdit = (campaign: Campaign) => {
@@ -53,53 +59,23 @@ export default function CampaignsPage() {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Campaign Management</h1>
       
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Campaigns</h2>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New Campaign
-          </Button>
-        </div>
+      <Tabs defaultValue="campaigns" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+          <TabsTrigger value="participants">Participants</TabsTrigger>
+        </TabsList>
 
-        <DataTable
-          columns={createColumns(columns)}
-          data={campaigns}
-          searchKey="title"
-          actions={campaignActions}
-          pagination={{
-            page,
-            pageSize,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize,
-          }}
-        />
+        <TabsContent value="campaigns">
+          <CampaignsList />
+        </TabsContent>
 
-        {/* Campaign create/edit dialog */}
-        <CampaignDialog
-          campaign={editingCampaign}
-          open={createDialogOpen || !!editingCampaign}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditingCampaign(null);
-              setCreateDialogOpen(false);
-            }
-          }}
-          onSuccess={() => {
-            refetch();
-          }}
-        />
-
-        {/* Delete confirmation dialog */}
-        <DeleteCampaignDialog
-          campaign={deletingCampaign}
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          onSuccess={refetch}
-        />
-      </div>
+        <TabsContent value="participants">
+          <CampaignParticipants />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 } 
