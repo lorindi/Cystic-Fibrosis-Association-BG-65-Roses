@@ -16,6 +16,7 @@ import { DataTableColumn } from '@/components/ui/data-table/columns';
 import { useCampaignEvents } from '@/hooks/admin/useCampaignEvents';
 import { CampaignEventDialog } from './components/campaign-event-dialog';
 import { DeleteEventDialog } from './components/delete-event-dialog';
+import Image from 'next/image';
 
 // Extended CampaignEvent type with additional field for actions
 type CampaignEventWithActions = CampaignEvent & {
@@ -155,6 +156,25 @@ export default function CampaignDetailsPage() {
           </p>
         </div>
       </div>
+      
+      {/* Campaign Images */}
+      {campaign.images && campaign.images.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Images</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {campaign.images.map((image, index) => (
+              <div key={index} className="relative h-40 rounded-md overflow-hidden border border-gray-200">
+                <Image
+                  src={image}
+                  alt={`Campaign image ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Description</h2>

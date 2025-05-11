@@ -75,7 +75,8 @@ const CampaignSchema = new Schema<ICampaignDocument>({
   },
   images: {
     type: [String],
-    validate: [arrayMaxLength, 'Campaigns cannot have more than 10 images.']
+    validate: [arrayMaxLength, 'Campaigns cannot have more than 10 images.'],
+    required: [true, 'At least one image is required for a campaign']
   },
   imagesCaptions: {
     type: [String],

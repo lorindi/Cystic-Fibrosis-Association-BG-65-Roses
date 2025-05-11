@@ -20,6 +20,8 @@ export interface Campaign {
   createdBy?: any;
   createdAt?: string;
   updatedAt?: string;
+  images: string[];
+  imagesCaptions?: string[];
 }
 
 export interface CampaignInput {
@@ -29,6 +31,8 @@ export interface CampaignInput {
   startDate: string;
   endDate?: string | null;
   events?: CampaignEventInput[];
+  images: string[];
+  imagesCaptions?: string[];
 }
 
 export interface CampaignEventInput {

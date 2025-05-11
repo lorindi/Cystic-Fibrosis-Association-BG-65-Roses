@@ -31,6 +31,7 @@ export const GET_CAMPAIGNS = gql`
       currentAmount
       startDate
       endDate
+      images
       events {
         id
         title
@@ -54,6 +55,7 @@ export const GET_CAMPAIGN = gql`
       currentAmount
       startDate
       endDate
+      images
       events {
         id
         title

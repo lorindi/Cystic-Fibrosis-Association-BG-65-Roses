@@ -82,17 +82,42 @@ export type Campaign = {
   createdBy: User;
   currentAmount: Scalars['Float']['output'];
   description: Scalars['String']['output'];
+  donations: Array<CampaignDonation>;
   endDate?: Maybe<Scalars['Date']['output']>;
   events: Array<CampaignEvent>;
   goal: Scalars['Float']['output'];
   id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  imagesCaptions?: Maybe<Array<Scalars['String']['output']>>;
+  isActive: Scalars['Boolean']['output'];
   participants: Array<User>;
   participantsCount: Scalars['Int']['output'];
   pendingParticipants: Array<User>;
   pendingParticipantsCount: Scalars['Int']['output'];
+  percentCompleted: Scalars['Float']['output'];
+  ratingCount?: Maybe<Scalars['Int']['output']>;
+  remainingAmount: Scalars['Float']['output'];
   startDate: Scalars['Date']['output'];
   title: Scalars['String']['output'];
+  totalRating?: Maybe<Scalars['Float']['output']>;
   updatedAt: Scalars['Date']['output'];
+};
+
+export type CampaignDonation = {
+  __typename?: 'CampaignDonation';
+  amount: Scalars['Float']['output'];
+  comment?: Maybe<Scalars['String']['output']>;
+  date: Scalars['Date']['output'];
+  id: Scalars['ID']['output'];
+  rating?: Maybe<Scalars['Int']['output']>;
+  user: User;
+};
+
+export type CampaignDonationInput = {
+  amount: Scalars['Float']['input'];
+  campaignId: Scalars['ID']['input'];
+  comment?: InputMaybe<Scalars['String']['input']>;
+  rating?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CampaignEvent = {
@@ -111,11 +136,22 @@ export type CampaignEventInput = {
   title: Scalars['String']['input'];
 };
 
+export type CampaignFilterInput = {
+  hasEvents?: InputMaybe<Scalars['Boolean']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  maxGoal?: InputMaybe<Scalars['Float']['input']>;
+  minGoal?: InputMaybe<Scalars['Float']['input']>;
+  minRating?: InputMaybe<Scalars['Float']['input']>;
+  sortBy?: InputMaybe<CampaignSortOption>;
+};
+
 export type CampaignInput = {
   description: Scalars['String']['input'];
   endDate?: InputMaybe<Scalars['Date']['input']>;
   events?: InputMaybe<Array<CampaignEventInput>>;
   goal: Scalars['Float']['input'];
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  imagesCaptions?: InputMaybe<Array<Scalars['String']['input']>>;
   startDate: Scalars['Date']['input'];
   title: Scalars['String']['input'];
 };
@@ -132,6 +168,15 @@ export type CampaignParticipationStatus =
   | 'APPROVED'
   | 'NOT_REGISTERED'
   | 'PENDING';
+
+export type CampaignSortOption =
+  | 'HIGHEST_GOAL'
+  | 'HIGHEST_RATED'
+  | 'LEAST_FUNDED'
+  | 'LOWEST_GOAL'
+  | 'MOST_FUNDED'
+  | 'NEWEST'
+  | 'OLDEST';
 
 export type ChatMessage = {
   __typename?: 'ChatMessage';
@@ -365,6 +410,7 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addCampaignComment: Campaign;
   addCampaignEvent: CampaignEvent;
   addComment: Comment;
   addConferenceSession: ConferenceSession;
@@ -391,6 +437,7 @@ export type Mutation = {
   deactivateAccount: Scalars['Boolean']['output'];
   deleteBlogPost: Scalars['Boolean']['output'];
   deleteCampaign: Scalars['Boolean']['output'];
+  deleteCampaignComment: Campaign;
   deleteCampaignEvent: Scalars['Boolean']['output'];
   deleteComment: Scalars['Boolean']['output'];
   deleteConference: Scalars['Boolean']['output'];
@@ -430,7 +477,9 @@ export type Mutation = {
   setUserRole: User;
   updateBlogPost: BlogPost;
   updateCampaign: Campaign;
+  updateCampaignComment: Campaign;
   updateCampaignEvent: CampaignEvent;
+  updateCampaignImages: Campaign;
   updateConference: Conference;
   updateConferenceSession: ConferenceSession;
   updateEvent: Event;
@@ -442,6 +491,13 @@ export type Mutation = {
   updateStoreItem: StoreItem;
   updateStory: Story;
   verifyEmail: VerificationResponse;
+};
+
+
+export type MutationAddCampaignCommentArgs = {
+  campaignId: Scalars['ID']['input'];
+  comment?: InputMaybe<Scalars['String']['input']>;
+  rating?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -573,6 +629,12 @@ export type MutationDeleteBlogPostArgs = {
 
 export type MutationDeleteCampaignArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCampaignCommentArgs = {
+  campaignId: Scalars['ID']['input'];
+  commentId: Scalars['ID']['input'];
 };
 
 
@@ -752,9 +814,24 @@ export type MutationUpdateCampaignArgs = {
 };
 
 
+export type MutationUpdateCampaignCommentArgs = {
+  campaignId: Scalars['ID']['input'];
+  comment?: InputMaybe<Scalars['String']['input']>;
+  commentId: Scalars['ID']['input'];
+  rating?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type MutationUpdateCampaignEventArgs = {
   eventId: Scalars['ID']['input'];
   input: CampaignEventInput;
+};
+
+
+export type MutationUpdateCampaignImagesArgs = {
+  id: Scalars['ID']['input'];
+  images: Array<Scalars['String']['input']>;
+  imagesCaptions?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 
@@ -943,6 +1020,7 @@ export type Query = {
   getBlogPost?: Maybe<BlogPost>;
   getBlogPosts?: Maybe<Array<BlogPost>>;
   getCampaign?: Maybe<Campaign>;
+  getCampaignDonations?: Maybe<Array<CampaignDonation>>;
   getCampaignEvents?: Maybe<Array<CampaignEvent>>;
   getCampaignNotifications?: Maybe<Array<CampaignNotification>>;
   getCampaigns?: Maybe<Array<Campaign>>;
@@ -954,6 +1032,7 @@ export type Query = {
   getDonors?: Maybe<Array<Donor>>;
   getEvent?: Maybe<Event>;
   getEvents?: Maybe<Array<Event>>;
+  getFilteredCampaigns?: Maybe<Array<Campaign>>;
   getInitiative: Initiative;
   getInitiatives: Array<Initiative>;
   getLoginHistory: Array<LoginHistory>;
@@ -1005,6 +1084,11 @@ export type QueryGetCampaignArgs = {
 };
 
 
+export type QueryGetCampaignDonationsArgs = {
+  campaignId: Scalars['ID']['input'];
+};
+
+
 export type QueryGetCampaignEventsArgs = {
   campaignId: Scalars['ID']['input'];
 };
@@ -1053,6 +1137,14 @@ export type QueryGetEventArgs = {
 
 
 export type QueryGetEventsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  noLimit?: InputMaybe<Scalars['Boolean']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryGetFilteredCampaignsArgs = {
+  filter?: InputMaybe<CampaignFilterInput>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;

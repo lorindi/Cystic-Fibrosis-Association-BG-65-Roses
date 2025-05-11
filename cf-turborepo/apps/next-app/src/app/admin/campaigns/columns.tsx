@@ -5,8 +5,31 @@ import { DataTableColumn, createColumns } from "@/components/ui/data-table/colum
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export const columns: DataTableColumn<Campaign>[] = [
+  {
+    accessorKey: "images",
+    header: "",
+    cell: ({ row }) => {
+      const campaign = row.original;
+      return campaign.images && campaign.images.length > 0 ? (
+        <div className="h-10 w-10 rounded-md overflow-hidden">
+          <Image
+            src={campaign.images[0]}
+            alt={campaign.title}
+            width={40}
+            height={40}
+            className="object-cover h-full w-full"
+          />
+        </div>
+      ) : (
+        <div className="h-10 w-10 bg-gray-200 rounded-md flex items-center justify-center">
+          <span className="text-gray-500 text-xs">No img</span>
+        </div>
+      );
+    },
+  },
   {
     accessorKey: "title",
     header: "Title",

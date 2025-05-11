@@ -19,6 +19,7 @@ const CREATE_CAMPAIGN = gql`
       currentAmount
       startDate
       endDate
+      images
       events {
         id
         title
@@ -42,6 +43,7 @@ const UPDATE_CAMPAIGN = gql`
       currentAmount
       startDate
       endDate
+      images
       events {
         id
         title
