@@ -5,6 +5,8 @@ import NavigationCards from "@/components/home/NavigationCards";
 import ContributeSection from "@/components/home/ContributeSection";
 import NewsSection from "@/components/home/NewsSection";
 import PatientStoriesSection from "@/components/home/PatientStoriesSection";
+import CategoryCards from "./campaigns/components/CategoryCards";
+
 export default function Home() {
   const handleClick = () => {
     alert("Button clicked!");
@@ -15,6 +17,7 @@ export default function Home() {
       <NavigationCards />
       <AboutUsSection />
       <ContributeSection />
+      <CategoryCards />
       <NewsSection />
       <PatientStoriesSection />
     </div>
