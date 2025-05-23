@@ -5,12 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("bg-BG", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
+/**
+ * Форматира дата в локализиран формат
+ */
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('bg-BG', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+
+/**
+ * Форматира валута
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('bg-BG', {
+    style: 'currency',
+    currency: 'BGN',
+    minimumFractionDigits: 0,
+  }).format(amount);
 }
 
 /**
