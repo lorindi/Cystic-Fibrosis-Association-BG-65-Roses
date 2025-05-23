@@ -13,12 +13,17 @@ const config: NextConfig = {
     return [];
   },
   images: {
-    domains: ['via.placeholder.com'],
+    domains: ['via.placeholder.com', 'randomuser.me'],
     
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me',
         pathname: '**',
       },
     ],
