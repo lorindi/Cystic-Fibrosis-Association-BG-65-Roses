@@ -86,6 +86,7 @@ export type Campaign = {
   endDate?: Maybe<Scalars['Date']['output']>;
   events: Array<CampaignEvent>;
   goal: Scalars['Float']['output'];
+  hashtags: Array<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   images: Array<Scalars['String']['output']>;
   imagesCaptions?: Maybe<Array<Scalars['String']['output']>>;
@@ -353,6 +354,23 @@ export type GoogleAuthInput = {
   idToken: Scalars['String']['input'];
 };
 
+export type Hashtag = {
+  __typename?: 'Hashtag';
+  categories: Array<Scalars['String']['output']>;
+  count: Scalars['Int']['output'];
+  createdAt: Scalars['Date']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
+};
+
+export type HashtagPaginatedResponse = {
+  __typename?: 'HashtagPaginatedResponse';
+  hasNextPage: Scalars['Boolean']['output'];
+  hashtags: Array<Hashtag>;
+  totalCount: Scalars['Int']['output'];
+};
+
 export type Initiative = {
   __typename?: 'Initiative';
   createdAt: Scalars['Date']['output'];
@@ -414,6 +432,7 @@ export type Mutation = {
   addCampaignEvent: CampaignEvent;
   addComment: Comment;
   addConferenceSession: ConferenceSession;
+  addHashtagsToCampaign: Campaign;
   addInitiativeItem: InitiativeItem;
   addUserToGroup: User;
   approveBlogPost: BlogPost;
@@ -427,6 +446,7 @@ export type Mutation = {
   createConference: Conference;
   createDonation: Donation;
   createEvent: Event;
+  createHashtag: Hashtag;
   createInitiative: Initiative;
   createNews: News;
   createPaymentIntent: PaymentIntent;
@@ -468,6 +488,8 @@ export type Mutation = {
   register: AuthResponse;
   rejectCampaignParticipant: Campaign;
   rejectInitiativeParticipant: Scalars['Boolean']['output'];
+  removeHashtagFromCategory: Scalars['Boolean']['output'];
+  removeHashtagsFromCampaign: Campaign;
   removePaymentMethod: Scalars['Boolean']['output'];
   removeUserFromGroup: User;
   resendVerificationEmail: Scalars['Boolean']['output'];
@@ -515,6 +537,12 @@ export type MutationAddCommentArgs = {
 export type MutationAddConferenceSessionArgs = {
   conferenceId: Scalars['ID']['input'];
   input: ConferenceSessionInput;
+};
+
+
+export type MutationAddHashtagsToCampaignArgs = {
+  campaignId: Scalars['ID']['input'];
+  hashtagIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -584,6 +612,12 @@ export type MutationCreateDonationArgs = {
 
 export type MutationCreateEventArgs = {
   input: EventInput;
+};
+
+
+export type MutationCreateHashtagArgs = {
+  category: Scalars['String']['input'];
+  name: Scalars['String']['input'];
 };
 
 
@@ -767,6 +801,18 @@ export type MutationRejectCampaignParticipantArgs = {
 export type MutationRejectInitiativeParticipantArgs = {
   initiativeId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveHashtagFromCategoryArgs = {
+  category: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+
+export type MutationRemoveHashtagsFromCampaignArgs = {
+  campaignId: Scalars['ID']['input'];
+  hashtagIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -1017,6 +1063,7 @@ export type ProfileUpdateInput = {
 export type Query = {
   __typename?: 'Query';
   askAI?: Maybe<AiResponse>;
+  getAllHashtags: HashtagPaginatedResponse;
   getBlogPost?: Maybe<BlogPost>;
   getBlogPosts?: Maybe<Array<BlogPost>>;
   getCampaign?: Maybe<Campaign>;
@@ -1033,6 +1080,7 @@ export type Query = {
   getEvent?: Maybe<Event>;
   getEvents?: Maybe<Array<Event>>;
   getFilteredCampaigns?: Maybe<Array<Campaign>>;
+  getHashtagsByCategory: Array<Hashtag>;
   getInitiative: Initiative;
   getInitiatives: Array<Initiative>;
   getLoginHistory: Array<LoginHistory>;
@@ -1050,6 +1098,7 @@ export type Query = {
   getStoreItems?: Maybe<Array<StoreItem>>;
   getStories?: Maybe<Array<Story>>;
   getStory?: Maybe<Story>;
+  getTrendingHashtags: Array<Hashtag>;
   getUser?: Maybe<User>;
   getUserCampaignStatus?: Maybe<Array<UserCampaignStatus>>;
   getUserCampaigns?: Maybe<Array<Campaign>>;
@@ -1059,11 +1108,19 @@ export type Query = {
   getUsers?: Maybe<Array<User>>;
   getUsersByGroup?: Maybe<Array<User>>;
   getUsersByRole?: Maybe<Array<User>>;
+  searchByTag: TaggedContent;
+  searchHashtags: Array<Hashtag>;
 };
 
 
 export type QueryAskAiArgs = {
   query: Scalars['String']['input'];
+};
+
+
+export type QueryGetAllHashtagsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1148,6 +1205,11 @@ export type QueryGetFilteredCampaignsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryGetHashtagsByCategoryArgs = {
+  category: Scalars['String']['input'];
 };
 
 
@@ -1246,6 +1308,12 @@ export type QueryGetStoryArgs = {
 };
 
 
+export type QueryGetTrendingHashtagsArgs = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryGetUserArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1292,6 +1360,20 @@ export type QueryGetUsersByRoleArgs = {
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   role: UserRole;
+};
+
+
+export type QuerySearchByTagArgs = {
+  categories?: InputMaybe<Array<Scalars['String']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  tag: Scalars['String']['input'];
+};
+
+
+export type QuerySearchHashtagsArgs = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  query: Scalars['String']['input'];
 };
 
 export type Recipe = {
@@ -1385,6 +1467,23 @@ export type Subscription = {
 export type SubscriptionMessageSentArgs = {
   roomId?: InputMaybe<Scalars['String']['input']>;
   userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type TaggedContent = {
+  __typename?: 'TaggedContent';
+  items: Array<TaggedContentItem>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type TaggedContentItem = {
+  __typename?: 'TaggedContentItem';
+  createdAt: Scalars['Date']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  hashtags: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  title: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type User = {
@@ -1703,14 +1802,14 @@ export type GetCampaignsQueryVariables = Exact<{
 }>;
 
 
-export type GetCampaignsQuery = { __typename?: 'Query', getCampaigns?: Array<{ __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> }> | null };
+export type GetCampaignsQuery = { __typename?: 'Query', getCampaigns?: Array<{ __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, images: Array<string>, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> }> | null };
 
 export type GetCampaignQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetCampaignQuery = { __typename?: 'Query', getCampaign?: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> } | null };
+export type GetCampaignQuery = { __typename?: 'Query', getCampaign?: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, images: Array<string>, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> } | null };
 
 export type GetEventsQueryVariables = Exact<{
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3086,6 +3185,7 @@ export const GetCampaignsDocument = gql`
     currentAmount
     startDate
     endDate
+    images
     events {
       id
       title
@@ -3141,6 +3241,7 @@ export const GetCampaignDocument = gql`
     currentAmount
     startDate
     endDate
+    images
     events {
       id
       title
