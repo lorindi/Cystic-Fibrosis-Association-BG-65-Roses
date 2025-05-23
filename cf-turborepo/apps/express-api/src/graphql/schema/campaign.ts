@@ -26,6 +26,7 @@ export const campaignTypeDefs = gql`
     percentCompleted: Float!
     remainingAmount: Float!
     isActive: Boolean!
+    hashtags: [String!]!
   }
   
   type CampaignEvent {
