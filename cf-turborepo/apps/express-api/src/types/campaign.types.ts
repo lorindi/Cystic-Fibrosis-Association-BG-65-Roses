@@ -35,6 +35,7 @@ export interface ICampaignDocument extends Document {
   imagesCaptions?: string[]; // опционални заглавия за изображенията
   donations: ICampaignDonation[]; // масив от донации с коментари и рейтинги
   totalRating?: number; // средна оценка на кампанията
+  hashtags: string[]; // масив от хаштагове
 }
 
 // Филтриране на кампании
