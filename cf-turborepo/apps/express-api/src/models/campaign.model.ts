@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { ICampaignDocument, ICampaignEvent, ICampaignDonation } from '../types/campaign.types';
+import { HashtagService } from '../services/hashtag.service';
 
 const CampaignEventSchema = new Schema<ICampaignEvent>({
   title: { type: String, required: true },
@@ -82,7 +83,12 @@ const CampaignSchema = new Schema<ICampaignDocument>({
     type: [String],
     validate: [captionsArrayLength, 'The number of captions must match the number of images.']
   },
-  donations: [CampaignDonationSchema]
+  donations: [CampaignDonationSchema],
+  hashtags: {
+    type: [String],
+    default: [],
+    trim: true
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -94,36 +100,57 @@ function arrayMaxLength(val: any[]) {
   return val.length <= 10;
 }
 
-// Валидатор за заглавията - трябва да са толкова на брой, колкото са изображенията
+// Валидатор за съответствие между броя изображения и описания
 function captionsArrayLength(this: any, val: any[]) {
-  // Ако няма заглавия, това е ок (не са задължителни)
-  if (!val || val.length === 0) return true;
-  // Трябва да имаме достъп до this, където this е документа
-  return !this.images || val.length === this.images.length;
+  return !val || val.length === this.images.length;
 }
 
-// Индекси за по-бързи заявки
+// Middleware за обработка на хаштагове преди запазване
+CampaignSchema.pre('save', async function(this: ICampaignDocument, next) {
+  // Извличаме хаштагове от заглавието и описанието
+  const titleHashtags = HashtagService.extractHashtags(this.title);
+  const descriptionHashtags = HashtagService.extractHashtags(this.description);
+  
+  // Обединяваме всички хаштагове и премахваме дубликатите
+  const allHashtags = [...new Set([...titleHashtags, ...descriptionHashtags, ...this.hashtags])];
+  
+  // Актуализираме хаштаговете на кампанията
+  this.hashtags = allHashtags;
+  
+  // Обработваме хаштаговете
+  await HashtagService.processHashtags(allHashtags, 'campaign');
+  
+  next();
+});
+
+// Middleware за намаляване на броячите на хаштаговете при изтриване
+CampaignSchema.pre('deleteOne', { document: true }, async function(this: ICampaignDocument, next) {
+  // Намаляваме броячите на всички хаштагове
+  for (const tag of this.hashtags) {
+    await HashtagService.decrementHashtagCount(tag, 'campaign');
+  }
+  
+  next();
+});
+
+// Индекси
+CampaignSchema.index({ createdAt: -1 });
 CampaignSchema.index({ startDate: 1 });
 CampaignSchema.index({ endDate: 1 });
-CampaignSchema.index({ createdBy: 1 });
-CampaignSchema.index({ participants: 1 });
-CampaignSchema.index({ pendingParticipants: 1 });
-CampaignSchema.index({ goal: -1 }); // За сортиране по най-висока цел
-CampaignSchema.index({ currentAmount: -1 }); // За сортиране по набрани средства
+CampaignSchema.index({ currentAmount: -1 });
+CampaignSchema.index({ hashtags: 1 });
 
-// Виртуално поле за процента на изпълнение
-CampaignSchema.virtual('percentCompleted').get(function() {
+// Виртуални полета
+CampaignSchema.virtual('percentCompleted').get(function(this: ICampaignDocument) {
   if (this.goal === 0) return 0;
   return Math.min(100, (this.currentAmount / this.goal) * 100);
 });
 
-// Виртуално поле за оставащата сума
-CampaignSchema.virtual('remainingAmount').get(function() {
+CampaignSchema.virtual('remainingAmount').get(function(this: ICampaignDocument) {
   return Math.max(0, this.goal - this.currentAmount);
 });
 
-// Виртуално поле, което проверява дали кампанията е активна
-CampaignSchema.virtual('isActive').get(function() {
+CampaignSchema.virtual('isActive').get(function(this: ICampaignDocument) {
   const now = new Date();
   if (this.endDate) {
     return now >= this.startDate && now <= this.endDate;
@@ -131,31 +158,27 @@ CampaignSchema.virtual('isActive').get(function() {
   return now >= this.startDate;
 });
 
-// Виртуално поле за броя на участниците
-CampaignSchema.virtual('participantsCount').get(function() {
+CampaignSchema.virtual('participantsCount').get(function(this: ICampaignDocument) {
   return this.participants.length;
 });
 
-// Виртуално поле за броя на чакащите
-CampaignSchema.virtual('pendingParticipantsCount').get(function() {
+CampaignSchema.virtual('pendingParticipantsCount').get(function(this: ICampaignDocument) {
   return this.pendingParticipants.length;
 });
 
-// Виртуално поле за общия рейтинг
-CampaignSchema.virtual('totalRating').get(function() {
+CampaignSchema.virtual('totalRating').get(function(this: ICampaignDocument) {
   if (!this.donations || this.donations.length === 0) return 0;
   
-  const donations = this.donations.filter(d => d.rating && d.rating > 0);
+  const donations = this.donations.filter((d: ICampaignDonation) => d.rating && d.rating > 0);
   if (donations.length === 0) return 0;
   
-  const totalRating = donations.reduce((sum, donation) => sum + (donation.rating || 0), 0);
+  const totalRating = donations.reduce((sum: number, donation: ICampaignDonation) => sum + (donation.rating || 0), 0);
   return totalRating / donations.length;
 });
 
-// Виртуално поле за броя на рейтингите
-CampaignSchema.virtual('ratingCount').get(function() {
+CampaignSchema.virtual('ratingCount').get(function(this: ICampaignDocument) {
   if (!this.donations) return 0;
-  return this.donations.filter(d => d.rating && d.rating > 0).length;
+  return this.donations.filter((d: ICampaignDonation) => d.rating && d.rating > 0).length;
 });
 
 const Campaign = mongoose.model<ICampaignDocument>('Campaign', CampaignSchema);
