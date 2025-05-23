@@ -18,6 +18,7 @@ import { stripeService } from './services/stripeService';
 import { Payment } from './models/payment.model';
 import { PaymentStatus } from './types/payment.types';
 
+
 dotenv.config();
 
 // Създаваме тип за конфигурирането на WebSocket сървъра
