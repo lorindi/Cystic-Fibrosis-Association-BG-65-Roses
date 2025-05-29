@@ -92,6 +92,11 @@ export default function CampaignPage() {
                   fill
                   className="object-contain" 
                 />
+                {campaign.imagesCaptions && campaign.imagesCaptions[selectedImage] && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                    <p className="text-white text-base font-medium">{campaign.imagesCaptions[selectedImage]}</p>
+                  </div>
+                )}
               </motion.div>
               
               <div className="absolute top-4 right-4">
@@ -312,26 +317,9 @@ export default function CampaignPage() {
                               }).format(donation.amount)}
                             </span>
                           </div>
-                          <div className="text-sm text-gray-500 mb-1">
+                          <div className="text-sm text-gray-500">
                             {formatDate(donation.date)}
                           </div>
-                          {donation.comment && (
-                            <p className="text-gray-700 mt-1">{donation.comment}</p>
-                          )}
-                          {donation.rating && (
-                            <div className="flex items-center mt-2">
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <svg 
-                                  key={i}
-                                  className={`w-4 h-4 ${i < donation.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                                  fill="currentColor" 
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -341,6 +329,83 @@ export default function CampaignPage() {
                     <div className="text-center">
                       <Button variant="outline">
                         Вижте всички {campaign.donations.length} дарения
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Comments and Ratings section */}
+            {campaign.donations && campaign.donations.filter(d => d.comment || d.rating).length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Коментари и оценки</h2>
+                <div className="space-y-4">
+                  {campaign.donations
+                    .filter(donation => donation.comment || donation.rating)
+                    .slice(-3)
+                    .reverse()
+                    .map((donation) => (
+                    <div key={`comment-${donation.id}`} className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mr-4">
+                          {donation.user.profile?.avatar ? (
+                            <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                              <Image 
+                                src={donation.user.profile.avatar} 
+                                alt={donation.user.name} 
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <span className="text-blue-600 font-semibold">
+                                {donation.user.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-semibold">{donation.user.name}</h3>
+                            <div className="text-sm text-gray-500">
+                              {formatDate(donation.date)}
+                            </div>
+                          </div>
+                          
+                          {donation.rating && (
+                            <div className="flex items-center mt-2">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <svg 
+                                  key={i}
+                                  className={`w-4 h-4 ${i < donation.rating! ? 'text-yellow-400' : 'text-gray-300'}`}
+                                  fill="currentColor" 
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07 3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                              <span className="ml-2 text-sm text-gray-600">
+                                ({donation.rating}/5)
+                              </span>
+                            </div>
+                          )}
+                          
+                          {donation.comment && (
+                            <p className="text-gray-700 mt-2 bg-gray-50 p-3 rounded-lg">
+                              "{donation.comment}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {campaign.donations.filter(d => d.comment || d.rating).length > 3 && (
+                    <div className="text-center">
+                      <Button variant="outline">
+                        Вижте всички {campaign.donations.filter(d => d.comment || d.rating).length} коментара
                       </Button>
                     </div>
                   )}
@@ -369,28 +434,45 @@ export default function CampaignPage() {
                     <span className="text-xl font-bold">{formattedCurrentAmount}</span>
                     <span className="text-gray-500">от {formattedGoal}</span>
                   </div>
+                  {campaign.remainingAmount && campaign.remainingAmount > 0 && (
+                    <div className="text-center text-sm text-gray-500 mt-2">
+                      Остават още {new Intl.NumberFormat('bg-BG', {
+                        style: 'currency',
+                        currency: 'BGN',
+                        minimumFractionDigits: 0,
+                      }).format(campaign.remainingAmount)}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="my-6 border-t border-gray-100 pt-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
                       <Users className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-                      <div className="text-xl font-bold">{campaign.participantsCount}</div>
-                      <div className="text-xs text-gray-500">участници</div>
+                      <div className="text-lg font-bold">{campaign.uniqueDonorsCount}</div>
+                      <div className="text-xs text-gray-500">дарители</div>
                     </div>
                     
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <Gift className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-                      <div className="text-xl font-bold">{campaign.donations?.length || 0}</div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <Gift className="w-5 h-5 mx-auto mb-1 text-green-600" />
+                      <div className="text-lg font-bold">{campaign.donationsCount}</div>
                       <div className="text-xs text-gray-500">дарения</div>
+                    </div>
+                    
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <Heart className="w-5 h-5 mx-auto mb-1 text-purple-600" />
+                      <div className="text-lg font-bold">{campaign.ratingCount || 0}</div>
+                      <div className="text-xs text-gray-500">оценки</div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="space-y-3">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Heart className="w-4 h-4 mr-2" />
-                    Дари сега
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" asChild>
+                    <Link href={`/campaigns/${campaign.id}/donate`}>
+                      <Heart className="w-4 h-4 mr-2" />
+                      Дари сега
+                    </Link>
                   </Button>
                   
                   <Button variant="outline" className="w-full">
@@ -458,16 +540,16 @@ export default function CampaignPage() {
                             {Array.from({ length: 5 }, (_, i) => (
                               <svg 
                                 key={i}
-                                className={`w-4 h-4 ${i < Math.round(campaign.totalRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                className={`w-4 h-4 ${i < Math.round(campaign.totalRating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
                                 fill="currentColor" 
                                 viewBox="0 0 20 20"
                               >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07 3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
                             ))}
                           </div>
                           <span className="ml-2 text-gray-600">
-                            ({campaign.ratingCount})
+                            {((campaign.totalRating || 0) / campaign.ratingCount).toFixed(1)} ({campaign.ratingCount})
                           </span>
                         </div>
                       </div>
