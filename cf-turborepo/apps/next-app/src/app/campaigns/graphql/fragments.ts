@@ -11,6 +11,14 @@ export const CAMPAIGN_FRAGMENT = gql`
     endDate
     images
     imagesCaptions
+    donationsCount
+    uniqueDonorsCount
+    totalRating
+    ratingCount
+    percentCompleted
+    remainingAmount
+    isActive
+    hashtags
     createdAt
     updatedAt
     createdBy {
@@ -28,11 +36,5 @@ export const CAMPAIGN_FRAGMENT = gql`
       }
     }
     participantsCount
-    totalRating
-    ratingCount
-    percentCompleted
-    remainingAmount
-    isActive
-    hashtags
   }
 `; 
