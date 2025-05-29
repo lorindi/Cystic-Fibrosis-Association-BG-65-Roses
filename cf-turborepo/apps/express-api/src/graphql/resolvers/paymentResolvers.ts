@@ -68,13 +68,21 @@ async function findOrCreateStripeCustomer(userId: string): Promise<string> {
  * Помощна функция за обработка на донор и обновяване на плащане
  */
 async function processDonorAndUpdatePayment(paymentData: PaymentData): Promise<void> {
+  console.log('=== processDonorAndUpdatePayment START ===');
+  console.log('Payment data:', paymentData);
+  
   // Ако имаме потребител, създаваме или обновяваме донора
-  if (!paymentData.user) return;
+  if (!paymentData.user) {
+    console.log('No user in payment data');
+    return;
+  }
 
+  console.log('Searching for existing donor...');
   // Намиране или създаване на донор за този потребител
   let donor = await Donor.findOne({ user: paymentData.user });
   
   if (!donor) {
+    console.log('No donor found, creating new one...');
     const userData = await User.findById(paymentData.user);
     if (userData) {
       donor = new Donor({
@@ -82,17 +90,68 @@ async function processDonorAndUpdatePayment(paymentData: PaymentData): Promise<v
         name: userData.name,
         totalDonations: 0
       });
+      console.log('New donor created');
     }
+  } else {
+    console.log('Existing donor found, total donations:', donor.totalDonations);
   }
   
   // Ако имаме донор, асоциираме го с плащането и обновяваме сумата
   if (donor) {
     donor.totalDonations += paymentData.amount;
     await donor.save();
+    console.log('Donor saved with new total:', donor.totalDonations);
     
     // Използваме type assertion, за да избегнем проблема с типизацията
     paymentData.donor = donor._id as any as Types.ObjectId;
+    console.log('Donor ID added to payment data:', donor._id);
   }
+  
+  console.log('=== processDonorAndUpdatePayment END ===');
+}
+
+/**
+ * Помощна функция за обновяване на кампания при дарение
+ */
+async function updateCampaignWithDonation(
+  campaignId: Types.ObjectId, 
+  userId: Types.ObjectId, 
+  amount: number
+): Promise<void> {
+  console.log('=== updateCampaignWithDonation START ===');
+  console.log('Campaign ID:', campaignId);
+  console.log('User ID:', userId);
+  console.log('Amount:', amount);
+  
+  try {
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      console.log('Campaign not found');
+      return;
+    }
+    
+    console.log('Campaign found:', campaign.title);
+    console.log('Current amount before update:', campaign.currentAmount);
+    
+    // Обновяваме currentAmount
+    campaign.currentAmount += amount;
+    
+    // Добавяме дарение към масива donations
+    campaign.donations.push({
+      user: userId,
+      amount: amount,
+      date: new Date()
+    });
+    
+    await campaign.save();
+    console.log('Campaign updated - new currentAmount:', campaign.currentAmount);
+    console.log('Total donations count:', campaign.donations.length);
+    
+  } catch (error) {
+    console.error('Error updating campaign:', error);
+  }
+  
+  console.log('=== updateCampaignWithDonation END ===');
 }
 
 /**
@@ -245,77 +304,56 @@ export const paymentResolvers = {
   Mutation: {
     createPaymentIntent: async (
       _: unknown,
-      { input }: { 
-        input: { 
-          amount: number; 
-          currency?: string; 
-          type: PaymentType;
-          campaignId?: string;
-          initiativeId?: string;
-          items?: string[];
-          description?: string;
-          savePaymentMethod?: boolean;
-        } 
-      },
+      { input }: { input: { amount: number; type: PaymentType; description?: string; campaignId?: string; initiativeId?: string } },
       context: ContextType
     ) => {
       const user = checkAuth(context);
-      const amountInCents = Math.round(input.amount * 100); // Конвертиране в най-малката валутна единица (стотинки)
 
       try {
-        // Намиране или създаване на Stripe клиент за потребителя
-        const stripeCustomerId = await findOrCreateStripeCustomer(user.id);
+        console.log('Creating payment intent for user:', user.id, 'amount:', input.amount, 'type:', input.type);
 
-        // Основно описание на плащането
-        let description = input.description || '';
-        
-        // Допълнително описание според типа плащане
-        if (input.type === PaymentType.CAMPAIGN_DONATION && input.campaignId) {
-          const campaign = await Campaign.findById(input.campaignId);
-          if (campaign) {
-            description = `Дарение за кампания: ${campaign.title}`;
-          }
-        } else if (input.type === PaymentType.INITIATIVE_DONATION && input.initiativeId) {
-          const initiative = await Initiative.findById(input.initiativeId);
-          if (initiative) {
-            description = `Дарение за инициатива: ${initiative.title}`;
-          }
+        // Вземаме имейла на потребителя за касова бележка
+        const userDoc = await User.findById(user.id);
+        const receiptEmail = userDoc?.email;
+
+        // Базовите метаданни
+        const baseMetadata: Record<string, string> = {
+          userId: user.id,
+          type: input.type
+        };
+
+        // Добавяме campaignId ако е подаден
+        if (input.campaignId) {
+          baseMetadata.campaignId = input.campaignId;
         }
 
-        // Създаваме метаданни за плащането
-        const metadata = createPaymentMetadata(
-          user.id, 
-          input.type, 
-          input.campaignId, 
-          input.initiativeId, 
-          input.items
-        );
+        // Добавяме initiativeId ако е подаден
+        if (input.initiativeId) {
+          baseMetadata.initiativeId = input.initiativeId;
+        }
 
-        // Намираме имейла на потребителя за receipt
-        const userData = await User.findById(user.id);
-        const receiptEmail = userData?.email;
+        console.log('Payment intent metadata:', baseMetadata);
 
-        // Създаваме PaymentIntent за клиента
-        const paymentIntent = await stripeService.createCustomerPaymentIntent(
-          stripeCustomerId,
-          {
-            amount: amountInCents,
-            currency: input.currency || 'bgn',
-            description,
-            receiptEmail,
-            metadata
-          }
-        );
+        // Създаваме PaymentIntent чрез Stripe
+        const paymentIntent = await stripeService.createPaymentIntent({
+          amount: Math.round(input.amount * 100), // Конвертиране на левове в стотинки
+          currency: 'bgn',
+          description: input.description,
+          metadata: baseMetadata,
+          receiptEmail: receiptEmail,
+        });
+
+        console.log('PaymentIntent created:', paymentIntent.id);
 
         return {
           clientSecret: paymentIntent.client_secret,
           paymentIntentId: paymentIntent.id,
           amount: input.amount,
-          currency: input.currency || 'bgn'
+          currency: 'bgn',
         };
       } catch (error) {
-        console.error('Грешка при създаване на платежно намерение:', error);
-        throw new Error('Грешка при създаване на платежно намерение');
+        console.error('Error creating payment intent:', error);
+        throw new Error(`Error creating payment intent: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     },
 
@@ -355,7 +393,7 @@ export const paymentResolvers = {
           status: PaymentStatus.SUCCEEDED,
           type: metadata.type as PaymentType || PaymentType.OTHER_DONATION,
           description: stripePaymentIntent.description,
-          user: metadata.userId ? new Types.ObjectId(metadata.userId) : undefined,
+          user: new Types.ObjectId(user.id), // Използваме user.id от контекста
         };
 
         // Добавяне на свързани обекти според метаданните
@@ -376,22 +414,24 @@ export const paymentResolvers = {
         // Обработка на донор и обновяване на плащането
         await processDonorAndUpdatePayment(paymentData);
 
-        // Използваме транзакция за записване на плащането
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        // Обновяване на кампанията, ако плащането е за кампания
+        if (paymentData.campaign && paymentData.user) {
+          await updateCampaignWithDonation(paymentData.campaign, paymentData.user, paymentData.amount);
+        }
 
         try {
           // Записваме плащането в базата данни
           const payment = new Payment(paymentData);
-          await payment.save({ session });
+          await payment.save();
           
-          await session.commitTransaction();
-          return payment;
+          // Връщаме плащането с популирани данни
+          return await Payment.findById(payment._id)
+            .populate('user')
+            .populate('campaign')
+            .populate('initiative')
+            .populate('donor');
         } catch (error) {
-          await session.abortTransaction();
           throw error;
-        } finally {
-          session.endSession();
         }
       } catch (error) {
         console.error('Грешка при потвърждаване на плащане:', error);
@@ -421,9 +461,6 @@ export const paymentResolvers = {
         }
 
         // Използваме транзакция за записване на промените
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
         try {
           // Правим заявка към Stripe за възстановяване
           const refund = await stripeService.createRefund(paymentIntentId);
@@ -434,27 +471,23 @@ export const paymentResolvers = {
 
           // Обновяваме статуса на плащането
           payment.status = PaymentStatus.REFUNDED;
-          await payment.save({ session });
+          await payment.save();
 
           // Ако има донор, намаляваме сумата на неговите дарения
           if (payment.donor) {
-            const donor = await Donor.findById(payment.donor).session(session);
+            const donor = await Donor.findById(payment.donor);
             if (donor) {
               donor.totalDonations -= payment.amount;
               if (donor.totalDonations < 0) {
                 donor.totalDonations = 0;
               }
-              await donor.save({ session });
+              await donor.save();
             }
           }
 
-          await session.commitTransaction();
           return payment;
         } catch (error) {
-          await session.abortTransaction();
           throw error;
-        } finally {
-          session.endSession();
         }
       } catch (error) {
         console.error('Грешка при възстановяване на плащане:', error);
