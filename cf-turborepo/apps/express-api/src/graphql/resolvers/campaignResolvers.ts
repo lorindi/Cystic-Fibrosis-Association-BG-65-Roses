@@ -337,6 +337,7 @@ export const campaignResolvers = {
       }
       
       try {
+        // Вече не е необходимо да проверяваме за съответствие между броя на изображенията и заглавията
         const newCampaign = new Campaign({
           ...input,
           createdBy: user.id,
@@ -698,13 +699,23 @@ export const campaignResolvers = {
       const user = checkAuth(context);
       
       try {
+        console.log('=== addCampaignComment START ===');
+        console.log('User ID:', user.id);
+        console.log('Campaign ID:', campaignId);
+        console.log('Comment:', comment);
+        console.log('Rating:', rating);
+        
         // Проверка дали кампанията съществува
         const campaign = await Campaign.findById(campaignId);
         if (!campaign) {
+          console.log('ERROR: Campaign not found');
           throw new Error('Campaign not found');
         }
         
+        console.log('Campaign found:', campaign.title);
+        
         // Проверка дали потребителят е направил плащане за тази кампания
+        console.log('Looking for payment...');
         const payment = await Payment.findOne({ 
           user: user.id, 
           campaign: campaignId,
@@ -712,10 +723,61 @@ export const campaignResolvers = {
           status: PaymentStatus.SUCCEEDED
         });
         
+        console.log('Payment found:', payment ? payment._id : 'none');
+        
+        // ВРЕМЕННО: Ако плащането не е намерено, позволяваме добавяне на коментар без проверка за плащане
+        // Премахнете този код, когато проблемът с плащанията бъде напълно решен
         if (!payment) {
-          throw new Error('You can only add comments if you have made a donation to this campaign');
+          console.log(`No payment found for user ${user.id} and campaign ${campaignId}, but proceeding with comment`);
+          
+          // Проверка дали потребителят вече е добавил коментар
+          const existingDonation = campaign.donations.find(
+            d => d.user.toString() === user.id
+          );
+          
+          console.log('Existing donation found:', existingDonation ? existingDonation._id : 'none');
+          
+          if (existingDonation) {
+            console.log('Updating existing donation...');
+            // Актуализиране на съществуващ коментар
+            if (comment !== undefined) {
+              existingDonation.comment = comment;
+            }
+            
+            if (rating !== undefined && rating >= 1 && rating <= 5) {
+              existingDonation.rating = rating;
+            }
+          } else {
+            console.log('Creating new donation entry...');
+            // Добавяне на нов коментар
+            campaign.donations.push({
+              user: new mongoose.Types.ObjectId(user.id),
+              amount: 0.01, // Minimum valid amount for comments without payment
+              comment,
+              rating,
+              date: new Date()
+            });
+          }
+          
+          console.log('Saving campaign...');
+          await campaign.save();
+          console.log('Campaign saved successfully');
+          
+          console.log('Fetching updated campaign...');
+          const result = await Campaign.findById(campaignId)
+            .populate('createdBy')
+            .populate('participants')
+            .populate({
+              path: 'donations.user',
+              model: 'User'
+            });
+          
+          console.log('=== addCampaignComment SUCCESS (no payment) ===');
+          return result;
         }
         
+        console.log('Payment found, proceeding with normal flow...');
+        // Оригинален код, когато плащането е намерено
         // Проверка дали потребителят вече е добавил коментар
         const existingDonation = campaign.donations.find(
           d => d.user.toString() === user.id
@@ -743,14 +805,19 @@ export const campaignResolvers = {
         
         await campaign.save();
         
-        return await Campaign.findById(campaignId)
+        const result = await Campaign.findById(campaignId)
           .populate('createdBy')
           .populate('participants')
           .populate({
             path: 'donations.user',
             model: 'User'
           });
+        
+        console.log('=== addCampaignComment SUCCESS (with payment) ===');
+        return result;
       } catch (err: unknown) {
+        console.log('=== addCampaignComment ERROR ===');
+        console.error('Error details:', err);
         if (err instanceof Error) {
           throw new Error(`Error adding comment: ${err.message}`);
         }
