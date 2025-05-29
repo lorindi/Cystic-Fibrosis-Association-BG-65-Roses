@@ -32,12 +32,15 @@ export const GET_CAMPAIGNS = gql`
       startDate
       endDate
       images
+      imagesCaptions
       events {
         id
         title
         description
         date
         location
+        image
+        imageCaption
       }
       participantsCount
       pendingParticipantsCount
@@ -56,12 +59,15 @@ export const GET_CAMPAIGN = gql`
       startDate
       endDate
       images
+      imagesCaptions
       events {
         id
         title
         description
         date
         location
+        image
+        imageCaption
       }
       participantsCount
       pendingParticipantsCount

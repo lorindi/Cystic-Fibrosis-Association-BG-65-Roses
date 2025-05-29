@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
-import { CalendarIcon, ImagePlus, X } from "lucide-react"
+import { CalendarIcon, Edit2, ImagePlus, Loader2, X } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -27,6 +27,13 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { enUS } from "date-fns/locale"
 import Image from "next/image"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 // Campaign validation schema
 const campaignSchema = z.object({
@@ -35,11 +42,12 @@ const campaignSchema = z.object({
   goal: z.number().min(1, "Goal must be a positive number"),
   startDate: z.date(),
   endDate: z.date().optional().nullable(),
-  images: z.array(z.string()).min(1, "At least one image is required"),
+  images: z.array(z.string()).optional(),
   imagesCaptions: z.array(z.string()).optional(),
 })
 
-export type CampaignFormValues = z.infer<typeof campaignSchema>
+// Define the type from the schema
+type CampaignFormValues = z.infer<typeof campaignSchema>
 
 interface CampaignFormProps {
   initialData?: Campaign | null
@@ -52,35 +60,35 @@ export function CampaignForm({
   onSubmit,
   isLoading = false,
 }: CampaignFormProps) {
-  // Convert initial data to the correct format for the form
-  const defaultValues: Partial<CampaignFormValues> = initialData
-    ? {
-        title: initialData.title,
-        description: initialData.description,
-        goal: initialData.goal,
-        startDate: new Date(initialData.startDate),
-        endDate: initialData.endDate ? new Date(initialData.endDate) : null,
-        images: initialData.images || [],
-        imagesCaptions: initialData.imagesCaptions || [],
-      }
-    : {
-        title: "",
-        description: "",
-        goal: 0,
-        startDate: new Date(),
-        endDate: null,
-        images: [],
-        imagesCaptions: [],
-      }
+  // Create initial values
+  const defaultValues: CampaignFormValues = {
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    goal: initialData?.goal || 0,
+    startDate: initialData ? new Date(initialData.startDate) : new Date(),
+    endDate: initialData?.endDate ? new Date(initialData.endDate) : null,
+    images: initialData?.images || [],
+    imagesCaptions: initialData?.imagesCaptions || [],
+  };
 
   const [imagePreviews, setImagePreviews] = useState<string[]>(
     initialData?.images || []
   )
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [captionDialogOpen, setCaptionDialogOpen] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1)
+  const [currentCaption, setCurrentCaption] = useState("")
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues,
   })
+
+  // Помощна функция за проверка дали URL е от Cloudinary
+  const isCloudinaryUrl = (url: string) => {
+    return url.includes('cloudinary.com');
+  }
 
   function handleSubmit(data: CampaignFormValues) {
     // Convert form data to the expected API format
@@ -88,49 +96,134 @@ export function CampaignForm({
       ...data,
       startDate: data.startDate.toISOString(),
       endDate: data.endDate ? data.endDate.toISOString() : null,
-      images: data.images,
-      imagesCaptions: data.imagesCaptions,
-      // Events are not added/edited in this form, so we don't include them
+      images: data.images || [],
+      imagesCaptions: data.imagesCaptions || [],
     }
     
     onSubmit(formattedData)
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
-    // Handle file upload to your server/storage here
-    // This is a placeholder for the actual image upload implementation
-    // You would typically upload the image to your server and get back URLs
     
-    const newImageUrls: string[] = [];
-    const currentImages = form.getValues("images") || [];
+    setIsUploading(true);
+    setUploadProgress(0);
     
-    // Simulate upload and getting image URLs
-    Array.from(files).forEach(file => {
-      const fileUrl = URL.createObjectURL(file);
-      newImageUrls.push(fileUrl);
-    });
+    // Текущи изображения
+    const currentImages = [...(form.getValues("images") || [])];
+    const currentPreviews = [...imagePreviews];
+    const currentCaptions = [...(form.getValues("imagesCaptions") || [])];
     
-    const updatedImages = [...currentImages, ...newImageUrls];
-    
-    // Update form values
-    form.setValue("images", updatedImages);
-    setImagePreviews(updatedImages);
-    
-    // Trigger validation
-    form.trigger("images");
+    try {
+      // Качваме всички файлове последователно
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Изчисляваме прогреса
+        const progressPerImage = 100 / files.length;
+        setUploadProgress((i * progressPerImage) + (progressPerImage / 2));
+        
+        // Създаваме FormData
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('folder', 'campaigns');
+        
+        // Изпращаме заявката и чакаме резултата
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.url) {
+          // Добавяме новото URL към изображенията
+          currentImages.push(data.url);
+          currentPreviews.push(data.url);
+          // Добавяме празно заглавие за новото изображение
+          currentCaptions.push("");
+        }
+      }
+      
+      // Актуализираме формата с всички успешно качени изображения
+      form.setValue("images", currentImages);
+      form.setValue("imagesCaptions", currentCaptions);
+      setImagePreviews(currentPreviews);
+      
+      // Ако сме качили поне едно ново изображение, отваряме диалога за въвеждане на заглавие
+      // за последното качено изображение
+      if (currentImages.length > 0) {
+        const newImageIndex = currentImages.length - 1;
+        setSelectedImageIndex(newImageIndex);
+        setCurrentCaption("");
+        setCaptionDialogOpen(true);
+      }
+      
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Възникна грешка при качването на изображенията. Моля, опитайте отново.");
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
-  const removeImage = (index: number) => {
-    const currentImages = [...form.getValues("images")];
-    currentImages.splice(index, 1);
-    form.setValue("images", currentImages);
-    setImagePreviews([...currentImages]);
+  const removeImage = async (index: number) => {
+    const currentImages = [...(form.getValues("images") || [])];
+    const imageUrl = currentImages[index];
+    const currentCaptions = [...(form.getValues("imagesCaptions") || [])];
     
-    // Trigger validation
-    form.trigger("images");
+    if (!imageUrl) return;
+    
+    // Ако изображението е от Cloudinary, изпращаме заявка за изтриване
+    if (isCloudinaryUrl(imageUrl)) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/images`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: imageUrl }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete image');
+        }
+      } catch (error) {
+        console.error('Error deleting image:', error);
+        alert("Възникна грешка при изтриването на изображението. Изображението ще бъде премахнато локално.");
+      }
+    }
+    
+    // Премахваме изображението от масива
+    currentImages.splice(index, 1);
+    // Премахваме и съответното заглавие
+    currentCaptions.splice(index, 1);
+    
+    form.setValue("images", currentImages);
+    form.setValue("imagesCaptions", currentCaptions);
+    setImagePreviews([...currentImages]);
+  };
+
+  const openCaptionDialog = (index: number) => {
+    const captions = form.getValues("imagesCaptions") || [];
+    setCurrentCaption(captions[index] || "");
+    setSelectedImageIndex(index);
+    setCaptionDialogOpen(true);
+  };
+
+  const saveCaption = () => {
+    if (selectedImageIndex >= 0) {
+      const currentCaptions = [...(form.getValues("imagesCaptions") || [])];
+      currentCaptions[selectedImageIndex] = currentCaption;
+      form.setValue("imagesCaptions", currentCaptions);
+      setCaptionDialogOpen(false);
+    }
   };
 
   return (
@@ -278,7 +371,7 @@ export function CampaignForm({
           name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Images (required)</FormLabel>
+              <FormLabel>Images (optional)</FormLabel>
               <FormControl>
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-4 mt-2">
@@ -293,39 +386,71 @@ export function CampaignForm({
                             className="object-cover h-full w-full"
                           />
                         </div>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="destructive"
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        <div className="absolute -top-2 -right-2 flex space-x-1">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => openCaptionDialog(index)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="destructive"
+                            className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeImage(index)}
+                            disabled={isUploading}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        {(form.getValues("imagesCaptions") || [])[index] && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
+                            {(form.getValues("imagesCaptions") || [])[index]}
+                          </div>
+                        )}
                       </div>
                     ))}
                     
-                    <label className="h-24 w-24 rounded-md border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
-                      <div className="flex flex-col items-center">
-                        <ImagePlus className="h-8 w-8 text-gray-400" />
-                        <span className="text-xs text-gray-500 mt-1">Add image</span>
+                    {isUploading ? (
+                      <div className="h-24 w-24 rounded-md border border-gray-300 flex items-center justify-center">
+                        <div className="flex flex-col items-center">
+                          <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                          <span className="text-xs text-gray-500 mt-1">{uploadProgress.toFixed(0)}%</span>
+                        </div>
                       </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                        multiple
-                      />
-                    </label>
+                    ) : (
+                      <label className="h-24 w-24 rounded-md border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex flex-col items-center">
+                          <ImagePlus className="h-8 w-8 text-gray-400" />
+                          <span className="text-xs text-gray-500 mt-1">Add image</span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                          multiple
+                          disabled={isUploading}
+                        />
+                      </label>
+                    )}
                   </div>
                   {form.formState.errors.images && (
                     <p className="text-sm font-medium text-destructive">
                       {form.formState.errors.images.message}
                     </p>
                   )}
+                  {form.formState.errors.imagesCaptions && (
+                    <p className="text-sm font-medium text-destructive">
+                      {form.formState.errors.imagesCaptions.message}
+                    </p>
+                  )}
                   <p className="text-sm text-gray-500">
-                    Upload up to 10 images for your campaign. First image will be used as the main thumbnail.
+                    Upload up to 13 images for your campaign. First image will be used as the main thumbnail. Captions are optional.
                   </p>
                 </div>
               </FormControl>
@@ -342,10 +467,48 @@ export function CampaignForm({
           </div>
         ) : null}
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Campaign"}
+        <Button type="submit" disabled={isLoading || isUploading}>
+          {isLoading ? "Saving..." : isUploading ? "Uploading Images..." : "Save Campaign"}
         </Button>
       </form>
+
+      <Dialog open={captionDialogOpen} onOpenChange={setCaptionDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Image Caption</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedImageIndex >= 0 && imagePreviews[selectedImageIndex] && (
+              <div className="flex justify-center">
+                <div className="w-48 h-48 relative">
+                  <Image
+                    src={imagePreviews[selectedImageIndex]}
+                    alt="Selected image"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <FormLabel>Caption</FormLabel>
+              <Input
+                value={currentCaption}
+                onChange={(e) => setCurrentCaption(e.target.value)}
+                placeholder="Enter a caption for this image"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setCaptionDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={saveCaption}>
+              Save Caption
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Form>
   )
 } 

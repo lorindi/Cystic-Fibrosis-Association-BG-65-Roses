@@ -18,9 +18,11 @@ export const campaignTypeDefs = gql`
     createdBy: User!
     createdAt: Date!
     updatedAt: Date!
-    images: [String!]!
+    images: [String!]
     imagesCaptions: [String!]
     donations: [CampaignDonation!]!
+    donationsCount: Int!
+    uniqueDonorsCount: Int!
     totalRating: Float
     ratingCount: Int
     percentCompleted: Float!
@@ -35,6 +37,8 @@ export const campaignTypeDefs = gql`
     description: String!
     date: Date!
     location: String!
+    image: String
+    imageCaption: String
   }
 
   type CampaignDonation {
@@ -95,6 +99,8 @@ export const campaignTypeDefs = gql`
     description: String!
     date: Date!
     location: String!
+    image: String
+    imageCaption: String
   }
 
   input CampaignDonationInput {

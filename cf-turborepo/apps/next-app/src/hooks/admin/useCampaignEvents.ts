@@ -11,6 +11,8 @@ const ADD_CAMPAIGN_EVENT = gql`
       description
       date
       location
+      image
+      imageCaption
     }
   }
 `;
@@ -24,6 +26,8 @@ const UPDATE_CAMPAIGN_EVENT = gql`
       description
       date
       location
+      image
+      imageCaption
     }
   }
 `;

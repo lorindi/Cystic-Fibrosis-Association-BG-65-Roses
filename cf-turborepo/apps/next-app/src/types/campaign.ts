@@ -4,6 +4,8 @@ export interface CampaignEvent {
   description: string;
   date: string;
   location: string;
+  image?: string;
+  imageCaption?: string;
 }
 
 export interface Campaign {
@@ -31,7 +33,7 @@ export interface CampaignInput {
   startDate: string;
   endDate?: string | null;
   events?: CampaignEventInput[];
-  images: string[];
+  images?: string[];
   imagesCaptions?: string[];
 }
 
@@ -40,4 +42,6 @@ export interface CampaignEventInput {
   description: string;
   date: string;
   location: string;
+  image?: string;
+  imageCaption?: string;
 } 

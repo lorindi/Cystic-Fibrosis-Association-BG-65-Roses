@@ -83,12 +83,13 @@ export type Campaign = {
   currentAmount: Scalars['Float']['output'];
   description: Scalars['String']['output'];
   donations: Array<CampaignDonation>;
+  donationsCount: Scalars['Int']['output'];
   endDate?: Maybe<Scalars['Date']['output']>;
   events: Array<CampaignEvent>;
   goal: Scalars['Float']['output'];
   hashtags: Array<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  images: Array<Scalars['String']['output']>;
+  images?: Maybe<Array<Scalars['String']['output']>>;
   imagesCaptions?: Maybe<Array<Scalars['String']['output']>>;
   isActive: Scalars['Boolean']['output'];
   participants: Array<User>;
@@ -101,6 +102,7 @@ export type Campaign = {
   startDate: Scalars['Date']['output'];
   title: Scalars['String']['output'];
   totalRating?: Maybe<Scalars['Float']['output']>;
+  uniqueDonorsCount: Scalars['Int']['output'];
   updatedAt: Scalars['Date']['output'];
 };
 
@@ -126,6 +128,8 @@ export type CampaignEvent = {
   date: Scalars['Date']['output'];
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  imageCaption?: Maybe<Scalars['String']['output']>;
   location: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
@@ -133,6 +137,8 @@ export type CampaignEvent = {
 export type CampaignEventInput = {
   date: Scalars['Date']['input'];
   description: Scalars['String']['input'];
+  image?: InputMaybe<Scalars['String']['input']>;
+  imageCaption?: InputMaybe<Scalars['String']['input']>;
   location: Scalars['String']['input'];
   title: Scalars['String']['input'];
 };
@@ -1802,14 +1808,14 @@ export type GetCampaignsQueryVariables = Exact<{
 }>;
 
 
-export type GetCampaignsQuery = { __typename?: 'Query', getCampaigns?: Array<{ __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, images: Array<string>, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> }> | null };
+export type GetCampaignsQuery = { __typename?: 'Query', getCampaigns?: Array<{ __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, images?: Array<string> | null, imagesCaptions?: Array<string> | null, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string, image?: string | null, imageCaption?: string | null }> }> | null };
 
 export type GetCampaignQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetCampaignQuery = { __typename?: 'Query', getCampaign?: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, images: Array<string>, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string }> } | null };
+export type GetCampaignQuery = { __typename?: 'Query', getCampaign?: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, startDate: string, endDate?: string | null, images?: Array<string> | null, imagesCaptions?: Array<string> | null, participantsCount: number, pendingParticipantsCount: number, events: Array<{ __typename?: 'CampaignEvent', id: string, title: string, description: string, date: string, location: string, image?: string | null, imageCaption?: string | null }> } | null };
 
 export type GetEventsQueryVariables = Exact<{
   noLimit?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1825,12 +1831,35 @@ export type GetDonationsQueryVariables = Exact<{
 
 export type GetDonationsQuery = { __typename?: 'Query', getDonors?: Array<{ __typename?: 'Donor', id: string, name: string, totalDonations: number, donations: Array<{ __typename?: 'Donation', id: string, amount: number, date: string, campaign?: { __typename?: 'Campaign', id: string, title: string } | null }> }> | null };
 
+export type GetCampaignDetailsQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetCampaignDetailsQuery = { __typename?: 'Query', getCampaign?: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, endDate?: string | null, images?: Array<string> | null, donationsCount: number, uniqueDonorsCount: number, totalRating?: number | null, ratingCount?: number | null, percentCompleted: number, remainingAmount: number, createdAt: string, createdBy: { __typename?: 'User', _id: string, name: string }, donations: Array<{ __typename?: 'CampaignDonation', id: string, amount: number, comment?: string | null, rating?: number | null, date: string, user: { __typename?: 'User', _id: string, name: string, profile?: { __typename?: 'UserProfile', avatar?: string | null } | null } }> } | null };
+
+export type AddCampaignCommentMutationVariables = Exact<{
+  campaignId: Scalars['ID']['input'];
+  comment?: InputMaybe<Scalars['String']['input']>;
+  rating?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type AddCampaignCommentMutation = { __typename?: 'Mutation', addCampaignComment: { __typename?: 'Campaign', id: string, title: string, description: string, goal: number, currentAmount: number, endDate?: string | null, images?: Array<string> | null, donationsCount: number, uniqueDonorsCount: number, totalRating?: number | null, ratingCount?: number | null, percentCompleted: number, remainingAmount: number, createdAt: string, createdBy: { __typename?: 'User', _id: string, name: string }, donations: Array<{ __typename?: 'CampaignDonation', id: string, amount: number, comment?: string | null, rating?: number | null, date: string, user: { __typename?: 'User', _id: string, name: string, profile?: { __typename?: 'UserProfile', avatar?: string | null } | null } }> } };
+
 export type CreatePaymentIntentMutationVariables = Exact<{
   input: CreatePaymentIntentInput;
 }>;
 
 
 export type CreatePaymentIntentMutation = { __typename?: 'Mutation', createPaymentIntent: { __typename?: 'PaymentIntent', clientSecret: string, paymentIntentId: string, amount: number, currency: string } };
+
+export type ConfirmPaymentMutationVariables = Exact<{
+  paymentIntentId: Scalars['String']['input'];
+}>;
+
+
+export type ConfirmPaymentMutation = { __typename?: 'Mutation', confirmPayment: { __typename?: 'Payment', _id: string, stripePaymentIntentId: string, amount: number, status: PaymentStatus, type: PaymentType, user?: { __typename?: 'User', _id: string, name: string } | null, campaign?: { __typename?: 'Campaign', id: string, title: string } | null } };
 
 export type GetPaymentMethodsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -3186,12 +3215,15 @@ export const GetCampaignsDocument = gql`
     startDate
     endDate
     images
+    imagesCaptions
     events {
       id
       title
       description
       date
       location
+      image
+      imageCaption
     }
     participantsCount
     pendingParticipantsCount
@@ -3242,12 +3274,15 @@ export const GetCampaignDocument = gql`
     startDate
     endDate
     images
+    imagesCaptions
     events {
       id
       title
       description
       date
       location
+      image
+      imageCaption
     }
     participantsCount
     pendingParticipantsCount
@@ -3387,6 +3422,143 @@ export type GetDonationsQueryHookResult = ReturnType<typeof useGetDonationsQuery
 export type GetDonationsLazyQueryHookResult = ReturnType<typeof useGetDonationsLazyQuery>;
 export type GetDonationsSuspenseQueryHookResult = ReturnType<typeof useGetDonationsSuspenseQuery>;
 export type GetDonationsQueryResult = Apollo.QueryResult<GetDonationsQuery, GetDonationsQueryVariables>;
+export const GetCampaignDetailsDocument = gql`
+    query GetCampaignDetails($id: ID!) {
+  getCampaign(id: $id) {
+    id
+    title
+    description
+    goal
+    currentAmount
+    endDate
+    images
+    donationsCount
+    uniqueDonorsCount
+    totalRating
+    ratingCount
+    percentCompleted
+    remainingAmount
+    createdBy {
+      _id
+      name
+    }
+    createdAt
+    donations {
+      id
+      user {
+        _id
+        name
+        profile {
+          avatar
+        }
+      }
+      amount
+      comment
+      rating
+      date
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetCampaignDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetCampaignDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCampaignDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCampaignDetailsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetCampaignDetailsQuery(baseOptions: Apollo.QueryHookOptions<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables> & ({ variables: GetCampaignDetailsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables>(GetCampaignDetailsDocument, options);
+      }
+export function useGetCampaignDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables>(GetCampaignDetailsDocument, options);
+        }
+export function useGetCampaignDetailsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables>(GetCampaignDetailsDocument, options);
+        }
+export type GetCampaignDetailsQueryHookResult = ReturnType<typeof useGetCampaignDetailsQuery>;
+export type GetCampaignDetailsLazyQueryHookResult = ReturnType<typeof useGetCampaignDetailsLazyQuery>;
+export type GetCampaignDetailsSuspenseQueryHookResult = ReturnType<typeof useGetCampaignDetailsSuspenseQuery>;
+export type GetCampaignDetailsQueryResult = Apollo.QueryResult<GetCampaignDetailsQuery, GetCampaignDetailsQueryVariables>;
+export const AddCampaignCommentDocument = gql`
+    mutation AddCampaignComment($campaignId: ID!, $comment: String, $rating: Int) {
+  addCampaignComment(campaignId: $campaignId, comment: $comment, rating: $rating) {
+    id
+    title
+    description
+    goal
+    currentAmount
+    endDate
+    images
+    donationsCount
+    uniqueDonorsCount
+    totalRating
+    ratingCount
+    percentCompleted
+    remainingAmount
+    createdBy {
+      _id
+      name
+    }
+    createdAt
+    donations {
+      id
+      user {
+        _id
+        name
+        profile {
+          avatar
+        }
+      }
+      amount
+      comment
+      rating
+      date
+    }
+  }
+}
+    `;
+export type AddCampaignCommentMutationFn = Apollo.MutationFunction<AddCampaignCommentMutation, AddCampaignCommentMutationVariables>;
+
+/**
+ * __useAddCampaignCommentMutation__
+ *
+ * To run a mutation, you first call `useAddCampaignCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddCampaignCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addCampaignCommentMutation, { data, loading, error }] = useAddCampaignCommentMutation({
+ *   variables: {
+ *      campaignId: // value for 'campaignId'
+ *      comment: // value for 'comment'
+ *      rating: // value for 'rating'
+ *   },
+ * });
+ */
+export function useAddCampaignCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCampaignCommentMutation, AddCampaignCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddCampaignCommentMutation, AddCampaignCommentMutationVariables>(AddCampaignCommentDocument, options);
+      }
+export type AddCampaignCommentMutationHookResult = ReturnType<typeof useAddCampaignCommentMutation>;
+export type AddCampaignCommentMutationResult = Apollo.MutationResult<AddCampaignCommentMutation>;
+export type AddCampaignCommentMutationOptions = Apollo.BaseMutationOptions<AddCampaignCommentMutation, AddCampaignCommentMutationVariables>;
 export const CreatePaymentIntentDocument = gql`
     mutation CreatePaymentIntent($input: CreatePaymentIntentInput!) {
   createPaymentIntent(input: $input) {
@@ -3423,6 +3595,51 @@ export function useCreatePaymentIntentMutation(baseOptions?: Apollo.MutationHook
 export type CreatePaymentIntentMutationHookResult = ReturnType<typeof useCreatePaymentIntentMutation>;
 export type CreatePaymentIntentMutationResult = Apollo.MutationResult<CreatePaymentIntentMutation>;
 export type CreatePaymentIntentMutationOptions = Apollo.BaseMutationOptions<CreatePaymentIntentMutation, CreatePaymentIntentMutationVariables>;
+export const ConfirmPaymentDocument = gql`
+    mutation ConfirmPayment($paymentIntentId: String!) {
+  confirmPayment(paymentIntentId: $paymentIntentId) {
+    _id
+    stripePaymentIntentId
+    amount
+    status
+    type
+    user {
+      _id
+      name
+    }
+    campaign {
+      id
+      title
+    }
+  }
+}
+    `;
+export type ConfirmPaymentMutationFn = Apollo.MutationFunction<ConfirmPaymentMutation, ConfirmPaymentMutationVariables>;
+
+/**
+ * __useConfirmPaymentMutation__
+ *
+ * To run a mutation, you first call `useConfirmPaymentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useConfirmPaymentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [confirmPaymentMutation, { data, loading, error }] = useConfirmPaymentMutation({
+ *   variables: {
+ *      paymentIntentId: // value for 'paymentIntentId'
+ *   },
+ * });
+ */
+export function useConfirmPaymentMutation(baseOptions?: Apollo.MutationHookOptions<ConfirmPaymentMutation, ConfirmPaymentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ConfirmPaymentMutation, ConfirmPaymentMutationVariables>(ConfirmPaymentDocument, options);
+      }
+export type ConfirmPaymentMutationHookResult = ReturnType<typeof useConfirmPaymentMutation>;
+export type ConfirmPaymentMutationResult = Apollo.MutationResult<ConfirmPaymentMutation>;
+export type ConfirmPaymentMutationOptions = Apollo.BaseMutationOptions<ConfirmPaymentMutation, ConfirmPaymentMutationVariables>;
 export const GetPaymentMethodsDocument = gql`
     query GetPaymentMethods {
   getPaymentMethods {

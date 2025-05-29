@@ -6,7 +6,9 @@ const CampaignEventSchema = new Schema<ICampaignEvent>({
   title: { type: String, required: true },
   description: { type: String, required: true },
   date: { type: Date, required: true },
-  location: { type: String, required: true }
+  location: { type: String, required: true },
+  image: { type: String },
+  imageCaption: { type: String }
 }, { _id: true });
 
 const CampaignDonationSchema = new Schema<ICampaignDonation>({
@@ -76,12 +78,12 @@ const CampaignSchema = new Schema<ICampaignDocument>({
   },
   images: {
     type: [String],
-    validate: [arrayMaxLength, 'Campaigns cannot have more than 10 images.'],
-    required: [true, 'At least one image is required for a campaign']
+    validate: [arrayMaxLength, 'Campaigns cannot have more than 13 images.'],
+    default: []
   },
   imagesCaptions: {
     type: [String],
-    validate: [captionsArrayLength, 'The number of captions must match the number of images.']
+    default: []
   },
   donations: [CampaignDonationSchema],
   hashtags: {
@@ -97,12 +99,7 @@ const CampaignSchema = new Schema<ICampaignDocument>({
 
 // Валидатор за максимален брой изображения
 function arrayMaxLength(val: any[]) {
-  return val.length <= 10;
-}
-
-// Валидатор за съответствие между броя изображения и описания
-function captionsArrayLength(this: any, val: any[]) {
-  return !val || val.length === this.images.length;
+  return val.length <= 13;
 }
 
 // Middleware за обработка на хаштагове преди запазване
@@ -179,6 +176,22 @@ CampaignSchema.virtual('totalRating').get(function(this: ICampaignDocument) {
 CampaignSchema.virtual('ratingCount').get(function(this: ICampaignDocument) {
   if (!this.donations) return 0;
   return this.donations.filter((d: ICampaignDonation) => d.rating && d.rating > 0).length;
+});
+
+CampaignSchema.virtual('donationsCount').get(function(this: ICampaignDocument) {
+  if (!this.donations) return 0;
+  return this.donations.length;
+});
+
+CampaignSchema.virtual('uniqueDonorsCount').get(function(this: ICampaignDocument) {
+  if (!this.donations || this.donations.length === 0) return 0;
+  
+  const uniqueUsers = new Set();
+  this.donations.forEach((donation: ICampaignDonation) => {
+    uniqueUsers.add(donation.user.toString());
+  });
+  
+  return uniqueUsers.size;
 });
 
 const Campaign = mongoose.model<ICampaignDocument>('Campaign', CampaignSchema);

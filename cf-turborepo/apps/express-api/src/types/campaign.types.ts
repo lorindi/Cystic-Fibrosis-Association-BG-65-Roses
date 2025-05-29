@@ -7,6 +7,8 @@ export interface ICampaignEvent {
   description: string;
   date: Date;
   location: string;
+  image?: string;
+  imageCaption?: string;
 }
 
 export interface ICampaignDonation {
@@ -31,8 +33,8 @@ export interface ICampaignDocument extends Document {
   createdBy: IUserDocument['_id'];
   createdAt: Date;
   updatedAt: Date;
-  images: string[]; // масив с URL адреси на изображения (максимум 10)
-  imagesCaptions?: string[]; // опционални заглавия за изображенията
+  images: string[]; // масив с URL адреси на изображения (максимум 13)
+  imagesCaptions?: string[]; // опционални заглавия за изображенията, вече не са задължителни
   donations: ICampaignDonation[]; // масив от донации с коментари и рейтинги
   totalRating?: number; // средна оценка на кампанията
   hashtags: string[]; // масив от хаштагове

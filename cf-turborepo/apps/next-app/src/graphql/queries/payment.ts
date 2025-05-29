@@ -11,6 +11,26 @@ export const CREATE_PAYMENT_INTENT = gql`
   }
 `;
 
+export const CONFIRM_PAYMENT = gql`
+  mutation ConfirmPayment($paymentIntentId: String!) {
+    confirmPayment(paymentIntentId: $paymentIntentId) {
+      _id
+      stripePaymentIntentId
+      amount
+      status
+      type
+      user {
+        _id
+        name
+      }
+      campaign {
+        id
+        title
+      }
+    }
+  }
+`;
+
 export const GET_PAYMENT_METHODS = gql`
   query GetPaymentMethods {
     getPaymentMethods {

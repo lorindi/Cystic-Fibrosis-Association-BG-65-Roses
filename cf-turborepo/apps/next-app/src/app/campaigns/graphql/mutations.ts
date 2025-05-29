@@ -26,4 +26,36 @@ export const ADD_CAMPAIGN_COMMENT = gql`
     }
   }
   ${CAMPAIGN_FRAGMENT}
+`;
+
+// Payment related mutations for campaigns
+export const CREATE_PAYMENT_INTENT = gql`
+  mutation CreatePaymentIntent($input: CreatePaymentIntentInput!) {
+    createPaymentIntent(input: $input) {
+      clientSecret
+      paymentIntentId
+      amount
+      currency
+    }
+  }
+`;
+
+export const CONFIRM_PAYMENT = gql`
+  mutation ConfirmPayment($paymentIntentId: String!) {
+    confirmPayment(paymentIntentId: $paymentIntentId) {
+      _id
+      stripePaymentIntentId
+      amount
+      status
+      type
+      user {
+        _id
+        name
+      }
+      campaign {
+        id
+        title
+      }
+    }
+  }
 `; 

@@ -17,6 +17,8 @@ import cookieParser from 'cookie-parser';
 import { stripeService } from './services/stripeService';
 import { Payment } from './models/payment.model';
 import { PaymentStatus } from './types/payment.types';
+import upload from './services/multerConfig';
+import { ImageService } from './services/imageService';
 
 
 dotenv.config();
@@ -125,6 +127,85 @@ async function startApolloServer() {
     }
   });
 
+  // CORS настройки, които позволяват изпращане на cookies
+  const corsOptions = {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true, // Това е важно, за да може браузърът да изпраща cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
+  };
+
+  // Прилагаме CORS middleware за всички заявки
+  app.use(cors(corsOptions));
+  app.use(express.json());
+  app.use(cookieParser()); // Добавяме middleware за парсване на cookies
+  
+  // Endpoint за качване на изображения
+  app.post('/api/upload', upload.single('image'), async (req, res) => {
+    console.log('Received upload request');
+    try {
+      if (!req.file) {
+        console.log('No file in request');
+        res.status(400).json({ error: 'No file uploaded' });
+        return;
+      }
+
+      console.log('File received:', req.file.originalname);
+      
+      // Определяме папката в зависимост от подадения параметър
+      const folder = req.body.folder || 'campaigns';
+      console.log('Target folder:', folder);
+      
+      // Качваме изображението в Cloudinary
+      const imageUrl = await ImageService.uploadImage(req.file.path, folder);
+      console.log('Image uploaded to Cloudinary:', imageUrl);
+      
+      res.status(200).json({
+        success: true,
+        url: imageUrl,
+        originalName: req.file.originalname
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Endpoint за изтриване на изображение
+  app.delete('/api/images', async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url) {
+        res.status(400).json({ error: 'Image URL is required' });
+        return;
+      }
+      
+      const success = await ImageService.deleteImage(url);
+      
+      if (success) {
+        res.status(200).json({
+          success: true,
+          message: 'Image deleted successfully'
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: 'Failed to delete image'
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Schema за GraphQL
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
@@ -172,16 +253,6 @@ async function startApolloServer() {
 
   await server.start();
 
-  // CORS настройки, които позволяват изпращане на cookies
-  const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true, // Това е важно, за да може браузърът да изпраща cookies
-  };
-
-  app.use(cors(corsOptions));
-  app.use(express.json());
-  app.use(cookieParser()); // Добавяме middleware за парсване на cookies
-  
   app.use('/graphql', 
     // @ts-ignore 
     expressMiddleware(server, {
@@ -202,4 +273,5 @@ async function startApolloServer() {
 connectDB().then(() => {
   startApolloServer();
 }); 
+
   

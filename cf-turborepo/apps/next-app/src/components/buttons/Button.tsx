@@ -99,6 +99,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      suppressHydrationWarning
       className={`${getClassName()} py-[12.01px] px-6 flex items-center justify-center w-full max-w-[278px] text-center transition-all duration-300 rounded-[10px] text-base lg:text-xl ${className}`}
       onClick={onClick}
       disabled={disabled || type === "disabled"}

@@ -13,7 +13,7 @@ const config: NextConfig = {
     return [];
   },
   images: {
-    domains: ['via.placeholder.com', 'randomuser.me'],
+    domains: ['via.placeholder.com', 'randomuser.me', 'res.cloudinary.com'],
     
     remotePatterns: [
       {
@@ -24,6 +24,11 @@ const config: NextConfig = {
       {
         protocol: 'https',
         hostname: 'randomuser.me',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
         pathname: '**',
       },
     ],
