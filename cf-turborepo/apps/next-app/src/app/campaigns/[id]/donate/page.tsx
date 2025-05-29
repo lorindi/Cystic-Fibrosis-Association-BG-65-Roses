@@ -34,16 +34,16 @@ export default function CampaignDonatePage() {
   if (loading) {
     return (
       <div className="min-h-[300px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
       </div>
     );
   }
 
   if (error || !campaign) {
     return (
-      <div className="p-6 bg-red-50 rounded-lg text-center">
+      <div className="p-6 bg-red-50 rounded-lg text-center max-w-lg mx-auto mt-8">
         <p className="text-red-700 mb-4">{error || 'Кампанията не беше намерена.'}</p>
-        <Link href="/campaigns" className="text-primary hover:underline">
+        <Link href="/campaigns" className="text-teal-600 hover:underline">
           Назад към всички кампании
         </Link>
       </div>
@@ -51,34 +51,16 @@ export default function CampaignDonatePage() {
   }
 
   return (
-    <div className="py-8">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
-          <div className="flex justify-between items-center mb-4">
-            <div className="text-sm text-gray-500">
-              Цел: {campaign.goal.toLocaleString()} лв.
-            </div>
-            <div className="text-sm text-gray-500">
-              Събрани: {campaign.currentAmount.toLocaleString()} лв.
-            </div>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-primary h-2.5 rounded-full" 
-              style={{ width: `${Math.min(100, (campaign.currentAmount / campaign.goal) * 100)}%` }} 
-            />
-          </div>
-        </div>
-
-        <DonationWidget 
-          campaignId={campaignId}
-          campaignTitle={campaign.title}
-          onSuccess={(paymentIntentId) => {
-            console.log('Успешно дарение за кампания:', paymentIntentId);
-          }}
-        />
-      </div>
+    <div className="py-8 px-4">
+      <DonationWidget 
+        campaignId={campaignId}
+        campaignTitle={campaign.title}
+        campaignGoal={campaign.goal}
+        campaignCurrentAmount={campaign.currentAmount}
+        onSuccess={(paymentIntentId) => {
+          console.log('Успешно дарение за кампания:', paymentIntentId);
+        }}
+      />
     </div>
   );
 } 
